@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  Environment:
+    Type: String
+    Default: "dev"
+    Description: "The environment for the deployment (dev or prod)"
+    AllowedValues:
+      - dev
+      - prod
+    ConstraintDescription: "Must be either 'dev' or 'prod'."
+
+Resources:
+  LambdaExecutionBlockbusterIndexMCPRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "blockbuster-index-mcp-role-${Environment}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaBasicExecution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "s3:GetObject"
+                Resource:
+                  - Fn::Sub:
+                      - "arn:aws:s3:::${BucketName}/*"
+                      - BucketName:
+                          Fn::ImportValue: !Sub "BlockbusterIndexMCPBucketName-${Environment}"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+
+Outputs:
+  LambdaExecutionBlockbusterIndexMCPArn:
+    Value: !GetAtt LambdaExecutionBlockbusterIndexMCPRole.Arn
+    Description: "Lambda execution role ARN"
+    Export:
+      Name: !Sub "LambdaExecutionBlockbusterIndexMCPRole-${Environment}"

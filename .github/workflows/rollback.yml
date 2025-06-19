@@ -1,0 +1,105 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      s3_zip_file:
+        description: "Zip file name in S3 (e.g., previous.zip)"
+        required: true
+        type: string
+      environment:
+        description: "Choose environment (dev/prod)"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  rollback-lambda:
+    name: Rollback MCP Lambda
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set Up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Check Change Set Update/Create
+        id: change_set_type
+        run: |
+          STACK_NAME="blockbuster-index-mcp-lambda-stack-${{ github.event.inputs.environment }}"
+          if aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region us-west-2 >/dev/null 2>&1; then
+            echo "Updating change set..."
+            echo "change_set_type=UPDATE" >> $GITHUB_ENV
+          else
+            echo "Creating change set..."
+            echo "change_set_type=CREATE" >> $GITHUB_ENV
+          fi
+
+      - name: Create CloudFormation Change Set for Rollback
+        run: |
+          STACK_NAME="blockbuster-index-mcp-lambda-stack-${{ github.event.inputs.environment }}"
+          TEMPLATE_FILE="template.yaml"
+          CHANGE_SET_NAME="rollback-mcp-change-set-${{ github.event.inputs.environment }}"
+          CHANGE_SET_TYPE=${{ env.change_set_type }}
+          S3_BUCKET="blockbuster-index-mcp-lambda-${{ github.event.inputs.environment }}"
+          aws cloudformation create-change-set \
+            --stack-name $STACK_NAME \
+            --template-body file://$TEMPLATE_FILE \
+            --parameters \
+              "ParameterKey=S3Key,ParameterValue=mcp/${{ github.event.inputs.s3_zip_file }}" \
+              "ParameterKey=Environment,ParameterValue=${{ github.event.inputs.environment }}" \
+            --change-set-name $CHANGE_SET_NAME \
+            --change-set-type $CHANGE_SET_TYPE \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --region us-west-2
+
+      - name: Wait for Change Set Creation
+        run: |
+          STACK_NAME="blockbuster-index-mcp-lambda-stack-${{ github.event.inputs.environment }}"
+          CHANGE_SET_NAME="rollback-mcp-change-set-${{ github.event.inputs.environment }}"
+          aws cloudformation wait change-set-create-complete \
+            --stack-name $STACK_NAME \
+            --change-set-name $CHANGE_SET_NAME \
+            --region us-west-2
+
+      - name: Execute CloudFormation Change Set
+        run: |
+          STACK_NAME="blockbuster-index-mcp-lambda-stack-${{ github.event.inputs.environment }}"
+          CHANGE_SET_NAME="rollback-mcp-change-set-${{ github.event.inputs.environment }}"
+          aws cloudformation execute-change-set \
+            --stack-name $STACK_NAME \
+            --change-set-name $CHANGE_SET_NAME \
+            --region us-west-2
+
+      - name: Monitor CloudFormation Stack Status
+        run: |
+          STACK_NAME="blockbuster-index-mcp-lambda-stack-${{ github.event.inputs.environment }}"
+          MAX_RETRIES=30
+          RETRY_COUNT=0
+          DONE_STATUSES=("CREATE_COMPLETE" "UPDATE_COMPLETE")
+          FAILED_STATUSES=("CREATE_FAILED" "UPDATE_FAILED" "ROLLBACK_FAILED")
+          while true; do
+            STATUS=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --region us-west-2 --query "Stacks[0].StackStatus" --output text)
+            echo "Status: $STATUS"
+            if [[ " ${DONE_STATUSES[@]} " =~ " ${STATUS} " ]]; then
+              echo "Rollback completed successfully!"
+              break
+            elif [[ " ${FAILED_STATUSES[@]} " =~ " ${STATUS} " ]]; then
+              echo "Rollback failed!"
+              exit 1
+            fi
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            if [[ $RETRY_COUNT -ge $MAX_RETRIES ]]; then
+              echo "Max retries reached, exiting."
+              exit 1
+            fi
+            echo "Checking status..."
+            sleep 10
+          done

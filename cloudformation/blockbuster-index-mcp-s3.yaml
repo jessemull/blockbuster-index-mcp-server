@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  Environment:
+    Type: String
+    Default: "dev"
+    Description: "The environment for the deployment (dev or prod)"
+    AllowedValues:
+      - dev
+      - prod
+    ConstraintDescription: "Must be either 'dev' or 'prod'."
+
+  BlockbusterIndexMCPBucketName:
+    Type: String
+    Default: "blockbuster-index-mcp-lambda"
+    Description: "Base name of the S3 bucket for MCP lambda deployment (env suffix will be appended)"
+
+Resources:
+  BlockbusterIndexMCPBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${BlockbusterIndexMCPBucketName}-${Environment}"
+
+Outputs:
+  BlockbusterIndexMCPBucketName:
+    Value: !Ref BlockbusterIndexMCPBucket
+    Export:
+      Name: !Sub "BlockbusterIndexMCPBucketName-${Environment}"
