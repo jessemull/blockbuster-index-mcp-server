@@ -45,35 +45,35 @@ This project implements the **Blockbuster Index MCP Lambda**, a data-processing 
 
 ### Key Features
 
-- **MCP (Massive Calculation Process)**: Periodically computes the Blockbuster Index for all U.S. states based on various signals (e.g., e-commerce adoption, physical retail trends).
-- **Next.js Compatibility**: Outputs static JSON data consumable by the Blockbuster Index frontend at build time or via client fetches.
+- **Model Context Protocol**: Periodically computes the **Blockbuster Index** for all U.S. states based on various signals (e.g., e-commerce adoption, physical retail trends).
+- **Next.js Compatibility**: Outputs static JSON data consumable by the **Blockbuster Index** frontend at build time or via client fetches.
 - **Cost-Efficient Architecture**: Designed to run on-demand or via scheduled execution using AWS Lambda and S3.
 
 ### **Authentication & Security**
 
 - This function does **not** require authentication, as it is typically invoked via a secure internal process via **CloudWatch** events.
-- The uutput is written to a secure S3 bucket served via CloudFront with optional public access through the static website.
+- The output is written to a secure S3 bucket served via CloudFront with optional public access through the static website.
 - Rate limiting and WAF rules are applied if and when the dynamic endpoints are exposed.
 
 ## Environments
 
-The **Blockbuster Index Project** operates in multiple environments to ensure smooth development, testing, and production workflows. Configuration files and environment variables should be set to point to the correct environment (dev/prod) depending on the stage of the application. Separate CloudFront distributions exist for each environment.
+The **Blockbuster Index Project** operates in multiple environments to ensure smooth development, testing and production workflows. Configuration files and environment variables should be set to point to the correct environment (dev/prod) depending on the stage of the application. Separate CloudFront distributions exist for each environment.
 
 ## Tech Stack
 
 This project leverages modern cloud infrastructure, AI models and TypeScript tooling to compute and serve the **Blockbuster Index**, a data-driven look at the transition from physical to digital retail in the U.S.
 
-- **AWS Lambda**: Hosts the MCP (Model Context Protocol) server which powers AI-driven analysis and generates the Blockbuster Index by interacting with external signals and datasets.
+- **AWS Lambda**: Hosts the MCP (Model Context Protocol) server which powers AI-driven analysis and generates the **Blockbuster Index** by interacting with external signals and datasets.
 
-- **AWS S3**: Stores the output Blockbuster Index data as static JSON files, which are consumed by the frontend.
+- **AWS S3**: Stores the **Blockbuster Index** data as static JSON files, which are consumed by the frontend.
 
 - **AWS CloudWatch Events**: Triggers scheduled executions of the MCP to refresh data periodically.
 
-- **LLM Integration (OpenAI)**: Powers natural language reasoning, classification, or synthesis of signals, interpreting economic indicators, summarizing trends, or generating explanations.
+- **LLM Integration (OpenAI)**: Powers natural language reasoning, classification or synthesis of signals, interpreting economic indicators, summarizing trends or generating explanations.
 
 - **External APIs**: Fetches supporting data such as retail foot traffic, e-commerce adoption rates or census statistics used to compute the index.
 
-- **TypeScript**: Used across all lambda functions and build scripts for strong typing, maintainability, and developer productivity.
+- **TypeScript**: Used across all lambda functions and build scripts for strong typing, maintainability and developer productivity.
 
 - **Jest**: Provides robust testing for the MCP logic to ensure accurate calculations and error handling.
 
@@ -212,7 +212,7 @@ This project uses automated deployment pipelines to ensure a smooth and reliable
 Each deployment process involves:
 
 - **Versioned Artifacts:** The function is bundled and uploaded as a zipped package to Amazon S3. The package is versioned using a unique artifact name, ensuring that each deployment has a distinct, traceable version.
-- **CloudFormation:** AWS CloudFormation change sets are used to manage and deploy the lambda function. This tool allows us to define, update, and roll back the infrastructure in a repeatable and consistent way.
+- **CloudFormation:** AWS CloudFormation change sets are used to manage and deploy the lambda function. This tool allows us to define, update and roll back the infrastructure in a repeatable and consistent way.
 - **Rollback:** Deployments can be rolled back to a prior version using previously stored S3 bundles.
 
 ### Tools Used
