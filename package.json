@@ -62,6 +62,7 @@
     "build": "webpack --config webpack.config.js",
     "clean": "rm -rf dist",
     "commit": "git-cz",
+    "coverage:open": "open ./coverage/lcov-report/index.html",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint --ext .ts",
