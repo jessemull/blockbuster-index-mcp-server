@@ -20,7 +20,7 @@ Resources:
       FunctionName: !Sub "blockbuster-index-mcp-${Environment}"
       Runtime: nodejs20.x
       Role:
-        Fn::ImportValue: !Sub "LambdaExecutionBlockbusterIndexMCPArn-${Environment}"
+        Fn::ImportValue: !Sub "LambdaExecutionBlockbusterIndexMCPRole-${Environment}"
       Handler: index.handler
       Code:
         S3Bucket:
