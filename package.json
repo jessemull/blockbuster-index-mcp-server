@@ -62,6 +62,7 @@
     "build": "webpack --config webpack.config.js",
     "clean": "rm -rf dist",
     "commit": "git-cz",
+    "coverage:open": "open ./coverage/lcov-report/index.html",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint --ext .ts",
@@ -69,6 +70,8 @@
     "package": "cd dist && zip -rq mcp.zip ./*",
     "prebuild": "npm run clean",
     "prepare": "husky",
+    "sam:build": "npm run build && npm run package",
+    "sam:invoke": "sam local invoke BlockbusterIndexMCPFunction --event local/event.json --template local/template.test.yaml",
     "test": "jest",
     "test:watch": "jest --watch"
   },

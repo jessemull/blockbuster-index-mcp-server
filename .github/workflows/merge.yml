@@ -51,9 +51,6 @@ jobs:
           export NODE_ENV=dev
           npm run build
           npm run package
-        env:
-          COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID_DEV }}
-          COGNITO_USER_POOL_CLIENT_ID: ${{ secrets.COGNITO_USER_POOL_CLIENT_ID_DEV }}
 
       - name: Generate Artifact Name
         run: |

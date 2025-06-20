@@ -1,1 +1,1 @@
-declare module "bunyan-cloudwatch";
+declare module 'bunyan-cloudwatch';
