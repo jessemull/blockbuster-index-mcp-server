@@ -14,30 +14,33 @@ This repository is part of the **Blockbuster Index Project** which includes the 
 2. [Environments](#environments)
 3. [Tech Stack](#tech-stack)
 4. [Setup Instructions](#setup-instructions)
-5. [Commits and Commitizen](#commits-and-commitizen)
+5. [SAM Local Invoke](#sam-local-invoke)
+   - [Pre-Requisites](#pre-requisites)
+   - [Running SAM Client Locally](#running-sam-client-locally)
+6. [Commits and Commitizen](#commits-and-commitizen)
    - [Making A Commit](#making-a-commit)
-6. [Linting & Formatting](#linting--formatting)
+7. [Linting & Formatting](#linting--formatting)
    - [Linting Commands](#linting-commands)
    - [Formatting Commands](#formatting-commands)
    - [Pre-Commit Hook](#pre-commit-hook)
-7. [Testing & Code Coverage](#testing--code-coverage)
+8. [Testing & Code Coverage](#testing--code-coverage)
    - [Testing Commands](#testing-commands)
    - [Code Coverage](#code-coverage)
-8. [Building & Packaging](#building--packaging)
+9. [Building & Packaging](#building--packaging)
    - [Summary](#summary)
    - [Install](#install)
    - [Build](#build)
    - [Package](#package)
-9. [Deployment Pipelines](#deployment-pipelines)
-   - [Deployment Strategy](#deployment-strategy)
-   - [Tools Used](#tools-used)
-   - [Pull Request](#pull-request)
-   - [Deploy](#deploy)
-   - [Merge](#merge)
-   - [Rollback](#rollback)
-10. [Connecting to the Bastion Host](#connecting-to-the-bastion-host)
+10. [Deployment Pipelines](#deployment-pipelines)
+    - [Deployment Strategy](#deployment-strategy)
+    - [Tools Used](#tools-used)
+    - [Pull Request](#pull-request)
+    - [Deploy](#deploy)
+    - [Merge](#merge)
+    - [Rollback](#rollback)
+11. [Connecting to the Bastion Host](#connecting-to-the-bastion-host)
     - [Environment Variables](#environment-variables)
-11. [License](#license)
+12. [License](#license)
 
 ## Project Overview
 
@@ -105,6 +108,36 @@ To clone the repository and install dependencies follow these steps:
 
    ```bash
    npm install
+   ```
+
+## SAM Local Invoke
+
+The lambda can be run locally using the SAM client using a mock test event and a cloudformation template for local development.
+
+### Pre-Requisites
+
+1. Install docker desktop using your preferred runtime environment:
+
+   [https://docs.docker.com/engine/install/](https://docs.docker.com/engine/install/)
+
+2. Install the SAM client:
+
+   ```bash
+   brew install aws/tap/aws-sam-cli
+   ```
+
+### Running SAM Client Locally
+
+1. Build and package the lambda:
+
+   ```bash
+   npm run sam:build
+   ```
+
+2. Invoke the lambda using the SAM client:
+
+   ```bash
+   npm run sam:invoke
    ```
 
 ## Commits and Commitizen
