@@ -1,6 +1,6 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import { Signal, States } from "./types";
-import { WEIGHTS } from "./constants";
+import { APIGatewayProxyHandler } from 'aws-lambda';
+import { Signal, States } from './types';
+import { WEIGHTS } from './constants';
 import {
   getAmazonScores,
   getAnalogScores,
@@ -9,8 +9,8 @@ import {
   getPhysicalScores,
   getStreamingScores,
   getWalmartScores,
-} from "./signals";
-import { logger, InternalServerError } from "./util";
+} from './signals';
+import { logger, InternalServerError } from './util';
 
 export const handler: APIGatewayProxyHandler = async () => {
   try {
@@ -61,11 +61,11 @@ export const handler: APIGatewayProxyHandler = async () => {
     };
   } catch (err) {
     logger.error(
-      "Blockbuster index calculation failed: ",
+      'Blockbuster index calculation failed: ',
       (err as Error).message,
     );
     return new InternalServerError(
-      "There was an error calculating the blockbuster index!",
+      'There was an error calculating the blockbuster index!',
     ).build();
   }
 };

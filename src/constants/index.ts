@@ -1,1 +1,1 @@
-export * from "./weights";
+export * from './weights';

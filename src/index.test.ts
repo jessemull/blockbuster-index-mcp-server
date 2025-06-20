@@ -1,15 +1,15 @@
-import * as signals from "./signals";
-import * as utilModule from "./util";
+import * as signals from './signals';
+import * as utilModule from './util';
 import {
   APIGatewayProxyEvent,
   APIGatewayProxyResult,
   Context,
-} from "aws-lambda";
-import { Signal, States } from "./types";
-import { WEIGHTS } from "./constants/weights";
-import { handler } from "./index";
+} from 'aws-lambda';
+import { Signal, States } from './types';
+import { WEIGHTS } from './constants/weights';
+import { handler } from './index';
 
-jest.mock("./signals", () => ({
+jest.mock('./signals', () => ({
   getAmazonScores: jest.fn(),
   getAnalogScores: jest.fn(),
   getBroadbandScores: jest.fn(),
@@ -19,7 +19,7 @@ jest.mock("./signals", () => ({
   getWalmartScores: jest.fn(),
 }));
 
-describe("Blockbuster Index MCP Handler", () => {
+describe('Blockbuster Index MCP Handler', () => {
   const mockScores = {
     [States.CA]: 0.1,
     [States.TX]: 0.2,
@@ -30,7 +30,7 @@ describe("Blockbuster Index MCP Handler", () => {
     jest.resetAllMocks();
   });
 
-  it("should return 200 and calculated scores for all states", async () => {
+  it('should return 200 and calculated scores for all states', async () => {
     (signals.getAmazonScores as jest.Mock).mockResolvedValue(mockScores);
     (signals.getAnalogScores as jest.Mock).mockResolvedValue(mockScores);
     (signals.getBroadbandScores as jest.Mock).mockResolvedValue(mockScores);
@@ -72,7 +72,7 @@ describe("Blockbuster Index MCP Handler", () => {
     expect(body[state].score).toBeCloseTo(parseFloat(expectedScore.toFixed(2)));
   });
 
-  it("should default missing scores to zero", async () => {
+  it('should default missing scores to zero', async () => {
     (signals.getAmazonScores as jest.Mock).mockResolvedValue({
       [States.CA]: 0.1,
     });
@@ -98,12 +98,12 @@ describe("Blockbuster Index MCP Handler", () => {
     expect(body[States.CA].components[Signal.AMAZON]).toBe(0.1);
   });
 
-  it("should log error and return 500 on exception", async () => {
+  it('should log error and return 500 on exception', async () => {
     const spyLogger = jest
-      .spyOn(utilModule.logger, "error")
+      .spyOn(utilModule.logger, 'error')
       .mockImplementation();
     (signals.getAmazonScores as jest.Mock).mockRejectedValue(
-      new Error("AWS failure"),
+      new Error('AWS failure'),
     );
 
     const result = (await handler(
@@ -114,11 +114,11 @@ describe("Blockbuster Index MCP Handler", () => {
 
     expect(result.statusCode).toBe(500);
     expect(result.body).toContain(
-      "There was an error calculating the blockbuster index!",
+      'There was an error calculating the blockbuster index!',
     );
     expect(spyLogger).toHaveBeenCalledWith(
-      "Blockbuster index calculation failed: ",
-      "AWS failure",
+      'Blockbuster index calculation failed: ',
+      'AWS failure',
     );
 
     spyLogger.mockRestore();

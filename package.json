@@ -70,7 +70,6 @@
     "package": "cd dist && zip -rq mcp.zip ./*",
     "prebuild": "npm run clean",
     "prepare": "husky",
-    "presam:invoke": "",
     "sam:build": "npm run build && npm run package",
     "sam:invoke": "sam local invoke BlockbusterIndexMCPFunction --event local/event.json --template local/template.test.yaml",
     "test": "jest",

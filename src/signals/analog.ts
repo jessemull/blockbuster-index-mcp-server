@@ -1,4 +1,4 @@
-import { States } from "../types";
+import { States } from '../types';
 
 export async function getAnalogScores(): Promise<Record<string, number>> {
   return {
