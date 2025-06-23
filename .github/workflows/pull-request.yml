@@ -22,11 +22,10 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Build & Package Lambda
+      - name: Build ECS Task
         run: |
           export NODE_ENV=dev
           npm run build
-          npm run package
 
   lint:
     name: Lint Code
