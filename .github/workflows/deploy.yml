@@ -18,19 +18,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install Dependencies
-        run: |
-          npm ci
+        run: npm ci
 
       - name: Lint Code
-        run: |
-          npm run lint
+        run: npm run lint
 
       - name: Run Unit Tests
-        run: |
-          npm test
+        run: npm test
 
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
@@ -67,118 +64,11 @@ jobs:
           docker push ${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ github.event.inputs.environment }}:$GITHUB_SHA
           echo "CONTAINER_IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ github.event.inputs.environment }}:$GITHUB_SHA" >> $GITHUB_ENV
 
-      - name: Build Project
+      - name: Deploy CloudFormation Stack
         run: |
-          export NODE_ENV=${{ github.event.inputs.environment }}
-          npm run build
-
-      - name: Check Change Set Update/Create 
-        id: change_set_type
-        run: |
-          ENVIRONMENT="${{ github.event.inputs.environment }}"
-          STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
-          if aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region us-west-2 >/dev/null 2>&1; then
-            echo "Updating change set..."
-            echo "change_set_type=UPDATE" >> $GITHUB_ENV
-          else
-            echo "Creating change set..."
-            echo "change_set_type=CREATE" >> $GITHUB_ENV
-          fi
-
-      - name: Check Stack Status
-        id: stack_status
-        if: env.change_set_type == 'UPDATE'
-        run: |
-          STACK_NAME="blockbuster-index-task-stack-${{ github.event.inputs.environment }}"
-          STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].StackStatus" --output text 2>/dev/null || echo "NOT_FOUND")
-          FAILED_STATES=("CREATE_FAILED" "ROLLBACK_FAILED" "UPDATE_FAILED" "DELETE_FAILED" "UPDATE_ROLLBACK_FAILED" "UPDATE_ROLLBACK_COMPLETE" "ROLLBACK_COMPLETE")
-          if [[ " ${FAILED_STATES[@]} " =~ " ${STATUS} " ]]; then
-            aws cloudformation delete-stack --stack-name "$STACK_NAME" --region us-west-2
-            aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME" --region us-west-2
-            echo "change_set_type=CREATE" >> $GITHUB_ENV
-          fi
-
-      - name: Create CloudFormation Change Set
-        run: |
-          ENVIRONMENT="${{ github.event.inputs.environment }}"
-          STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
-          TEMPLATE_FILE="cloudformation/blockbuster-index-task-definition.yaml"
-          CHANGE_SET_NAME="blockbuster-index-task-change-set-${ENVIRONMENT}"
-          CHANGE_SET_TYPE=${{ env.change_set_type }}
-          aws cloudformation create-change-set \
-            --stack-name $STACK_NAME \
-            --template-body file://$TEMPLATE_FILE \
-            --parameters \
-              ParameterKey=ContainerImage,ParameterValue=${{ env.CONTAINER_IMAGE_URI }} \
-              ParameterKey=Environment,ParameterValue=${ENVIRONMENT} \
-            --change-set-name $CHANGE_SET_NAME \
-            --change-set-type $CHANGE_SET_TYPE \
+          aws cloudformation deploy \
+            --stack-name blockbuster-index-task-stack-${{ github.event.inputs.environment }} \
+            --template-file cloudformation/blockbuster-index-task-definition.yaml \
+            --parameter-overrides ContainerImage=${{ env.CONTAINER_IMAGE_URI }} Environment=${{ github.event.inputs.environment }} \
             --capabilities CAPABILITY_NAMED_IAM \
             --region us-west-2
-
-      - name: Wait for Change Set Creation
-        run: |
-          aws cloudformation wait change-set-create-complete \
-            --stack-name "blockbuster-index-task-stack-${{ github.event.inputs.environment }}" \
-            --change-set-name "blockbuster-index-task-change-set-${{ github.event.inputs.environment }}" \
-            --region us-west-2
-
-      - name: Check for Applied Changes
-        run: |
-          ENVIRONMENT="${{ github.event.inputs.environment }}"
-          STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"    
-          CHANGE_SET_NAME="blockbuster-index-task-change-set-${ENVIRONMENT}"
-          CHANGES=$(aws cloudformation describe-change-set \
-                    --stack-name $STACK_NAME \
-                    --change-set-name $CHANGE_SET_NAME \
-                    --query "Changes" \
-                    --region us-west-2)
-          if [ "$(echo "$CHANGES" | jq length)" -eq 0 ]; then
-            echo "No changes in the change set, skipping execution."
-            echo "no_changes=true" >> $GITHUB_ENV
-          else
-            echo "Changes detected, proceeding with execution."
-            echo "no_changes=false" >> $GITHUB_ENV
-          fi
-
-      - name: Execute CloudFormation Change Set
-        if: env.no_changes == 'false'
-        run: |
-          ENVIRONMENT="${{ github.event.inputs.environment }}"
-          STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
-          CHANGE_SET_NAME="blockbuster-index-task-change-set-${ENVIRONMENT}"
-          aws cloudformation execute-change-set \
-            --stack-name $STACK_NAME \
-            --change-set-name $CHANGE_SET_NAME \
-            --region us-west-2
-
-      - name: Monitor CloudFormation Stack Status
-        if: env.no_changes == 'false'
-        run: |
-          DONE_STATUSES=("CREATE_COMPLETE" "UPDATE_COMPLETE" "ROLLBACK_COMPLETE" "UPDATE_ROLLBACK_COMPLETE" "DELETE_COMPLETE")
-          FAILED_STATUSES=("CREATE_FAILED" "UPDATE_FAILED" "ROLLBACK_FAILED" "DELETE_FAILED" "UPDATE_ROLLBACK_FAILED" "ROLLBACK_IN_PROGRESS" "DELETE_IN_PROGRESS")
-          ENVIRONMENT="${{ github.event.inputs.environment }}"
-          STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
-          MAX_RETRIES=30
-          RETRY_COUNT=0
-          while true; do
-            STATUS=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --region us-west-2 --query "Stacks[0].StackStatus" --output text)
-            echo "Status: $STATUS"
-            if [[ " ${DONE_STATUSES[@]} " =~ " ${STATUS} " ]]; then
-              echo "Stack update completed successfully!"
-              echo "Status: $STATUS"
-              break
-            elif [[ " ${FAILED_STATUSES[@]} " =~ " ${STATUS} " ]]; then
-              echo "Stack failed to update!"
-              echo "Status: $STATUS"
-              aws cloudformation describe-stack-events --stack-name $STACK_NAME --region us-west-2 --query "StackEvents[?ResourceStatus=='$STATUS'].[LogicalResourceId, ResourceStatus, ResourceStatusReason]" --output table
-              exit 1
-            fi
-            RETRY_COUNT=$((RETRY_COUNT + 1))
-            if [[ $RETRY_COUNT -ge $MAX_RETRIES ]]; then
-              echo "Max retries reached, exiting."
-              exit 1
-            fi
-            echo "Checking status..."
-            sleep 10
-          done
