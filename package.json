@@ -69,7 +69,6 @@
     "format:check": "prettier --check .",
     "lint": "eslint --ext .ts",
     "lint:fix": "eslint --ext .ts --fix",
-    "package": "cd dist && zip -rq mcp.zip ./*",
     "prebuild": "npm run clean",
     "prepare": "husky",
     "signal": "node scripts/run-signal.js",

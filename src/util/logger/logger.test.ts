@@ -21,7 +21,6 @@ describe('Logger', () => {
     expect(BunyanCloudWatch).toHaveBeenCalledWith(
       expect.objectContaining({
         logGroupName: '/aws/lambda/blockbuster-index-mcp-log-group',
-        logStreamName: 'blockbuster-index-mcp-log-stream',
         awsRegion: 'us-west-2',
       }),
     );

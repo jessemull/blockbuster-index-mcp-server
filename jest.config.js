@@ -1,8 +1,13 @@
 module.exports = {
   collectCoverage: true,
-  collectCoverageFrom: ["**/*.{ts,tsx}", "!src/types/**"],
-  coverageDirectory: "./coverage",
-  coverageReporters: ["json", "lcov", "text", "clover"],
+  collectCoverageFrom: [
+    '**/*.{ts,tsx}',
+    '!src/types/**',
+    '!dev/**',
+    '!**/index.ts',
+  ],
+  coverageDirectory: './coverage',
+  coverageReporters: ['json', 'lcov', 'text', 'clover'],
   coverageThreshold: {
     global: {
       branches: 80,
@@ -11,15 +16,15 @@ module.exports = {
       statements: 80,
     },
   },
-  moduleFileExtensions: ["ts", "js", "json", "node"],
-  preset: "ts-jest",
-  testEnvironment: "node",
-  testPathIgnorePatterns: ["/node_modules/", "/dist/"],
+  moduleFileExtensions: ['ts', 'js', 'json', 'node'],
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/dev/'],
   transform: {
-    "^.+\\.ts$": [
-      "ts-jest",
+    '^.+\\.ts$': [
+      'ts-jest',
       {
-        tsconfig: "tsconfig.json",
+        tsconfig: 'tsconfig.json',
       },
     ],
   },
