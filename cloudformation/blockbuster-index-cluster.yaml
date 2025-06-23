@@ -139,18 +139,28 @@ Outputs:
   ECSClusterArn:
     Description: "ECS Cluster ARN"
     Value: !GetAtt ECSCluster.Arn
+    Export:
+      Name: !Sub "${Environment}-BlockbusterECSClusterArn"
   ECSLogGroupName:
     Description: "Log group name"
     Value: !Ref ECSLogGroup
+    Export:
+      Name: !Sub "${Environment}-BlockbusterLogGroupName"
   ExecutionRoleArn:
     Description: "ECS Execution Role ARN"
     Value: !GetAtt ECSTaskExecutionRole.Arn
+    Export:
+      Name: !Sub "${Environment}-BlockbusterExecutionRoleArn"
   TaskRoleArn:
     Description: "ECS Task Role ARN"
     Value: !GetAtt ECSTaskRole.Arn
+    Export:
+      Name: !Sub "${Environment}-BlockbusterTaskRoleArn"
   EventBridgeInvokeRoleArn:
     Description: "EventBridge Invoke Role ARN"
     Value: !GetAtt EventBridgeInvokeRole.Arn
+    Export:
+      Name: !Sub "${Environment}-BlockbusterEventBridgeInvokeRoleArn"
   FargateSecurityGroupId:
     Description: "Security Group ID for Fargate tasks"
     Value: !Ref ECSFargateSecurityGroup

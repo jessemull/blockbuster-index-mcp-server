@@ -21,7 +21,7 @@ Mappings:
         - sg-04df1a4c1eabbf38b
 
 Conditions:
-  IsDev: !Equals [ !Ref Environment, "dev" ]
+  IsDev: !Equals [!Ref Environment, "dev"]
 
 Parameters:
   Environment:
@@ -40,21 +40,6 @@ Parameters:
     Default: "rate(1 day)"
     Description: "EventBridge schedule expression (cron or rate)"
 
-  ECSClusterArn:
-    Type: String
-
-  ECSLogGroupName:
-    Type: String
-
-  ExecutionRoleArn:
-    Type: String
-
-  TaskRoleArn:
-    Type: String
-
-  EventBridgeInvokeRoleArn:
-    Type: String
-
 Resources:
   ECSTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -65,8 +50,12 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      ExecutionRoleArn: !Ref ExecutionRoleArn
-      TaskRoleArn: !Ref TaskRoleArn
+      ExecutionRoleArn: 
+        !ImportValue 
+          Fn::Sub: "${Environment}-BlockbusterExecutionRoleArn"
+      TaskRoleArn: 
+        !ImportValue 
+          Fn::Sub: "${Environment}-BlockbusterTaskRoleArn"
       ContainerDefinitions:
         - Name: blockbuster-index-container
           Image: !Ref ContainerImage
@@ -76,7 +65,9 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-group: !Ref ECSLogGroupName
+              awslogs-group: 
+                !ImportValue 
+                  Fn::Sub: "${Environment}-BlockbusterLogGroupName"
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: "blockbuster-index"
           Environment:
@@ -92,9 +83,13 @@ Resources:
       ScheduleExpression: !Ref ScheduleExpression
       State: ENABLED
       Targets:
-        - Arn: !Ref ECSClusterArn
+        - Arn: 
+            !ImportValue 
+              Fn::Sub: "${Environment}-BlockbusterECSClusterArn"
           Id: "BlockbusterIndexECSTask"
-          RoleArn: !Ref EventBridgeInvokeRoleArn
+          RoleArn: 
+            !ImportValue 
+              Fn::Sub: "${Environment}-BlockbusterEventBridgeInvokeRoleArn"
           EcsParameters:
             TaskDefinitionArn: !Ref ECSTaskDefinition
             TaskCount: 1
