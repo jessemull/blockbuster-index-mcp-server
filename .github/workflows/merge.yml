@@ -92,7 +92,7 @@ jobs:
         run: |
           ENVIRONMENT=dev
           STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
-          TEMPLATE_FILE="cloudformation/blockbuster-index-task-definition.yml"
+          TEMPLATE_FILE="cloudformation/blockbuster-index-task-definition.yaml"
           CHANGE_SET_NAME="blockbuster-index-task-change-set-${ENVIRONMENT}"
           CHANGE_SET_TYPE=${{ env.change_set_type }}
           aws cloudformation create-change-set \
