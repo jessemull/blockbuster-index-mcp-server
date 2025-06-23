@@ -62,30 +62,28 @@ jobs:
           export NODE_ENV=dev
           npm run build
 
-      - name: Check Change Set Update/Create 
-        id: change_set_type
+      - name: Delete Existing Change Set If Exists
         run: |
-          ENVIRONMENT="dev"
+          ENVIRONMENT=dev
           STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
-          if aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region us-west-2 >/dev/null 2>&1; then
-            echo "Updating change set..."
-            echo "change_set_type=UPDATE" >> $GITHUB_ENV
+          CHANGE_SET_NAME="blockbuster-index-task-change-set-${ENVIRONMENT}"
+          if aws cloudformation describe-change-set --stack-name $STACK_NAME --change-set-name $CHANGE_SET_NAME --region us-west-2 >/dev/null 2>&1; then
+            echo "Deleting existing change set $CHANGE_SET_NAME"
+            aws cloudformation delete-change-set --stack-name $STACK_NAME --change-set-name $CHANGE_SET_NAME --region us-west-2
+            # Wait until the change set is deleted (retry)
+            COUNT=0
+            MAX_RETRIES=15
+            while aws cloudformation describe-change-set --stack-name $STACK_NAME --change-set-name $CHANGE_SET_NAME --region us-west-2 >/dev/null 2>&1; do
+              if [ $COUNT -ge $MAX_RETRIES ]; then
+                echo "Timeout waiting for change set deletion"
+                exit 1
+              fi
+              echo "Waiting for change set to be deleted..."
+              sleep 5
+              COUNT=$((COUNT+1))
+            done
           else
-            echo "Creating change set..."
-            echo "change_set_type=CREATE" >> $GITHUB_ENV
-          fi
-
-      - name: Check Stack Status
-        id: stack_status
-        if: env.change_set_type == 'UPDATE'
-        run: |
-          STACK_NAME="blockbuster-index-task-stack-dev"
-          STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].StackStatus" --output text 2>/dev/null || echo "NOT_FOUND")
-          FAILED_STATES=("CREATE_FAILED" "ROLLBACK_FAILED" "UPDATE_FAILED" "DELETE_FAILED" "UPDATE_ROLLBACK_FAILED" "UPDATE_ROLLBACK_COMPLETE" "ROLLBACK_COMPLETE")
-          if [[ " ${FAILED_STATES[@]} " =~ " ${STATUS} " ]]; then
-            aws cloudformation delete-stack --stack-name "$STACK_NAME" --region us-west-2
-            aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME" --region us-west-2
-            echo "change_set_type=CREATE" >> $GITHUB_ENV
+            echo "No existing change set to delete"
           fi
 
       - name: Create CloudFormation Change Set
@@ -94,7 +92,7 @@ jobs:
           STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
           TEMPLATE_FILE="cloudformation/blockbuster-index-task-definition.yaml"
           CHANGE_SET_NAME="blockbuster-index-task-change-set-${ENVIRONMENT}"
-          CHANGE_SET_TYPE=${{ env.change_set_type }}
+          CHANGE_SET_TYPE="CREATE"
           aws cloudformation create-change-set \
             --stack-name $STACK_NAME \
             --template-body file://$TEMPLATE_FILE \
