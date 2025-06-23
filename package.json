@@ -56,7 +56,7 @@
     "*.md": "prettier --write"
   },
   "main": "dist/index.js",
-  "name": "blockbuster-index-mcp-lambda",
+  "name": "blockbuster-index-mcp-server",
   "scripts": {
     "bastion": "node ./scripts/connect.js",
     "build": "webpack --config webpack.config.js",

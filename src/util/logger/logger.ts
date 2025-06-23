@@ -3,7 +3,7 @@ import BunyanCloudWatch from 'bunyan-cloudwatch';
 
 const awsRegion = process.env.AWS_REGION || 'us-west-2';
 const logGroupName =
-  process.env.CW_LOG_GROUP || '/aws/lambda/blockbuster-index-mcp-log-group';
+  process.env.CW_LOG_GROUP || '/aws/ecs/blockbuster-index-mcp-log-group';
 const logStreamName =
   process.env.CW_LOG_STREAM ||
   `blockbuster-index-mcp-${process.env.AWS_TASK_ID || Date.now()}`;

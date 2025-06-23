@@ -64,26 +64,30 @@ jobs:
 
       - name: Delete Existing Change Set If Exists
         run: |
-          ENVIRONMENT=dev
           STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
           CHANGE_SET_NAME="blockbuster-index-task-change-set-${ENVIRONMENT}"
           if aws cloudformation describe-change-set --stack-name $STACK_NAME --change-set-name $CHANGE_SET_NAME --region us-west-2 >/dev/null 2>&1; then
-            echo "Deleting existing change set $CHANGE_SET_NAME"
-            aws cloudformation delete-change-set --stack-name $STACK_NAME --change-set-name $CHANGE_SET_NAME --region us-west-2
-            # Wait until the change set is deleted (retry)
-            COUNT=0
-            MAX_RETRIES=15
-            while aws cloudformation describe-change-set --stack-name $STACK_NAME --change-set-name $CHANGE_SET_NAME --region us-west-2 >/dev/null 2>&1; do
-              if [ $COUNT -ge $MAX_RETRIES ]; then
-                echo "Timeout waiting for change set deletion"
-                exit 1
-              fi
-              echo "Waiting for change set to be deleted..."
-              sleep 5
-              COUNT=$((COUNT+1))
-            done
+            STATUS=$(aws cloudformation describe-change-set --stack-name $STACK_NAME --change-set-name $CHANGE_SET_NAME --region us-west-2 --query "Status" --output text)
+            echo "Existing change set $CHANGE_SET_NAME found with status: $STATUS"
+            if [[ "$STATUS" == "FAILED" || "$STATUS" == "CREATE_COMPLETE" ]]; then
+              echo "Deleting existing change set $CHANGE_SET_NAME"
+              aws cloudformation delete-change-set --stack-name $STACK_NAME --change-set-name $CHANGE_SET_NAME --region us-west-2
+              COUNT=0
+              MAX_RETRIES=15
+              while aws cloudformation describe-change-set --stack-name $STACK_NAME --change-set-name $CHANGE_SET_NAME --region us-west-2 >/dev/null 2>&1; do
+                if [ $COUNT -ge $MAX_RETRIES ]; then
+                  echo "Timeout waiting for change set deletion"
+                  exit 1
+                fi
+                echo "Waiting for change set to be deleted..."
+                sleep 5
+                COUNT=$((COUNT+1))
+              done
+            else
+              echo "Change set $CHANGE_SET_NAME status $STATUS does not allow deletion, skipping delete."
+            fi
           else
-            echo "No existing change set to delete"
+            echo "No existing change set to delete."
           fi
 
       - name: Create CloudFormation Change Set
