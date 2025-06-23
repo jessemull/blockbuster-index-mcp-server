@@ -1,4 +1,5 @@
-import { APIGatewayProxyHandler } from 'aws-lambda';
+import fs from 'fs';
+import path from 'path';
 import { Signal, States } from './types';
 import { WEIGHTS } from './constants';
 import {
@@ -10,9 +11,13 @@ import {
   getStreamingScores,
   getWalmartScores,
 } from './signals';
-import { logger, InternalServerError } from './util';
+import { logger } from './util';
 
-export const handler: APIGatewayProxyHandler = async () => {
+const isDevelopment =
+  process.env.NODE_ENV === 'development' ||
+  process.env.LOCAL_DEVELOPMENT === 'true';
+
+async function main() {
   try {
     const [amazon, analog, broadband, ecommerce, media, streaming, walmart] =
       await Promise.all([
@@ -35,13 +40,13 @@ export const handler: APIGatewayProxyHandler = async () => {
 
     for (const state of Object.values(States)) {
       const components = {
-        [Signal.AMAZON]: amazon[state as States] ?? 0,
-        [Signal.ANALOG]: analog[state as States] ?? 0,
-        [Signal.BROADBAND]: broadband[state as States] ?? 0,
-        [Signal.ECOMMERCE]: ecommerce[state as States] ?? 0,
-        [Signal.PHYSICAL]: media[state as States] ?? 0,
-        [Signal.STREAMING]: streaming[state as States] ?? 0,
-        [Signal.WALMART]: walmart[state as States] ?? 0,
+        [Signal.AMAZON]: amazon[state] ?? 0,
+        [Signal.ANALOG]: analog[state] ?? 0,
+        [Signal.BROADBAND]: broadband[state] ?? 0,
+        [Signal.ECOMMERCE]: ecommerce[state] ?? 0,
+        [Signal.PHYSICAL]: media[state] ?? 0,
+        [Signal.STREAMING]: streaming[state] ?? 0,
+        [Signal.WALMART]: walmart[state] ?? 0,
       };
 
       const score = Object.entries(components).reduce(
@@ -55,17 +60,26 @@ export const handler: APIGatewayProxyHandler = async () => {
       };
     }
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify(response, null, 2),
-    };
+    if (isDevelopment) {
+      const scoresDir = path.resolve(__dirname, '../dev/scores');
+      const filePath = path.join(scoresDir, 'blockbuster-index.json');
+      await fs.mkdirSync(scoresDir, { recursive: true });
+      await fs.writeFileSync(filePath, JSON.stringify(response, null, 2));
+      logger.info(`Combined scores written to: ${filePath}...`);
+    } else {
+      logger.info(JSON.stringify(response, null, 2));
+    }
   } catch (err) {
     logger.error(
       'Blockbuster index calculation failed: ',
       (err as Error).message,
     );
-    return new InternalServerError(
-      'There was an error calculating the blockbuster index!',
-    ).build();
+    process.exit(1);
   }
-};
+}
+
+// Only run if this script is called directly...
+
+if (require.main === module) {
+  main();
+}

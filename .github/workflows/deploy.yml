@@ -4,17 +4,17 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Choose environment (test/production)'
+        description: 'Choose environment (dev/prod)'
         required: true
-        default: 'test'
+        default: 'dev'
         type: choice
         options:
           - dev
           - prod
   
 jobs:
-  deploy-lambda:
-    name: Deploy MCP Lambda
+  deploy-ecs-task:
+    name: Deploy ECS Fargate Task
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -53,31 +53,30 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
 
-      - name: Build Lambda Package
+      - name: Log Into AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build Docker Image
         run: |
-          export NODE_ENV="${{ github.event.inputs.environment }}"
+          docker build -t blockbuster-index:$GITHUB_SHA .
+          docker tag blockbuster-index:$GITHUB_SHA ${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ github.event.inputs.environment }}:$GITHUB_SHA
+
+      - name: Push Docker Image to ECR
+        run: |
+          docker push ${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ github.event.inputs.environment }}:$GITHUB_SHA
+          echo "CONTAINER_IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ github.event.inputs.environment }}:$GITHUB_SHA" >> $GITHUB_ENV
+
+      - name: Build Project
+        run: |
+          export NODE_ENV=${{ github.event.inputs.environment }}
           npm run build
-          npm run package
-          
-      - name: Generate Artifact Name
-        run: |
-          COMMIT_HASH=$(git rev-parse --short HEAD)
-          VERSION=$(jq -r .version < package.json)
-          TIMESTAMP=$(date -u +"%Y%m%dT%H%M%SZ")
-          ARTIFACT_NAME="blockbuster-index-mcp-lambda-${VERSION}-${COMMIT_HASH}-${TIMESTAMP}.zip"
-          echo "Artifact: $ARTIFACT_NAME"
-          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
-          
-      - name: Upload Lambda to S3
-        run: |
-          S3_BUCKET="blockbuster-index-mcp-lambda-${{ github.event.inputs.environment }}"
-          aws s3 cp "dist/mcp.zip" s3://${S3_BUCKET}/mcp/${ARTIFACT_NAME} --region us-west-2
 
       - name: Check Change Set Update/Create 
         id: change_set_type
         run: |
           ENVIRONMENT="${{ github.event.inputs.environment }}"
-          STACK_NAME="blockbuster-index-mcp-lambda-stack-${{ github.event.inputs.environment }}"
+          STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
           if aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region us-west-2 >/dev/null 2>&1; then
             echo "Updating change set..."
             echo "change_set_type=UPDATE" >> $GITHUB_ENV
@@ -90,46 +89,45 @@ jobs:
         id: stack_status
         if: env.change_set_type == 'UPDATE'
         run: |
-          STACK_NAME="blockbuster-index-mcp-lambda-stack-${{ github.event.inputs.environment }}"
+          STACK_NAME="blockbuster-index-task-stack-${{ github.event.inputs.environment }}"
           STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].StackStatus" --output text 2>/dev/null || echo "NOT_FOUND")
-          echo "Status: $STATUS"
           FAILED_STATES=("CREATE_FAILED" "ROLLBACK_FAILED" "UPDATE_FAILED" "DELETE_FAILED" "UPDATE_ROLLBACK_FAILED" "UPDATE_ROLLBACK_COMPLETE" "ROLLBACK_COMPLETE")
           if [[ " ${FAILED_STATES[@]} " =~ " ${STATUS} " ]]; then
-            echo "Deleting stack due to status..."
             aws cloudformation delete-stack --stack-name "$STACK_NAME" --region us-west-2
-            echo "Waiting for stack deletion to complete..."
             aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME" --region us-west-2
-            echo "Stack deleted successfully!"
             echo "change_set_type=CREATE" >> $GITHUB_ENV
           fi
 
       - name: Create CloudFormation Change Set
         run: |
-          ENVIRONMENT=${{ github.event.inputs.environment }}
-          STACK_NAME="blockbuster-index-mcp-lambda-stack-${{ github.event.inputs.environment }}"
-          TEMPLATE_FILE="template.yaml"
-          CHANGE_SET_NAME="blockbuster-index-mcp-lambda-change-set-${{ github.event.inputs.environment }}"
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
+          TEMPLATE_FILE="cloudformation/blockbuster-index-task-definition.yml"
+          CHANGE_SET_NAME="blockbuster-index-task-change-set-${ENVIRONMENT}"
           CHANGE_SET_TYPE=${{ env.change_set_type }}
           aws cloudformation create-change-set \
             --stack-name $STACK_NAME \
             --template-body file://$TEMPLATE_FILE \
             --parameters \
-              "ParameterKey=S3Key,ParameterValue=mcp/${ARTIFACT_NAME}" \
-              "ParameterKey=Environment,ParameterValue=${ENVIRONMENT}" \
+              ParameterKey=ContainerImage,ParameterValue=${{ env.CONTAINER_IMAGE_URI }} \
+              ParameterKey=Environment,ParameterValue=${ENVIRONMENT} \
             --change-set-name $CHANGE_SET_NAME \
             --change-set-type $CHANGE_SET_TYPE \
             --capabilities CAPABILITY_NAMED_IAM \
             --region us-west-2
-          echo "Waiting for change set to be created..."
+
+      - name: Wait for Change Set Creation
+        run: |
           aws cloudformation wait change-set-create-complete \
-            --stack-name $STACK_NAME \
-            --change-set-name $CHANGE_SET_NAME \
+            --stack-name "blockbuster-index-task-stack-${{ github.event.inputs.environment }}" \
+            --change-set-name "blockbuster-index-task-change-set-${{ github.event.inputs.environment }}" \
             --region us-west-2
 
       - name: Check for Applied Changes
         run: |
-          STACK_NAME="blockbuster-index-mcp-lambda-stack-${{ github.event.inputs.environment }}"
-          CHANGE_SET_NAME="blockbuster-index-mcp-lambda-change-set-${{ github.event.inputs.environment }}"
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"    
+          CHANGE_SET_NAME="blockbuster-index-task-change-set-${ENVIRONMENT}"
           CHANGES=$(aws cloudformation describe-change-set \
                     --stack-name $STACK_NAME \
                     --change-set-name $CHANGE_SET_NAME \
@@ -146,8 +144,9 @@ jobs:
       - name: Execute CloudFormation Change Set
         if: env.no_changes == 'false'
         run: |
-          STACK_NAME="blockbuster-index-mcp-lambda-stack-${{ github.event.inputs.environment }}"
-          CHANGE_SET_NAME="blockbuster-index-mcp-lambda-change-set-${{ github.event.inputs.environment }}"
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
+          CHANGE_SET_NAME="blockbuster-index-task-change-set-${ENVIRONMENT}"
           aws cloudformation execute-change-set \
             --stack-name $STACK_NAME \
             --change-set-name $CHANGE_SET_NAME \
@@ -158,7 +157,8 @@ jobs:
         run: |
           DONE_STATUSES=("CREATE_COMPLETE" "UPDATE_COMPLETE" "ROLLBACK_COMPLETE" "UPDATE_ROLLBACK_COMPLETE" "DELETE_COMPLETE")
           FAILED_STATUSES=("CREATE_FAILED" "UPDATE_FAILED" "ROLLBACK_FAILED" "DELETE_FAILED" "UPDATE_ROLLBACK_FAILED" "ROLLBACK_IN_PROGRESS" "DELETE_IN_PROGRESS")
-          STACK_NAME="blockbuster-index-mcp-lambda-stack-${{ github.event.inputs.environment }}"
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
           MAX_RETRIES=30
           RETRY_COUNT=0
           while true; do
@@ -168,7 +168,6 @@ jobs:
               echo "Stack update completed successfully!"
               echo "Status: $STATUS"
               break
-            # Check if the status is one of the 'failed' statuses
             elif [[ " ${FAILED_STATUSES[@]} " =~ " ${STATUS} " ]]; then
               echo "Stack failed to update!"
               echo "Status: $STATUS"
@@ -183,18 +182,3 @@ jobs:
             echo "Checking status..."
             sleep 10
           done
-      
-      - name: Prune Backups
-        run: |
-          S3_BUCKET="blockbuster-index-mcp-lambda-${{ github.event.inputs.environment }}"
-          OBJECTS=$(aws s3 ls s3://${S3_BUCKET}/mcp/ | sort | awk '{print $4}')
-          TOTAL_OBJECTS=$(echo "$OBJECTS" | wc -l)
-          if [ "$TOTAL_OBJECTS" -gt 5 ]; then
-            OBJECTS_TO_DELETE=$(echo "$OBJECTS" | head -n $(($TOTAL_OBJECTS - 5)))
-            for OBJ in $OBJECTS_TO_DELETE; do
-              aws s3 rm s3://${S3_BUCKET}/mcp/$OBJ
-            done
-          else
-            echo "Less than 5 objects found, no pruning needed..."
-          fi
-

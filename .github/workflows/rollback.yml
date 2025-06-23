@@ -3,8 +3,8 @@ name: Rollback
 on:
   workflow_dispatch:
     inputs:
-      s3_zip_file:
-        description: "Zip file name in S3 (e.g., previous.zip)"
+      container_image_uri:
+        description: "Container image URI to rollback to (e.g., 123456789012.dkr.ecr.us-west-2.amazonaws.com/blockbuster-index-dev:abcdef)"
         required: true
         type: string
       environment:
@@ -16,8 +16,8 @@ on:
           - prod
 
 jobs:
-  rollback-lambda:
-    name: Rollback MCP Lambda
+  rollback-ecs-task:
+    name: Rollback ECS Fargate Task
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -30,10 +30,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
 
-      - name: Check Change Set Update/Create
+      - name: Determine Change Set Type (Create or Update)
         id: change_set_type
         run: |
-          STACK_NAME="blockbuster-index-mcp-lambda-stack-${{ github.event.inputs.environment }}"
+          STACK_NAME="blockbuster-index-task-stack-${{ github.event.inputs.environment }}"
           if aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region us-west-2 >/dev/null 2>&1; then
             echo "Updating change set..."
             echo "change_set_type=UPDATE" >> $GITHUB_ENV
@@ -44,17 +44,17 @@ jobs:
 
       - name: Create CloudFormation Change Set for Rollback
         run: |
-          STACK_NAME="blockbuster-index-mcp-lambda-stack-${{ github.event.inputs.environment }}"
-          TEMPLATE_FILE="template.yaml"
-          CHANGE_SET_NAME="rollback-mcp-change-set-${{ github.event.inputs.environment }}"
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
+          TEMPLATE_FILE="cloudformation/blockbuster-index-task-definition.yml"
+          CHANGE_SET_NAME="rollback-task-change-set-${ENVIRONMENT}"
           CHANGE_SET_TYPE=${{ env.change_set_type }}
-          S3_BUCKET="blockbuster-index-mcp-lambda-${{ github.event.inputs.environment }}"
           aws cloudformation create-change-set \
             --stack-name $STACK_NAME \
             --template-body file://$TEMPLATE_FILE \
             --parameters \
-              "ParameterKey=S3Key,ParameterValue=mcp/${{ github.event.inputs.s3_zip_file }}" \
-              "ParameterKey=Environment,ParameterValue=${{ github.event.inputs.environment }}" \
+              ParameterKey=ContainerImage,ParameterValue="${{ github.event.inputs.container_image_uri }}" \
+              ParameterKey=Environment,ParameterValue=$ENVIRONMENT \
             --change-set-name $CHANGE_SET_NAME \
             --change-set-type $CHANGE_SET_TYPE \
             --capabilities CAPABILITY_NAMED_IAM \
@@ -62,29 +62,52 @@ jobs:
 
       - name: Wait for Change Set Creation
         run: |
-          STACK_NAME="blockbuster-index-mcp-lambda-stack-${{ github.event.inputs.environment }}"
-          CHANGE_SET_NAME="rollback-mcp-change-set-${{ github.event.inputs.environment }}"
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
+          CHANGE_SET_NAME="rollback-task-change-set-${ENVIRONMENT}"
           aws cloudformation wait change-set-create-complete \
             --stack-name $STACK_NAME \
             --change-set-name $CHANGE_SET_NAME \
             --region us-west-2
 
-      - name: Execute CloudFormation Change Set
+      - name: Check for Changes in Change Set
         run: |
-          STACK_NAME="blockbuster-index-mcp-lambda-stack-${{ github.event.inputs.environment }}"
-          CHANGE_SET_NAME="rollback-mcp-change-set-${{ github.event.inputs.environment }}"
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
+          CHANGE_SET_NAME="rollback-task-change-set-${ENVIRONMENT}"
+          CHANGES=$(aws cloudformation describe-change-set \
+            --stack-name $STACK_NAME \
+            --change-set-name $CHANGE_SET_NAME \
+            --query "Changes" \
+            --region us-west-2)
+          if [ "$(echo "$CHANGES" | jq length)" -eq 0 ]; then
+            echo "No changes detected in change set, skipping execution."
+            echo "no_changes=true" >> $GITHUB_ENV
+          else
+            echo "Changes detected, proceeding with execution."
+            echo "no_changes=false" >> $GITHUB_ENV
+          fi
+
+      - name: Execute CloudFormation Change Set
+        if: env.no_changes == 'false'
+        run: |
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
+          CHANGE_SET_NAME="rollback-task-change-set-${ENVIRONMENT}"
           aws cloudformation execute-change-set \
             --stack-name $STACK_NAME \
             --change-set-name $CHANGE_SET_NAME \
             --region us-west-2
 
       - name: Monitor CloudFormation Stack Status
+        if: env.no_changes == 'false'
         run: |
-          STACK_NAME="blockbuster-index-mcp-lambda-stack-${{ github.event.inputs.environment }}"
+          DONE_STATUSES=("CREATE_COMPLETE" "UPDATE_COMPLETE" "ROLLBACK_COMPLETE" "UPDATE_ROLLBACK_COMPLETE" "DELETE_COMPLETE")
+          FAILED_STATUSES=("CREATE_FAILED" "UPDATE_FAILED" "ROLLBACK_FAILED" "DELETE_FAILED" "UPDATE_ROLLBACK_FAILED" "ROLLBACK_IN_PROGRESS" "DELETE_IN_PROGRESS")
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          STACK_NAME="blockbuster-index-task-stack-${ENVIRONMENT}"
           MAX_RETRIES=30
           RETRY_COUNT=0
-          DONE_STATUSES=("CREATE_COMPLETE" "UPDATE_COMPLETE")
-          FAILED_STATUSES=("CREATE_FAILED" "UPDATE_FAILED" "ROLLBACK_FAILED")
           while true; do
             STATUS=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --region us-west-2 --query "Stacks[0].StackStatus" --output text)
             echo "Status: $STATUS"
@@ -93,6 +116,7 @@ jobs:
               break
             elif [[ " ${FAILED_STATUSES[@]} " =~ " ${STATUS} " ]]; then
               echo "Rollback failed!"
+              aws cloudformation describe-stack-events --stack-name $STACK_NAME --region us-west-2 --query "StackEvents[?ResourceStatus=='$STATUS'].[LogicalResourceId, ResourceStatus, ResourceStatusReason]" --output table
               exit 1
             fi
             RETRY_COUNT=$((RETRY_COUNT + 1))

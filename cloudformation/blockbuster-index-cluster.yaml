@@ -1,0 +1,159 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Stable ECS infrastructure: cluster, roles, log groups."
+
+Parameters:
+  DefaultVPC:
+    Type: AWS::EC2::VPC::Id
+    Description: "The default VPC for the environment"
+  Environment:
+    Type: String
+    Default: "dev"
+    AllowedValues:
+      - dev
+      - prod
+
+Resources:
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub "blockbuster-index-${Environment}"
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep only the last 10 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 10
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "blockbuster-index-${Environment}"
+
+  ECSLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/blockbuster-index-${Environment}"
+      RetentionInDays: 14
+
+  ECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "blockbuster-index-ecs-task-execution-role-${Environment}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: "CloudWatchLogsPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-${Environment}:*"
+
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "blockbuster-index-ecs-task-role-${Environment}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: "S3WriteAccess"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub "arn:aws:s3:::blockbuster-index-client-${Environment}"
+                  - !Sub "arn:aws:s3:::blockbuster-index-client-${Environment}/*"
+
+  EventBridgeInvokeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "blockbuster-index-eventbridge-invoke-role-${Environment}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: "AllowRunTask"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecs:RunTask
+                Resource: "*"
+
+  ECSFargateSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "blockbuster-index-sg-${Environment}"
+      GroupDescription: !Sub "Security group for ECS Fargate tasks in ${Environment}"
+      VpcId: !Ref DefaultVPC
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: "0.0.0.0/0"
+      Tags:
+        - Key: Name
+          Value: !Sub "blockbuster-index-sg-${Environment}"
+
+Outputs:
+  ECSClusterArn:
+    Description: "ECS Cluster ARN"
+    Value: !GetAtt ECSCluster.Arn
+  ECSLogGroupName:
+    Description: "Log group name"
+    Value: !Ref ECSLogGroup
+  ExecutionRoleArn:
+    Description: "ECS Execution Role ARN"
+    Value: !GetAtt ECSTaskExecutionRole.Arn
+  TaskRoleArn:
+    Description: "ECS Task Role ARN"
+    Value: !GetAtt ECSTaskRole.Arn
+  EventBridgeInvokeRoleArn:
+    Description: "EventBridge Invoke Role ARN"
+    Value: !GetAtt EventBridgeInvokeRole.Arn
+  FargateSecurityGroupId:
+    Description: "Security Group ID for Fargate tasks"
+    Value: !Ref ECSFargateSecurityGroup
+  ECRRepositoryUri:
+    Description: "ECR Repository URI"
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/blockbuster-index-${Environment}"

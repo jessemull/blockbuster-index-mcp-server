@@ -1,0 +1,109 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "ECS Task Definition and Scheduled Rule."
+
+Mappings:
+  EnvConfig:
+    dev:
+      Subnets:
+        - subnet-02ce757a
+        - subnet-2655df7b
+        - subnet-e22085a8
+        - subnet-badfdd91
+      SecurityGroups:
+        - sg-ccc333
+    prod:
+      Subnets:
+        - subnet-xxx999
+        - subnet-yyy888
+      SecurityGroups:
+        - sg-zzz777
+
+Conditions:
+  IsDev: !Equals [ !Ref Environment, "dev" ]
+
+Parameters:
+  Environment:
+    Type: String
+    Default: "dev"
+    AllowedValues:
+      - dev
+      - prod
+
+  ContainerImage:
+    Type: String
+    Description: "ECR image URI or container image for the ECS task"
+
+  ScheduleExpression:
+    Type: String
+    Default: "rate(1 day)"
+    Description: "EventBridge schedule expression (cron or rate)"
+
+  ECSClusterArn:
+    Type: String
+
+  ECSLogGroupName:
+    Type: String
+
+  ExecutionRoleArn:
+    Type: String
+
+  TaskRoleArn:
+    Type: String
+
+  EventBridgeInvokeRoleArn:
+    Type: String
+
+Resources:
+  ECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "blockbuster-index-task-${Environment}"
+      Cpu: "512"
+      Memory: "1024"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !Ref ExecutionRoleArn
+      TaskRoleArn: !Ref TaskRoleArn
+      ContainerDefinitions:
+        - Name: blockbuster-index-container
+          Image: !Ref ContainerImage
+          Cpu: 512
+          Memory: 1024
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ECSLogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: "blockbuster-index"
+          Environment:
+            - Name: NODE_ENV
+              Value: !If [IsDev, "test", "production"]
+            - Name: OPENAI_API_KEY
+              Value: !Sub "{{resolve:secretsmanager:blockbuster-index-openai-${Environment}:SecretString:apiKey}}"
+
+  ScheduledTaskRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub "blockbuster-index-scheduled-task-rule-${Environment}"
+      ScheduleExpression: !Ref ScheduleExpression
+      State: ENABLED
+      Targets:
+        - Arn: !Ref ECSClusterArn
+          Id: "BlockbusterIndexECSTask"
+          RoleArn: !Ref EventBridgeInvokeRoleArn
+          EcsParameters:
+            TaskDefinitionArn: !Ref ECSTaskDefinition
+            TaskCount: 1
+            LaunchType: FARGATE
+            NetworkConfiguration:
+              AwsVpcConfiguration:
+                AssignPublicIp: ENABLED
+                SecurityGroups: !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
+                Subnets: !FindInMap [EnvConfig, !Ref Environment, Subnets]
+
+Outputs:
+  ECSTaskDefinitionArn:
+    Description: "ECS Task Definition ARN"
+    Value: !Ref ECSTaskDefinition
