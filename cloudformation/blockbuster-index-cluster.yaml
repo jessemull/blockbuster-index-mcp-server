@@ -113,7 +113,7 @@ Resources:
             Action: sts:AssumeRole
       Path: "/"
       Policies:
-        - PolicyName: "AllowRunTask"
+        - PolicyName: "AllowRunTaskAndPassRoles"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -121,6 +121,12 @@ Resources:
                 Action:
                   - ecs:RunTask
                 Resource: "*"
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource:
+                  - !GetAtt ECSTaskExecutionRole.Arn
+                  - !GetAtt ECSTaskRole.Arn
 
   ECSFargateSecurityGroup:
     Type: AWS::EC2::SecurityGroup
