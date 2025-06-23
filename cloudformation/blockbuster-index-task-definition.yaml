@@ -10,13 +10,15 @@ Mappings:
         - subnet-e22085a8
         - subnet-badfdd91
       SecurityGroups:
-        - sg-ccc333
+        - sg-09812900f87093af6
     prod:
       Subnets:
-        - subnet-xxx999
-        - subnet-yyy888
+        - subnet-02ce757a
+        - subnet-2655df7b
+        - subnet-e22085a8
+        - subnet-badfdd91
       SecurityGroups:
-        - sg-zzz777
+        - sg-04df1a4c1eabbf38b
 
 Conditions:
   IsDev: !Equals [ !Ref Environment, "dev" ]
