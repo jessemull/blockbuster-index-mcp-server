@@ -13,11 +13,9 @@ import {
 } from './signals';
 import { logger } from './util';
 
-const isDevelopment =
-  process.env.NODE_ENV === 'development' ||
-  process.env.LOCAL_DEVELOPMENT === 'true';
+export async function main() {
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
-async function main() {
   try {
     const [amazon, analog, broadband, ecommerce, media, streaming, walmart] =
       await Promise.all([
@@ -63,8 +61,8 @@ async function main() {
     if (isDevelopment) {
       const scoresDir = path.resolve(__dirname, '../dev/scores');
       const filePath = path.join(scoresDir, 'blockbuster-index.json');
-      await fs.mkdirSync(scoresDir, { recursive: true });
-      await fs.writeFileSync(filePath, JSON.stringify(response, null, 2));
+      fs.mkdirSync(scoresDir, { recursive: true });
+      fs.writeFileSync(filePath, JSON.stringify(response, null, 2));
       logger.info(`Combined scores written to: ${filePath}...`);
     } else {
       logger.info(JSON.stringify(response, null, 2));
@@ -78,7 +76,7 @@ async function main() {
   }
 }
 
-// Only run if this script is called directly...
+/* istanbul ignore next */
 
 if (require.main === module) {
   main();
