@@ -18,7 +18,7 @@ Mappings:
         - subnet-e22085a8
         - subnet-badfdd91
       SecurityGroups:
-        - sg-04df1a4c1eabbf38b
+        - sg-08bcf61562fda9041
 
 Conditions:
   IsDev: !Equals [!Ref Environment, "dev"]
