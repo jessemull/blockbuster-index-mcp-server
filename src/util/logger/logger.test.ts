@@ -2,6 +2,21 @@ import { logger } from './index';
 
 jest.mock('bunyan-cloudwatch', () => jest.fn(() => ({ write: jest.fn() })));
 
+const originalStdout = process.stdout.write;
+const originalStderr = process.stderr.write;
+const originalEnv = process.env;
+
+beforeAll(() => {
+  process.stdout.write = jest.fn();
+  process.stderr.write = jest.fn();
+});
+
+afterAll(() => {
+  process.stdout.write = originalStdout;
+  process.stderr.write = originalStderr;
+  process.env = originalEnv;
+});
+
 describe('Logger', () => {
   it('should be defined', () => {
     expect(logger).toBeDefined();
@@ -43,12 +58,26 @@ describe('Logger', () => {
   });
 
   it('should use default values if env vars are missing', () => {
-    // Test that the logger is created even with missing env vars
     expect(logger).toBeDefined();
     expect(logger.fields.name).toBe('blockbuster-index-mcp-logger');
   });
 
   it('should use the correct log level', () => {
     expect(typeof logger.level()).toBe('number');
+  });
+
+  it('should configure CloudWatch stream in production mode', async () => {
+    process.env.NODE_ENV = 'production';
+    process.env.AWS_REGION = 'us-east-1';
+    process.env.CW_LOG_GROUP = '/test/log/group';
+    process.env.CW_LOG_STREAM = 'test-stream';
+
+    jest.resetModules();
+    const { logger: productionLogger } = await import('./index');
+
+    expect(productionLogger).toBeDefined();
+    expect(productionLogger.fields.name).toBe('blockbuster-index-mcp-logger');
+
+    expect(() => productionLogger.info('test production log')).not.toThrow();
   });
 });
