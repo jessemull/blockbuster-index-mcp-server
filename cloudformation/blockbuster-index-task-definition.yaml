@@ -11,6 +11,8 @@ Mappings:
         - subnet-badfdd91
       SecurityGroups:
         - sg-09812900f87093af6
+      S3BucketName: "blockbuster-index-client-dev"
+      LogLevel: "info"
     prod:
       Subnets:
         - subnet-02ce757a
@@ -19,6 +21,8 @@ Mappings:
         - subnet-badfdd91
       SecurityGroups:
         - sg-08bcf61562fda9041
+      S3BucketName: "blockbuster-index-client-prod"
+      LogLevel: "warn"
 
 Conditions:
   IsDev: !Equals [!Ref Environment, "dev"]
@@ -72,7 +76,26 @@ Resources:
               awslogs-stream-prefix: "blockbuster-index"
           Environment:
             - Name: NODE_ENV
-              Value: !If [IsDev, "test", "production"]
+              Value: !If [IsDev, "development", "production"]
+            - Name: AWS_REGION
+              Value: !Ref AWS::Region
+            - Name: S3_BUCKET_NAME
+              Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]
+            - Name: LOG_LEVEL
+              Value: !FindInMap [EnvConfig, !Ref Environment, LogLevel]
+            - Name: CW_LOG_GROUP
+              Value: !ImportValue 
+                Fn::Sub: "${Environment}-BlockbusterLogGroupName"
+            - Name: CW_LOG_STREAM
+              Value: !Sub "blockbuster-index-mcp-${Environment}-${AWS::StackName}"
+            - Name: MAX_RETRIES
+              Value: "3"
+            - Name: RETRY_DELAY
+              Value: "1000"
+            - Name: CACHE_CONTROL
+              Value: "max-age=300"
+            - Name: npm_package_version
+              Value: "1.0.0"
             - Name: OPENAI_API_KEY
               Value: !Sub "{{resolve:secretsmanager:blockbuster-index-openai-${Environment}:SecretString:apiKey}}"
 
@@ -104,3 +127,6 @@ Outputs:
   ECSTaskDefinitionArn:
     Description: "ECS Task Definition ARN"
     Value: !Ref ECSTaskDefinition
+  S3BucketName:
+    Description: "S3 Bucket Name for data storage"
+    Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]

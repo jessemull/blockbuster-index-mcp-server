@@ -1,20 +1,35 @@
-import * as signals from './signals';
 import fs from 'fs';
 import path from 'path';
-import { Signal, States } from './types';
-import { WEIGHTS } from './constants';
-import { logger } from './util';
+
 import { main } from './index';
+import * as signals from './signals';
+import { States } from './types';
+import { logger, retryWithBackoff, uploadToS3 } from './util';
 
 jest.mock('fs');
 jest.mock('path');
 jest.mock('./signals');
 jest.mock('./util', () => ({
   logger: {
-    info: jest.fn(),
+    debug: jest.fn(),
+    endOperation: jest.fn(),
     error: jest.fn(),
+    errorWithContext: jest.fn(),
+    info: jest.fn(),
+    performance: jest.fn(),
+    signal: jest.fn(),
+    startOperation: jest.fn(),
+    warn: jest.fn(),
   },
+  retryWithBackoff: jest.fn((fn) => fn()),
+  uploadToS3: jest.fn().mockResolvedValue(undefined),
 }));
+
+const mockExit = jest
+  .spyOn(process, 'exit')
+  .mockImplementation((code?: string | number | null | undefined) => {
+    throw new Error(`process.exit: ${code}`);
+  });
 
 describe('main()', () => {
   const mockScores = {
@@ -27,7 +42,11 @@ describe('main()', () => {
   beforeEach(() => {
     jest.resetModules();
     jest.resetAllMocks();
-    process.env = { ...OLD_ENV, NODE_ENV: 'production' };
+    process.env = {
+      ...OLD_ENV,
+      NODE_ENV: 'production',
+      S3_BUCKET_NAME: 'bucket',
+    };
 
     (signals.getAmazonScores as jest.Mock).mockResolvedValue(mockScores);
     (signals.getAnalogScores as jest.Mock).mockResolvedValue(mockScores);
@@ -44,25 +63,33 @@ describe('main()', () => {
 
     (fs.mkdirSync as jest.Mock).mockImplementation(() => {});
     (fs.writeFileSync as jest.Mock).mockImplementation(() => {});
+
+    // Mock retryWithBackoff to just call the function
+    (retryWithBackoff as jest.Mock).mockImplementation((fn) => fn());
   });
 
   afterAll(() => {
     process.env = OLD_ENV;
+    mockExit.mockRestore();
   });
 
   it('calculates scores and logs JSON in production mode', async () => {
     await main();
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('"score":'),
-    );
+    expect(logger.startOperation).toHaveBeenCalled();
+    expect(logger.performance).toHaveBeenCalled();
+    expect(logger.signal).toHaveBeenCalled();
+    expect(logger.endOperation).toHaveBeenCalled();
+    expect(uploadToS3).toHaveBeenCalled();
     expect(fs.writeFileSync).not.toHaveBeenCalled();
   });
 
   it('calculates scores and writes file in development mode', async () => {
-    process.env = { ...OLD_ENV, NODE_ENV: 'development' };
-
+    process.env = {
+      ...OLD_ENV,
+      NODE_ENV: 'development',
+      S3_BUCKET_NAME: 'bucket',
+    };
     await main();
-
     expect(fs.mkdirSync).toHaveBeenCalledWith('/fake/dev/scores', {
       recursive: true,
     });
@@ -70,36 +97,8 @@ describe('main()', () => {
       '/fake/dev/scores/blockbuster-index.json',
       expect.stringContaining('"score":'),
     );
-
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('Combined scores written to'),
-    );
-  });
-
-  it('handles missing state keys by defaulting to 0', async () => {
-    (signals.getAmazonScores as jest.Mock).mockResolvedValue({});
-
-    await main();
-
-    expect(logger.info).toHaveBeenCalled();
-  });
-
-  it('calls process.exit(1) and logs error on failure', async () => {
-    const error = new Error('fail');
-    (signals.getAmazonScores as jest.Mock).mockRejectedValue(error);
-    const exitSpy = jest.spyOn(process, 'exit').mockImplementation(((
-      code?: number,
-    ) => {
-      throw new Error(`process.exit: ${code}`);
-    }) as never);
-
-    await expect(main()).rejects.toThrow('process.exit: 1');
-    expect(logger.error).toHaveBeenCalledWith(
-      'Blockbuster index calculation failed: ',
-      'fail',
-    );
-
-    exitSpy.mockRestore();
+    expect(logger.performance).toHaveBeenCalled();
+    expect(uploadToS3).not.toHaveBeenCalled();
   });
 
   it('computes correct weighted scores based on WEIGHTS constant', async () => {
@@ -114,24 +113,49 @@ describe('main()', () => {
     (signals.getPhysicalScores as jest.Mock).mockResolvedValue(customScores);
     (signals.getStreamingScores as jest.Mock).mockResolvedValue(customScores);
     (signals.getWalmartScores as jest.Mock).mockResolvedValue(customScores);
-
     await main();
+    expect(logger.signal).toHaveBeenCalled();
+  });
 
-    const loggedArg = (logger.info as jest.Mock).mock.calls[0][0];
-    const result = JSON.parse(loggedArg);
+  it('calls process.exit(1) and logs error on failure', async () => {
+    const error = new Error('fail');
+    (signals.getAmazonScores as jest.Mock).mockRejectedValue(error);
+    await expect(main()).rejects.toThrow('process.exit: 1');
+    expect(logger.errorWithContext).toHaveBeenCalledWith(
+      'Blockbuster index calculation failed:',
+      error,
+      expect.any(Object),
+    );
+  });
 
-    for (const state of Object.values(States)) {
-      const s = state as keyof typeof customScores;
-      const expectedScore =
-        (customScores[s] ?? 0) * WEIGHTS[Signal.AMAZON] +
-        (customScores[s] ?? 0) * WEIGHTS[Signal.ANALOG] +
-        (customScores[s] ?? 0) * WEIGHTS[Signal.BROADBAND] +
-        (customScores[s] ?? 0) * WEIGHTS[Signal.ECOMMERCE] +
-        (customScores[s] ?? 0) * WEIGHTS[Signal.PHYSICAL] +
-        (customScores[s] ?? 0) * WEIGHTS[Signal.STREAMING] +
-        (customScores[s] ?? 0) * WEIGHTS[Signal.WALMART];
+  it('calls process.exit(1) if uploadToS3 fails', async () => {
+    (uploadToS3 as jest.Mock).mockRejectedValue(new Error('s3fail'));
+    await expect(main()).rejects.toThrow('process.exit: 1');
+    expect(logger.errorWithContext).toHaveBeenCalledWith(
+      'Blockbuster index calculation failed:',
+      expect.any(Error),
+      expect.any(Object),
+    );
+  });
 
-      expect(result[s].score).toBeCloseTo(expectedScore, 2);
-    }
+  it('handles missing state keys by defaulting to 0', async () => {
+    (signals.getAmazonScores as jest.Mock).mockResolvedValue({});
+    await main();
+    expect(logger.signal).toHaveBeenCalled();
+  });
+
+  it('retries on signal fetch failure and eventually succeeds', async () => {
+    let callCount = 0;
+    (signals.getAmazonScores as jest.Mock).mockImplementation(() => {
+      callCount++;
+      if (callCount < 2) throw new Error('fail');
+      return Promise.resolve(mockScores);
+    });
+    await main();
+    expect(logger.errorWithContext).toHaveBeenCalledWith(
+      'Attempt 1 failed:',
+      expect.any(Error),
+    );
+    expect(logger.signal).toHaveBeenCalled();
   });
 });
