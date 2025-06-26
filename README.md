@@ -14,11 +14,9 @@ This repository is part of the **Blockbuster Index Project** which includes the 
 
 1. [Project Overview](#project-overview)
 2. [Environments](#environments)
-   - [Development Environment](#development-environment)
-   - [Production Environment](#production-environment)
 3. [Tech Stack](#tech-stack)
 4. [Setup Instructions](#setup-instructions)
-5. [Signal Calculation](#signal-calculation)
+5. [Running Individual Signals](#running-individual-signals)
 6. [Commits & Commitizen](#commits--commitizen)
    - [Making a Commit](#making-a-commit)
 7. [Linting & Formatting](#linting--formatting)
@@ -31,64 +29,42 @@ This repository is part of the **Blockbuster Index Project** which includes the 
 9. [Error & Performance Monitoring](#error--performance-monitoring)
    - [Configuration](#configuration)
    - [CloudWatch Logging](#cloudwatch-logging)
-10. [Development & Testing](#development--testing)
-    - [Environment Variables](#environment-variables)
-    - [Running Locally](#running-locally)
-    - [Running Individual Signals](#running-individual-signals)
-11. [Build & Deployment](#build--deployment)
+10. [Environment Variables](#environment-variables)
+11. [Running Locally w/ Docker](#running-locally-w-docker)
+12. [Build & Deployment](#build--deployment)
     - [Environment Variables](#environment-variables-1)
     - [Build Process](#build-process)
     - [Docker Container](#docker-container)
-12. [Infrastructure](#infrastructure)
-    - [AWS ECS Fargate](#aws-ecs-fargate)
+13. [Infrastructure](#infrastructure)
     - [CloudFormation](#cloudformation)
     - [Scheduled Execution](#scheduled-execution)
-13. [Connecting to the Bastion Host](#connecting-to-the-bastion-host)
+14. [Connecting to the Bastion Host](#connecting-to-the-bastion-host)
     - [Environment Variables](#environment-variables-2)
-14. [License](#license)
+15. [License](#license)
 
 ## Project Overview
 
-This project calculates the **Blockbuster Index** by aggregating seven different retail footprint signals for each US state. The server fetches data from various retail APIs, applies weighted calculations, and uploads the results to S3 for consumption by the Blockbuster Index website.
+This project calculates the **Blockbuster Index** by aggregating seven different retail footprint signals for each U.S. state. The server fetches data from various retail APIs, applies weighted calculations, and uploads the results to S3 for use by the **Blockbuster Index** website.
 
-The calculation process includes:
+The calculation process includes the following signals:
 
-- **Amazon**: E-commerce adoption and digital retail presence
-- **Analog**: Traditional retail and physical store metrics
-- **Broadband**: Internet infrastructure and connectivity
-- **E-commerce**: Online shopping adoption rates
-- **Physical**: Brick-and-mortar retail presence
-- **Streaming**: Digital media consumption patterns
-- **Walmart**: Traditional retail giant footprint
+- **Amazon** – E-commerce adoption and digital retail presence
+- **Analog** – Traditional retail and physical store metrics
+- **Broadband** – Internet infrastructure and connectivity
+- **E-commerce** – Online shopping adoption rates
+- **Physical** – Brick-and-mortar retail presence
+- **Streaming** – Digital media consumption patterns
+- **Walmart** – Traditional retail giant footprint
 
-Each signal is weighted and combined to create a comprehensive score reflecting the balance between digital and physical retail in each state.
+Each signal is weighted and combined to generate a comprehensive score that reflects the balance between digital and physical retail activity in each state.
 
 ## Environments
 
-The **Blockbuster Index MCP Server** operates in multiple environments to ensure smooth development, testing, and production workflows.
-
-### Development Environment
-
-The development environment runs locally and writes results to local files for testing and development purposes.
-
-- Local file output: `dev/scores/blockbuster-index.json`
-- Environment: `NODE_ENV=development`
-
-### Production Environment
-
-The production environment runs as an ECS Fargate task and uploads results to S3 for the website.
-
-- S3 output: `s3://blockbuster-index-client-prod/data/data.json`
-- Environment: `NODE_ENV=production`
-- Schedule: Daily execution via EventBridge
+The **Blockbuster Index** operates in multiple environments to ensure smooth development, testing, and production workflows. Configuration files and environment variables should be set to point to the correct environment (dev/prod), depending on the stage of the application. Separate cloudfront distributions exist for each environment.
 
 ## Tech Stack
 
 The **Blockbuster Index MCP Server** is built using modern technologies to ensure reliability, scalability, and maintainability.
-
-- **TypeScript**: Provides type safety and enhanced developer experience for the server codebase.
-
-- **Node.js**: Runtime environment for executing the server application.
 
 - **AWS ECS Fargate**: Containerized deployment platform that runs the server as a scheduled task without managing servers.
 
@@ -110,11 +86,15 @@ The **Blockbuster Index MCP Server** is built using modern technologies to ensur
 
 - **Commitizen**: A tool for enforcing a standardized commit message format, improving version control history and making collaboration more structured.
 
-- **Husky & lint-staged**: Git hooks that ensure code quality by running linting and formatting before commits.
+- **Husky & Lint-Staged**: Git hooks that ensure code quality by running linting and formatting before commits.
 
 - **Bunyan**: Structured logging library that provides JSON-formatted logs for better parsing and analysis.
 
 - **AWS SDK v3**: Modern AWS SDK for JavaScript that provides type-safe access to AWS services like S3.
+
+- **TypeScript**: Provides type safety and enhanced developer experience for the server codebase.
+
+- **Node.js**: Runtime environment for executing the server application.
 
 This tech stack ensures that the **Blockbuster Index MCP Server** remains performant, secure, and easily maintainable while leveraging AWS infrastructure for scalability and reliability.
 
@@ -140,39 +120,25 @@ To clone the repository, install dependencies, and run the project locally follo
    npm install
    ```
 
-4. Set up environment variables (see [Environment Variables](#environment-variables) section).
+4. Set up environment variables. Please see the [Environment Variables](#environment-variables) section.
 
-5. Run the server locally:
+5. Run the server locally inside a docker container:
 
    ```bash
    npm run dev
    ```
 
-## Signal Calculation
+## Running Individual Signals
 
-The **Blockbuster Index** is calculated by aggregating seven different retail footprint signals, each with specific weights:
-
-| Signal         | Weight | Description                                     |
-| -------------- | ------ | ----------------------------------------------- |
-| **Amazon**     | 10%    | E-commerce adoption and digital retail presence |
-| **Analog**     | 10%    | Traditional retail and physical store metrics   |
-| **Broadband**  | 20%    | Internet infrastructure and connectivity        |
-| **E-commerce** | 20%    | Online shopping adoption rates                  |
-| **Physical**   | 15%    | Brick-and-mortar retail presence                |
-| **Streaming**  | 15%    | Digital media consumption patterns              |
-| **Walmart**    | 10%    | Traditional retail giant footprint              |
-
-Each signal fetches data from external APIs and returns scores for all 50 US states. The final index score is calculated as a weighted sum of all signals.
-
-### Running Individual Signals
-
-To test individual signals during development:
+To test individual signals:
 
 ```bash
-# Run a specific signal
 npm run signal
+```
 
-# Run all signals
+To test all signals:
+
+```bash
 npm run signal:all
 ```
 
@@ -258,36 +224,34 @@ This project uses **AWS CloudWatch** for server-side error and performance monit
 
 ### Configuration
 
-CloudWatch logging is configured with environment-specific settings. Logs are sent to CloudWatch Logs with structured JSON formatting for better parsing and analysis.
+CloudWatch logging is configured with environment-specific settings. Logs are sent to CloudWatch with structured JSON formatting for better parsing and analysis.
 
 ### CloudWatch Logging
 
 The server uses **Bunyan** for structured logging with the following features:
 
-- **JSON-formatted logs** for better parsing and analysis
-- **Performance metrics** for tracking calculation times
-- **Signal-specific logging** for monitoring individual signal performance
-- **Error context** for debugging and monitoring
-- **CloudWatch integration** for centralized log management
+- **JSON-formatted logs** for better parsing and analysis.
+- **Performance metrics** for tracking calculation times.
+- **Signal-specific logging** for monitoring individual signal performance.
+- **Error context** for debugging and monitoring.
+- **CloudWatch integration** for centralized log management.
 
-## Development & Testing
-
-### Environment Variables
+## Environment Variables
 
 The following environment variables must be set in a `.env.local` file in the root of the project:
 
-| Variable         | Description                                     | Required                                               |
-| ---------------- | ----------------------------------------------- | ------------------------------------------------------ |
-| `AWS_REGION`     | AWS region for S3 and CloudWatch operations     | No (default: us-west-2)                                |
-| `CACHE_CONTROL`  | Cache control header for S3 uploads             | No (default: max-age=300)                              |
-| `CW_LOG_GROUP`   | CloudWatch log group name                       | No (default: /aws/ecs/blockbuster-index-mcp-log-group) |
-| `CW_LOG_STREAM`  | CloudWatch log stream name                      | No (auto-generated)                                    |
-| `LOG_LEVEL`      | Logging level (debug, info, warn, error)        | No (default: info)                                     |
-| `NODE_ENV`       | Environment (development, production)           | No (default: development)                              |
-| `S3_BUCKET_NAME` | S3 bucket name for data uploads                 | Yes (production)                                       |
-| `OPENAI_API_KEY` | OpenAI API key for AI-powered signal processing | Yes                                                    |
+| Variable         | Description                                      |
+| ---------------- | ------------------------------------------------ |
+| `AWS_REGION`     | AWS region for S3 and CloudWatch operations.     |
+| `CACHE_CONTROL`  | Cache control header for S3 uploads.             |
+| `CW_LOG_GROUP`   | CloudWatch log group name.                       |
+| `CW_LOG_STREAM`  | CloudWatch log stream name.                      |
+| `LOG_LEVEL`      | Logging level (debug, info, warn, error).        |
+| `NODE_ENV`       | Environment (development, production).           |
+| `OPENAI_API_KEY` | OpenAI API key for AI-powered signal processing. |
+| `S3_BUCKET_NAME` | S3 bucket name for data uploads.                 |
 
-### Running Locally
+## Running Locally w/ Docker
 
 To run the server in development mode:
 
@@ -295,23 +259,11 @@ To run the server in development mode:
 npm run dev
 ```
 
-This will:
+Running the server locally will:
 
-- Calculate the Blockbuster Index for all states
-- Write results to `dev/scores/blockbuster-index.json`
-- Log performance metrics and signal scores
-
-### Running Individual Signals
-
-To test specific signals:
-
-```bash
-# Run a single signal
-npm run signal
-
-# Run all signals
-npm run signal:all
-```
+- Calculate the Blockbuster Index for all states.
+- Write results to `dev/scores/blockbuster-index.json`.
+- Log performance metrics and signal scores.
 
 ## Build & Deployment
 
@@ -319,12 +271,12 @@ npm run signal:all
 
 The following environment variables must be set for production deployment:
 
-| Variable         | Description                                     | Required           |
-| ---------------- | ----------------------------------------------- | ------------------ |
-| `S3_BUCKET_NAME` | S3 bucket name for data uploads                 | Yes                |
-| `OPENAI_API_KEY` | OpenAI API key for AI-powered signal processing | Yes                |
-| `AWS_REGION`     | AWS region for S3 and CloudWatch operations     | No                 |
-| `LOG_LEVEL`      | Logging level for production                    | No (default: warn) |
+| Variable         | Description                                     |
+| ---------------- | ----------------------------------------------- |
+| `AWS_REGION`     | AWS region for S3 and CloudWatch operations     |
+| `LOG_LEVEL`      | Logging level for production                    |
+| `OPENAI_API_KEY` | OpenAI API key for AI-powered signal processing |
+| `S3_BUCKET_NAME` | S3 bucket name for data uploads                 |
 
 ### Build Process
 
@@ -334,52 +286,46 @@ To build the project for production:
 npm run build
 ```
 
-This will:
+Building the server will:
 
-- Compile TypeScript to JavaScript
-- Bundle the application with Webpack
-- Optimize and minify the code
-- Output to `dist/` directory
+- Compile TypeScript to JavaScript.
+- Bundle the application with Webpack.
+- Optimize and minify the code.
+- Output to `dist/` directory.
 
 ### Docker Container
 
-The application is containerized using Docker for consistent deployment:
+The application is containerized using Docker for consistent deployment.
+
+To build the docker container:
 
 ```bash
-# Build the Docker image
 docker build -t blockbuster-index-mcp-server .
+```
 
-# Run the container
+To run the docker container:
+
+```bash
 docker run -e S3_BUCKET_NAME=your-bucket -e OPENAI_API_KEY=your-key blockbuster-index-mcp-server
 ```
 
 ## Infrastructure
 
-### AWS ECS Fargate
-
-The server runs as an ECS Fargate task with the following configuration:
-
-- **CPU**: 512 vCPU units
-- **Memory**: 1024 MB
-- **Network Mode**: awsvpc
-- **Launch Type**: FARGATE
-- **Task Count**: 1
-
 ### CloudFormation
 
 Infrastructure is managed using AWS CloudFormation templates:
 
-- **`blockbuster-index-task-definition.yaml`**: Defines the ECS task definition and scheduled execution rule
-- **`blockbuster-index-cluster.yaml`**: Defines the ECS cluster and related resources
+- **`blockbuster-index-task-definition.yaml`**: Defines the ECS task definition and scheduled execution rule.
+- **`blockbuster-index-cluster.yaml`**: Defines the ECS cluster and related resources.
 
 ### Scheduled Execution
 
 The server runs on a daily schedule using AWS EventBridge:
 
-- **Schedule Expression**: `rate(1 day)` (configurable)
-- **Target**: ECS Fargate task
-- **Network**: VPC with public IP assignment
-- **Security Groups**: Environment-specific security groups
+- **Schedule Expression**: once per day (configurable).
+- **Target**: ECS Fargate task.
+- **Network**: VPC with public IP assignment.
+- **Security Groups**: Environment-specific security groups.
 
 ## Connecting to the Bastion Host
 
@@ -393,11 +339,11 @@ npm run bastion
 
 The following environment variables must be set in a `.env.local` file in the root of the project:
 
-| Variable               | Description                              |
-| ---------------------- | ---------------------------------------- |
-| `SSH_HOST`             | The bastion host IP                      |
-| `SSH_PRIVATE_KEY_PATH` | Path to the bastion host private SSH key |
-| `SSH_USER`             | The bastion host username                |
+| Variable               | Description                               |
+| ---------------------- | ----------------------------------------- |
+| `SSH_HOST`             | The bastion host IP.                      |
+| `SSH_PRIVATE_KEY_PATH` | Path to the bastion host private SSH key. |
+| `SSH_USER`             | The bastion host username.                |
 
 Ensure you have the appropriate permissions set on your SSH key for secure access.
 
