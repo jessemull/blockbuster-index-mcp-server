@@ -48,13 +48,13 @@ This project calculates the **Blockbuster Index** by aggregating seven different
 
 The calculation process includes the following signals:
 
-- **Amazon** – E-commerce adoption and digital retail presence
-- **Analog** – Traditional retail and physical store metrics
-- **Broadband** – Internet infrastructure and connectivity
-- **E-commerce** – Online shopping adoption rates
-- **Physical** – Brick-and-mortar retail presence
-- **Streaming** – Digital media consumption patterns
-- **Walmart** – Traditional retail giant footprint
+- **Amazon** – E-commerce adoption and digital retail presence.
+- **Analog** – Traditional retail and physical store metrics.
+- **Broadband** – Internet infrastructure and connectivity.
+- **E-commerce** – Online shopping adoption rates.
+- **Physical** – Brick-and-mortar retail presence.
+- **Streaming** – Digital media consumption patterns.
+- **Walmart** – Traditional retail giant footprint.
 
 Each signal is weighted and combined to generate a comprehensive score that reflects the balance between digital and physical retail activity in each state.
 
