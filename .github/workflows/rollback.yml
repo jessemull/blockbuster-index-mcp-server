@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       container_image_uri:
-        description: "Container image URI to rollback to (e.g., 123456789012.dkr.ecr.us-west-2.amazonaws.com/blockbuster-index-dev:abcdef)"
+        description: 'Container image URI to rollback to (e.g., 123456789012.dkr.ecr.us-west-2.amazonaws.com/blockbuster-index-dev:abcdef)'
         required: true
         type: string
       environment:
-        description: "Choose environment (dev/prod)"
+        description: 'Choose environment (dev/prod)'
         required: true
         type: choice
         options:

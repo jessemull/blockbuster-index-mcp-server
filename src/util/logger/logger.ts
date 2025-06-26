@@ -1,32 +1,99 @@
 import * as bunyan from 'bunyan';
 import BunyanCloudWatch from 'bunyan-cloudwatch';
+import { CONFIG } from '../../config';
 
-const awsRegion = process.env.AWS_REGION || 'us-west-2';
-const logGroupName =
-  process.env.CW_LOG_GROUP || '/aws/ecs/blockbuster-index-mcp-log-group';
-const logStreamName =
-  process.env.CW_LOG_STREAM ||
-  `blockbuster-index-mcp-${process.env.AWS_TASK_ID || Date.now()}`;
+export const cloudwatch =
+  CONFIG.NODE_ENV === 'production'
+    ? [
+        {
+          level: 'warn' as bunyan.LogLevel,
+          type: 'raw',
+          stream: BunyanCloudWatch({
+            awsRegion: CONFIG.AWS_REGION,
+            logGroupName: CONFIG.CW_LOG_GROUP,
+            logStreamName: CONFIG.CW_LOG_STREAM,
+          }),
+        },
+      ]
+    : [];
 
-const logger = bunyan.createLogger({
+export const baseLogger = bunyan.createLogger({
   name: 'blockbuster-index-mcp-logger',
-  level: (process.env.LOG_LEVEL as bunyan.LogLevel) || 'info',
-  serializers: bunyan.stdSerializers,
+  level: CONFIG.LOG_LEVEL as bunyan.LogLevel,
+  serializers: {
+    ...bunyan.stdSerializers,
+    error: (err: Error) => ({
+      message: err.message,
+      name: err.name,
+      stack: err.stack,
+    }),
+  },
   streams: [
     {
       level: 'info',
       stream: process.stdout,
     },
-    {
-      level: 'warn',
-      type: 'raw',
-      stream: BunyanCloudWatch({
-        logGroupName,
-        logStreamName,
-        awsRegion,
-      }),
-    },
+    ...cloudwatch,
   ],
 });
 
-export { logger };
+export const logger = Object.assign(baseLogger, {
+  errorWithContext: (
+    message: string,
+    error: Error,
+    context?: Record<string, unknown>,
+  ) => {
+    baseLogger.error({
+      error: error.message,
+      message,
+      stack: error.stack,
+      type: 'error',
+      ...context,
+    });
+  },
+  endOperation: (
+    operation: string,
+    duration: number,
+    metadata?: Record<string, unknown>,
+  ) => {
+    baseLogger.info({
+      duration,
+      operation,
+      type: 'operation_end',
+      ...metadata,
+    });
+  },
+  performance: (
+    operation: string,
+    duration: number,
+    metadata?: Record<string, unknown>,
+  ) => {
+    baseLogger.info({
+      duration,
+      operation,
+      type: 'performance',
+      ...metadata,
+    });
+  },
+  signal: (
+    signal: string,
+    state: string,
+    score: number,
+    metadata?: Record<string, unknown>,
+  ) => {
+    baseLogger.info({
+      score,
+      signal,
+      state,
+      type: 'signal',
+      ...metadata,
+    });
+  },
+  startOperation: (operation: string, metadata?: Record<string, unknown>) => {
+    baseLogger.info({
+      operation,
+      type: 'operation_start',
+      ...metadata,
+    });
+  },
+});

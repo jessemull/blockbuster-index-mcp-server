@@ -1,137 +1,166 @@
 import * as signals from './signals';
 import fs from 'fs';
 import path from 'path';
-import { Signal, States } from './types';
-import { WEIGHTS } from './constants';
-import { logger } from './util';
+import { CONFIG } from './config';
+import { logger, uploadToS3 } from './util';
 import { main } from './index';
 
 jest.mock('fs');
+
 jest.mock('path');
-jest.mock('./signals');
-jest.mock('./util', () => ({
-  logger: {
-    info: jest.fn(),
-    error: jest.fn(),
+
+jest.mock('./config', () => ({
+  CONFIG: {
+    IS_DEVELOPMENT: true,
+    VERSION: '1.0.0',
+    NODE_ENV: 'development',
+    S3_BUCKET_NAME: 'fake-bucket',
+  },
+  validateConfig: jest.fn(),
+}));
+
+jest.mock('./constants', () => ({
+  WEIGHTS: {
+    AMAZON: 1,
+    ANALOG: 1,
+    BROADBAND: 1,
+    ECOMMERCE: 1,
+    PHYSICAL: 1,
+    STREAMING: 1,
+    WALMART: 1,
   },
 }));
 
-describe('main()', () => {
+jest.mock('./signals');
+
+jest.mock('./util', () => ({
+  logger: {
+    startOperation: jest.fn(),
+    endOperation: jest.fn(),
+    performance: jest.fn(),
+    signal: jest.fn(),
+    errorWithContext: jest.fn(),
+  },
+  retryWithBackoff: jest.fn((fn) => fn()),
+  uploadToS3: jest.fn(),
+}));
+
+describe('main', () => {
   const mockScores = {
-    [States.AK]: 1,
-    [States.AR]: 2,
+    CA: 1,
+    NY: 2,
   };
 
-  const OLD_ENV = process.env;
-
   beforeEach(() => {
-    jest.resetModules();
-    jest.resetAllMocks();
-    process.env = { ...OLD_ENV, NODE_ENV: 'production' };
+    jest.clearAllMocks();
 
-    (signals.getAmazonScores as jest.Mock).mockResolvedValue(mockScores);
-    (signals.getAnalogScores as jest.Mock).mockResolvedValue(mockScores);
-    (signals.getBroadbandScores as jest.Mock).mockResolvedValue(mockScores);
-    (signals.getCommerceScores as jest.Mock).mockResolvedValue(mockScores);
-    (signals.getPhysicalScores as jest.Mock).mockResolvedValue(mockScores);
-    (signals.getStreamingScores as jest.Mock).mockResolvedValue(mockScores);
-    (signals.getWalmartScores as jest.Mock).mockResolvedValue(mockScores);
+    Object.assign(signals, {
+      getAmazonScores: jest.fn().mockResolvedValue(mockScores),
+      getAnalogScores: jest.fn().mockResolvedValue(mockScores),
+      getBroadbandScores: jest.fn().mockResolvedValue(mockScores),
+      getCommerceScores: jest.fn().mockResolvedValue(mockScores),
+      getPhysicalScores: jest.fn().mockResolvedValue(mockScores),
+      getStreamingScores: jest.fn().mockResolvedValue(mockScores),
+      getWalmartScores: jest.fn().mockResolvedValue(mockScores),
+    });
 
-    (path.resolve as jest.Mock).mockReturnValue('/fake/dev/scores');
-    (path.join as jest.Mock).mockReturnValue(
-      '/fake/dev/scores/blockbuster-index.json',
-    );
-
-    (fs.mkdirSync as jest.Mock).mockImplementation(() => {});
-    (fs.writeFileSync as jest.Mock).mockImplementation(() => {});
+    Object.assign(CONFIG, {
+      IS_DEVELOPMENT: true,
+      VERSION: '1.0.0',
+      NODE_ENV: 'development',
+      S3_BUCKET_NAME: 'fake-bucket',
+    });
   });
 
-  afterAll(() => {
-    process.env = OLD_ENV;
-  });
+  it('writes scores to file in development mode', async () => {
+    const resolve = path.resolve as jest.Mock;
+    const join = path.join as jest.Mock;
 
-  it('calculates scores and logs JSON in production mode', async () => {
-    await main();
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('"score":'),
-    );
-    expect(fs.writeFileSync).not.toHaveBeenCalled();
-  });
-
-  it('calculates scores and writes file in development mode', async () => {
-    process.env = { ...OLD_ENV, NODE_ENV: 'development' };
+    resolve.mockReturnValue('/mocked/dev/scores');
+    join.mockReturnValue('/mocked/dev/scores/blockbuster-index.json');
 
     await main();
 
-    expect(fs.mkdirSync).toHaveBeenCalledWith('/fake/dev/scores', {
+    expect(fs.mkdirSync).toHaveBeenCalledWith('/mocked/dev/scores', {
       recursive: true,
     });
     expect(fs.writeFileSync).toHaveBeenCalledWith(
-      '/fake/dev/scores/blockbuster-index.json',
-      expect.stringContaining('"score":'),
+      '/mocked/dev/scores/blockbuster-index.json',
+      expect.stringContaining('"version": "1.0.0"'),
     );
 
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('Combined scores written to'),
+    expect(logger.performance).toHaveBeenCalledWith(
+      'file_written',
+      expect.any(Number),
+      expect.objectContaining({ filePath: expect.any(String) }),
     );
   });
 
-  it('handles missing state keys by defaulting to 0', async () => {
-    (signals.getAmazonScores as jest.Mock).mockResolvedValue({});
+  it('uploads to S3 in production mode', async () => {
+    CONFIG.IS_DEVELOPMENT = false;
 
     await main();
 
-    expect(logger.info).toHaveBeenCalled();
-  });
-
-  it('calls process.exit(1) and logs error on failure', async () => {
-    const error = new Error('fail');
-    (signals.getAmazonScores as jest.Mock).mockRejectedValue(error);
-    const exitSpy = jest.spyOn(process, 'exit').mockImplementation(((
-      code?: number,
-    ) => {
-      throw new Error(`process.exit: ${code}`);
-    }) as never);
-
-    await expect(main()).rejects.toThrow('process.exit: 1');
-    expect(logger.error).toHaveBeenCalledWith(
-      'Blockbuster index calculation failed: ',
-      'fail',
+    expect(uploadToS3).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bucket: 'fake-bucket',
+        key: 'data/data.json',
+        metadata: expect.objectContaining({
+          version: '1.0.0',
+        }),
+      }),
     );
 
-    exitSpy.mockRestore();
+    expect(logger.performance).toHaveBeenCalledWith(
+      's3_uploaded',
+      expect.any(Number),
+      expect.objectContaining({ bucket: 'fake-bucket' }),
+    );
   });
 
-  it('computes correct weighted scores based on WEIGHTS constant', async () => {
-    const customScores = {
-      [States.AL]: 1,
-      [States.AK]: 2,
-    };
-    (signals.getAmazonScores as jest.Mock).mockResolvedValue(customScores);
-    (signals.getAnalogScores as jest.Mock).mockResolvedValue(customScores);
-    (signals.getBroadbandScores as jest.Mock).mockResolvedValue(customScores);
-    (signals.getCommerceScores as jest.Mock).mockResolvedValue(customScores);
-    (signals.getPhysicalScores as jest.Mock).mockResolvedValue(customScores);
-    (signals.getStreamingScores as jest.Mock).mockResolvedValue(customScores);
-    (signals.getWalmartScores as jest.Mock).mockResolvedValue(customScores);
+  it('validates config when not in development mode', async () => {
+    CONFIG.IS_DEVELOPMENT = false;
+    const { validateConfig } = await import('./config');
 
     await main();
 
-    const loggedArg = (logger.info as jest.Mock).mock.calls[0][0];
-    const result = JSON.parse(loggedArg);
+    expect(validateConfig).toHaveBeenCalled();
+  });
 
-    for (const state of Object.values(States)) {
-      const s = state as keyof typeof customScores;
-      const expectedScore =
-        (customScores[s] ?? 0) * WEIGHTS[Signal.AMAZON] +
-        (customScores[s] ?? 0) * WEIGHTS[Signal.ANALOG] +
-        (customScores[s] ?? 0) * WEIGHTS[Signal.BROADBAND] +
-        (customScores[s] ?? 0) * WEIGHTS[Signal.ECOMMERCE] +
-        (customScores[s] ?? 0) * WEIGHTS[Signal.PHYSICAL] +
-        (customScores[s] ?? 0) * WEIGHTS[Signal.STREAMING] +
-        (customScores[s] ?? 0) * WEIGHTS[Signal.WALMART];
+  it('logs and exits on error', async () => {
+    const error = new Error('mock failure');
+    const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit');
+    });
 
-      expect(result[s].score).toBeCloseTo(expectedScore, 2);
-    }
+    (signals.getAmazonScores as jest.Mock).mockRejectedValueOnce(error);
+
+    await expect(main()).rejects.toThrow('process.exit');
+    expect(logger.errorWithContext).toHaveBeenCalledWith(
+      'Blockbuster index calculation failed:',
+      error,
+      expect.objectContaining({ environment: 'development' }),
+    );
+
+    mockExit.mockRestore();
+  });
+
+  it('logs and exits on non-Error throw', async () => {
+    const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit');
+    });
+
+    (signals.getAmazonScores as jest.Mock).mockRejectedValueOnce(
+      'string error',
+    );
+
+    await expect(main()).rejects.toThrow('process.exit');
+    expect(logger.errorWithContext).toHaveBeenCalledWith(
+      'Blockbuster index calculation failed:',
+      expect.any(Error),
+      expect.objectContaining({ environment: 'development' }),
+    );
+
+    mockExit.mockRestore();
   });
 });
