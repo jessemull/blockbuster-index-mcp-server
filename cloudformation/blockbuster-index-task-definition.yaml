@@ -1,5 +1,5 @@
-AWSTemplateFormatVersion: "2010-09-09"
-Description: "ECS Task Definition and Scheduled Rule."
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'ECS Task Definition and Scheduled Rule.'
 
 Mappings:
   EnvConfig:
@@ -11,8 +11,8 @@ Mappings:
         - subnet-badfdd91
       SecurityGroups:
         - sg-09812900f87093af6
-      S3BucketName: "blockbuster-index-client-dev"
-      LogLevel: "info"
+      S3BucketName: 'blockbuster-index-client-dev'
+      LogLevel: 'info'
     prod:
       Subnets:
         - subnet-02ce757a
@@ -21,45 +21,43 @@ Mappings:
         - subnet-badfdd91
       SecurityGroups:
         - sg-08bcf61562fda9041
-      S3BucketName: "blockbuster-index-client-prod"
-      LogLevel: "warn"
+      S3BucketName: 'blockbuster-index-client-prod'
+      LogLevel: 'warn'
 
 Conditions:
-  IsDev: !Equals [!Ref Environment, "dev"]
+  IsDev: !Equals [!Ref Environment, 'dev']
 
 Parameters:
   Environment:
     Type: String
-    Default: "dev"
+    Default: 'dev'
     AllowedValues:
       - dev
       - prod
 
   ContainerImage:
     Type: String
-    Description: "ECR image URI or container image for the ECS task"
+    Description: 'ECR image URI or container image for the ECS task'
 
   ScheduleExpression:
     Type: String
-    Default: "rate(1 day)"
-    Description: "EventBridge schedule expression (cron or rate)"
+    Default: 'rate(1 day)'
+    Description: 'EventBridge schedule expression (cron or rate)'
 
 Resources:
   ECSTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
-      Family: !Sub "blockbuster-index-task-${Environment}"
-      Cpu: "512"
-      Memory: "1024"
+      Family: !Sub 'blockbuster-index-task-${Environment}'
+      Cpu: '512'
+      Memory: '1024'
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      ExecutionRoleArn: 
-        !ImportValue 
-          Fn::Sub: "${Environment}-BlockbusterExecutionRoleArn"
-      TaskRoleArn: 
-        !ImportValue 
-          Fn::Sub: "${Environment}-BlockbusterTaskRoleArn"
+      ExecutionRoleArn: !ImportValue
+        Fn::Sub: '${Environment}-BlockbusterExecutionRoleArn'
+      TaskRoleArn: !ImportValue
+        Fn::Sub: '${Environment}-BlockbusterTaskRoleArn'
       ContainerDefinitions:
         - Name: blockbuster-index-container
           Image: !Ref ContainerImage
@@ -69,14 +67,13 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-group: 
-                !ImportValue 
-                  Fn::Sub: "${Environment}-BlockbusterLogGroupName"
+              awslogs-group: !ImportValue
+                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
               awslogs-region: !Ref AWS::Region
-              awslogs-stream-prefix: "blockbuster-index"
+              awslogs-stream-prefix: 'blockbuster-index'
           Environment:
             - Name: NODE_ENV
-              Value: !If [IsDev, "development", "production"]
+              Value: !If [IsDev, 'development', 'production']
             - Name: AWS_REGION
               Value: !Ref AWS::Region
             - Name: S3_BUCKET_NAME
@@ -84,35 +81,33 @@ Resources:
             - Name: LOG_LEVEL
               Value: !FindInMap [EnvConfig, !Ref Environment, LogLevel]
             - Name: CW_LOG_GROUP
-              Value: !ImportValue 
-                Fn::Sub: "${Environment}-BlockbusterLogGroupName"
+              Value: !ImportValue
+                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
             - Name: CW_LOG_STREAM
-              Value: !Sub "blockbuster-index-mcp-${Environment}-${AWS::StackName}"
+              Value: !Sub 'blockbuster-index-mcp-${Environment}-${AWS::StackName}'
             - Name: MAX_RETRIES
-              Value: "3"
+              Value: '3'
             - Name: RETRY_DELAY
-              Value: "1000"
+              Value: '1000'
             - Name: CACHE_CONTROL
-              Value: "max-age=300"
+              Value: 'max-age=300'
             - Name: npm_package_version
-              Value: "1.0.0"
+              Value: '1.0.0'
             - Name: OPENAI_API_KEY
-              Value: !Sub "{{resolve:secretsmanager:blockbuster-index-openai-${Environment}:SecretString:apiKey}}"
+              Value: !Sub '{{resolve:secretsmanager:blockbuster-index-openai-${Environment}:SecretString:apiKey}}'
 
   ScheduledTaskRule:
     Type: AWS::Events::Rule
     Properties:
-      Name: !Sub "blockbuster-index-scheduled-task-rule-${Environment}"
+      Name: !Sub 'blockbuster-index-scheduled-task-rule-${Environment}'
       ScheduleExpression: !Ref ScheduleExpression
       State: ENABLED
       Targets:
-        - Arn: 
-            !ImportValue 
-              Fn::Sub: "${Environment}-BlockbusterECSClusterArn"
-          Id: "BlockbusterIndexECSTask"
-          RoleArn: 
-            !ImportValue 
-              Fn::Sub: "${Environment}-BlockbusterEventBridgeInvokeRoleArn"
+        - Arn: !ImportValue
+            Fn::Sub: '${Environment}-BlockbusterECSClusterArn'
+          Id: 'BlockbusterIndexECSTask'
+          RoleArn: !ImportValue
+            Fn::Sub: '${Environment}-BlockbusterEventBridgeInvokeRoleArn'
           EcsParameters:
             TaskDefinitionArn: !Ref ECSTaskDefinition
             TaskCount: 1
@@ -120,13 +115,14 @@ Resources:
             NetworkConfiguration:
               AwsVpcConfiguration:
                 AssignPublicIp: ENABLED
-                SecurityGroups: !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
+                SecurityGroups:
+                  !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
                 Subnets: !FindInMap [EnvConfig, !Ref Environment, Subnets]
 
 Outputs:
   ECSTaskDefinitionArn:
-    Description: "ECS Task Definition ARN"
+    Description: 'ECS Task Definition ARN'
     Value: !Ref ECSTaskDefinition
   S3BucketName:
-    Description: "S3 Bucket Name for data storage"
+    Description: 'S3 Bucket Name for data storage'
     Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]

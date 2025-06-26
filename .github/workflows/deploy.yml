@@ -11,7 +11,7 @@ on:
         options:
           - dev
           - prod
-  
+
 jobs:
   deploy-ecs-task:
     name: Deploy ECS Fargate Task
