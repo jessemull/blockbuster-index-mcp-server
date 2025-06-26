@@ -1,13 +1,14 @@
-# The Blockbuster Index MCP Server
+# Blockbuster Index MCP Server
 
-The **Blockbuster Index MCP Server** is a TypeScript-based server that calculates the **Blockbuster Index** for all US states by aggregating multiple retail footprint signals. This server runs as an ECS Fargate task on a daily schedule, fetching data from various retail APIs, calculating weighted scores, and uploading the results to S3 for consumption by the Blockbuster Index website.
+The **Blockbuster Index MCP Server** calculates the **Blockbuster Index** for all U.S. states by aggregating multiple retail footprint signals. It runs as an ECS Fargate task on a daily schedule, fetching data from various retail APIs, computing weighted scores, and uploading the results to S3 for use by the **Blockbuster Index** website.
 
-The **Blockbuster Index** is an AI-powered exploration of how consumer buying habits have shifted from traditional brick-and-mortar stores to digital purchases across the United States. Inspired by the nostalgic decline of physical video rental stores like Blockbuster, this project creates a unique index that scores each state based on various signals reflecting the balance of online versus in-person purchases.
+The **Blockbuster Index** is an AI-powered exploration of how consumer buying habits have shifted across the United States—from traditional brick-and-mortar retail to online commerce. Inspired by the cultural decline of physical video rental stores like Blockbuster, this project builds a unique state-by-state index using signals that reflect the tension between digital and analog purchasing behavior.
 
 This repository is part of the **Blockbuster Index Project** which includes the following repositories:
 
 - **[Blockbuster Index MCP Server](https://github.com/jessemull/blockbuster-index-mcp-server)**: The **Blockbuster Index** calculation server (this repository).
 - **[Blockbuster Index Project Client](https://github.com/jessemull/blockbuster-index)**: The **Blockbuster Index** NextJS client.
+- **[Blockbuster Index Lambda@Edge](https://github.com/jessemull/blockbuster-index-lambda-at-edge)**: The **Blockbuster Index** Lambda@Edge.
 
 ## Table of Contents
 
