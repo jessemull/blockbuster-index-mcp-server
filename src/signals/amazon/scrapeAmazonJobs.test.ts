@@ -3,7 +3,9 @@ import { scrapeAmazonJobs } from './scrapeAmazonJobs';
 import { searchJobsInState } from './searchJobsInState';
 
 jest.mock('puppeteer');
+
 jest.mock('./searchJobsInState');
+
 jest.mock('../../util', () => ({
   logger: {
     info: jest.fn(),
@@ -11,12 +13,14 @@ jest.mock('../../util', () => ({
     warn: jest.fn(),
   },
 }));
+
 jest.mock('../../types', () => ({
   States: {
     CA: 'CA',
     TX: 'TX',
   },
 }));
+
 jest.mock('../../constants', () => ({
   STATE_ABBR_TO_NAME: {
     CA: 'California',

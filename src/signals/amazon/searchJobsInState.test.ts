@@ -1,6 +1,6 @@
 import { Browser } from 'puppeteer';
-import { searchJobsInState } from './searchJobsInState';
 import { logger } from '../../util';
+import { searchJobsInState } from './searchJobsInState';
 
 jest.mock('../../util', () => ({
   logger: {
@@ -50,7 +50,6 @@ describe('searchJobsInState', () => {
 
   it('handles page.setUserAgent failure', async () => {
     mockPage.setUserAgent.mockRejectedValueOnce(new Error('UserAgent failed'));
-
     await expect(
       searchJobsInState(mockBrowser, 'CA', 'California'),
     ).rejects.toThrow('UserAgent failed');
@@ -58,7 +57,6 @@ describe('searchJobsInState', () => {
 
   it('handles page.goto failure', async () => {
     mockPage.goto.mockRejectedValueOnce(new Error('Navigation failed'));
-
     await expect(
       searchJobsInState(mockBrowser, 'CA', 'California'),
     ).rejects.toThrow('Navigation failed');
@@ -66,7 +64,6 @@ describe('searchJobsInState', () => {
 
   it('handles page.evaluate failure', async () => {
     mockPage.evaluate.mockRejectedValueOnce(new Error('Evaluate failed'));
-
     await expect(
       searchJobsInState(mockBrowser, 'CA', 'California'),
     ).rejects.toThrow('Evaluate failed');
@@ -86,9 +83,7 @@ describe('searchJobsInState', () => {
 
   it('handles waitForSelector timeout gracefully', async () => {
     mockPage.waitForSelector.mockRejectedValueOnce(new Error('Timeout'));
-
     const result = await searchJobsInState(mockBrowser, 'CA', 'California');
-
     expect(result).toBe(42);
   });
 });

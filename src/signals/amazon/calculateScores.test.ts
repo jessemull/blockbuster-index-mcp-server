@@ -23,7 +23,7 @@ describe('calculateScores', () => {
 
   it('handles single state', () => {
     const result = calculateScores({ CA: 50 });
-    expect(result.CA).toBe(0.1); // Equal scores when only one state
+    expect(result.CA).toBe(0.1);
   });
 
   it('handles zero job counts', () => {
@@ -34,7 +34,7 @@ describe('calculateScores', () => {
 
   it('handles mixed job counts including zero', () => {
     const result = calculateScores({ CA: 0, TX: 100 });
-    expect(result.CA).toBe(0.05); // Minimum score
-    expect(result.TX).toBe(0.2); // Maximum score
+    expect(result.CA).toBe(0.05);
+    expect(result.TX).toBe(0.2);
   });
 });

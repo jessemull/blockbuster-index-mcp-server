@@ -1,6 +1,5 @@
 import { getEqualScores } from './getEqualScores';
 
-// Mock the States import
 jest.mock('../../types', () => ({
   States: {
     CA: 'CA',

@@ -1,6 +1,6 @@
 export function getTotalJobsFromPagination(pageButtons: unknown[]): number {
   if (!Array.isArray(pageButtons) || pageButtons.length === 0) {
-    return 500; // Fallback value
+    return 500;
   }
 
   let maxPage = 1;
