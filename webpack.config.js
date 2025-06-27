@@ -67,4 +67,9 @@ module.exports = {
       resourceRegExp: /^dtrace-provider$/,
     }),
   ],
+  ignoreWarnings: [
+    /Critical dependency: the request of a dependency is an expression/,
+    /Module not found: Error: Can't resolve 'bufferutil'/,
+    /Module not found: Error: Can't resolve 'utf-8-validate'/,
+  ],
 };
