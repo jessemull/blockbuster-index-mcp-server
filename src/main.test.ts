@@ -19,9 +19,9 @@ jest.mock('path');
 jest.mock('./config', () => ({
   CONFIG: {
     IS_DEVELOPMENT: true,
-    VERSION: '1.0.0',
     NODE_ENV: 'development',
     S3_BUCKET_NAME: 'fake-bucket',
+    VERSION: '1.0.0',
   },
   validateConfig: jest.fn(),
 }));

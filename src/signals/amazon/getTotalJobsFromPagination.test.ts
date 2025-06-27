@@ -25,4 +25,14 @@ describe('getTotalJobsFromPagination', () => {
     const result = getTotalJobsFromPagination(mockButtons);
     expect(result).toBe(30); // 3 pages * 10 jobs per page
   });
+
+  it('skips buttons without getAttribute method', () => {
+    const mockButtons = [
+      { getAttribute: jest.fn().mockReturnValue('1') },
+      { someOtherProperty: 'value' }, // Button without getAttribute
+      { getAttribute: jest.fn().mockReturnValue('5') },
+    ];
+    const result = getTotalJobsFromPagination(mockButtons);
+    expect(result).toBe(50); // 5 pages * 10 jobs per page (skips the invalid button)
+  });
 });

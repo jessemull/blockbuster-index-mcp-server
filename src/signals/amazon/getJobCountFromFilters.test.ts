@@ -58,4 +58,32 @@ describe('getJobCountFromFilters', () => {
     );
     expect(result).toBe(0);
   });
+
+  it('handles empty textContent by using empty string fallback', () => {
+    const mockJobCountElement = {
+      textContent: '',
+    };
+    const mockFullTimeButton = {
+      querySelector: jest.fn().mockReturnValue(mockJobCountElement),
+    };
+    const result = getJobCountFromFilters(
+      mockFullTimeButton,
+      getTotalJobsFromPagination,
+    );
+    expect(result).toBe(0);
+  });
+
+  it('handles null textContent by using empty string fallback', () => {
+    const mockJobCountElement = {
+      textContent: null,
+    };
+    const mockFullTimeButton = {
+      querySelector: jest.fn().mockReturnValue(mockJobCountElement),
+    };
+    const result = getJobCountFromFilters(
+      mockFullTimeButton,
+      getTotalJobsFromPagination,
+    );
+    expect(result).toBe(0);
+  });
 });
