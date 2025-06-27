@@ -22,7 +22,6 @@ export async function searchJobsInState(
         timeout: 10000,
       })
       .catch(() => {
-        // Continue if selector not found
         return;
       });
 
