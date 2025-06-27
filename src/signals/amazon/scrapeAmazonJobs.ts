@@ -9,30 +9,38 @@ export async function scrapeAmazonJobs(): Promise<Record<string, number>> {
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
+
   try {
     const jobCounts: Record<string, number> = {};
-    Object.values(States).forEach((state) => {
+
+    // Initialize job count for all states
+    for (const state of Object.values(States)) {
       jobCounts[state] = 0;
-    });
+    }
+
+    // Query job data per state
     for (const state of Object.values(States)) {
       logger.info(`Searching for Amazon jobs in ${state}`);
-      const stateJobCount = await searchJobsInState(
-        browser,
-        state,
-        STATE_ABBR_TO_NAME[state],
-      );
+
+      const region = STATE_ABBR_TO_NAME[state];
+      const stateJobCount = await searchJobsInState(browser, state, region);
+
       jobCounts[state] = stateJobCount;
+
       logger.info(`Completed ${state}: found ${stateJobCount} total jobs`);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Throttle requests
     }
+
     return jobCounts;
   } finally {
     try {
       await browser.close();
     } catch (closeError) {
       logger.warn('Failed to close browser: ', closeError);
-      throw closeError; // Re-throw for testability
+      throw closeError; // Ensure this is visible in tests/logs
     }
   }
 }
+
 export default scrapeAmazonJobs;
