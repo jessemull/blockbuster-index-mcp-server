@@ -1,1 +1,3 @@
-export * from './analog';
+import { getAnalogScores } from './analog';
+
+export { getAnalogScores };

@@ -29,8 +29,8 @@ describe('getTotalJobsFromPagination', () => {
   it('skips buttons without getAttribute method', () => {
     const mockButtons = [
       { getAttribute: jest.fn().mockReturnValue('1') },
-      { someOtherProperty: 'value' },
       { getAttribute: jest.fn().mockReturnValue('5') },
+      { someOtherProperty: 'value' },
     ];
     const result = getTotalJobsFromPagination(mockButtons);
     expect(result).toBe(50);

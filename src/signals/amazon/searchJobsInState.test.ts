@@ -14,18 +14,18 @@ declare global {
 
 jest.mock('../../util', () => ({
   logger: {
-    info: jest.fn(),
     error: jest.fn(),
+    info: jest.fn(),
     warn: jest.fn(),
   },
 }));
 
 const mockPage = {
-  setUserAgent: jest.fn(),
-  goto: jest.fn(),
-  waitForSelector: jest.fn(),
-  evaluate: jest.fn(),
   close: jest.fn(),
+  evaluate: jest.fn(),
+  goto: jest.fn(),
+  setUserAgent: jest.fn(),
+  waitForSelector: jest.fn(),
 };
 
 const mockBrowser = {

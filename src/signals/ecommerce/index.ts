@@ -1,1 +1,3 @@
-export * from './ecommerce';
+import { getCommerceScores } from './ecommerce';
+
+export { getCommerceScores };

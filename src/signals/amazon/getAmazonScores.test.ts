@@ -1,16 +1,16 @@
+import { calculateScores } from './calculateScores';
 import { getAmazonScores } from './getAmazonScores';
+import { getEqualScores } from './getEqualScores';
 import { logger } from '../../util';
 import { scrapeAmazonJobs } from './scrapeAmazonJobs';
-import { calculateScores } from './calculateScores';
-import { getEqualScores } from './getEqualScores';
 
 jest.mock('./scrapeAmazonJobs');
 jest.mock('./calculateScores');
 jest.mock('./getEqualScores');
 jest.mock('../../util', () => ({
   logger: {
-    info: jest.fn(),
     error: jest.fn(),
+    info: jest.fn(),
     warn: jest.fn(),
   },
 }));
@@ -48,8 +48,8 @@ describe('getAmazonScores', () => {
     expect(logger.info).toHaveBeenCalledWith(
       expect.stringContaining('Amazon job presence calculation completed...'),
       expect.objectContaining({
-        totalStates: 2,
         totalJobs: 60,
+        totalStates: 2,
       }),
     );
   });

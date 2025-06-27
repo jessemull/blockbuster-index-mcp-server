@@ -1,1 +1,3 @@
-export * from './broadband';
+import { getBroadbandScores } from './broadband';
+
+export { getBroadbandScores };
