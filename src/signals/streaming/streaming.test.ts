@@ -1,9 +1,9 @@
-import { States } from '../types';
-import { getCommerceScores } from '../signals';
+import { States } from '../../types';
+import { getStreamingScores } from './streaming';
 
-describe('getCommerceScores', () => {
+describe('getStreamingScores', () => {
   it('should return a score for every state', async () => {
-    const result = await getCommerceScores();
+    const result = await getStreamingScores();
 
     expect(typeof result).toBe('object');
 

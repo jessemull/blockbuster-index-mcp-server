@@ -1,6 +1,6 @@
-import { States } from '../types';
+import { States } from '../../types';
 
-export async function getWalmartScores(): Promise<Record<string, number>> {
+export async function getCommerceScores(): Promise<Record<string, number>> {
   return {
     [States.AK]: 0.12,
     [States.AL]: 0.18,

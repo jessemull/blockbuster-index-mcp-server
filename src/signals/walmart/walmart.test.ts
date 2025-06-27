@@ -1,9 +1,9 @@
-import { States } from '../types';
-import { getAnalogScores } from '../signals';
+import { States } from '../../types';
+import { getWalmartScores } from './walmart';
 
-describe('getAnalogScores', () => {
+describe('getWalmartScores', () => {
   it('should return a score for every state', async () => {
-    const result = await getAnalogScores();
+    const result = await getWalmartScores();
 
     expect(typeof result).toBe('object');
 
