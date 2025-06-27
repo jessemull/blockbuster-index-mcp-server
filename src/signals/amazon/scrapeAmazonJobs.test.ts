@@ -76,13 +76,11 @@ describe('scrapeAmazonJobs', () => {
     (puppeteer.launch as jest.Mock).mockRejectedValueOnce(
       new Error('Browser failed'),
     );
-
     await expect(scrapeAmazonJobs()).rejects.toThrow('Browser failed');
   });
 
   it('handles searchJobsInState failure', async () => {
     mockSearchJobsInState.mockRejectedValueOnce(new Error('Search failed'));
-
     await expect(scrapeAmazonJobs()).rejects.toThrow('Search failed');
   });
 

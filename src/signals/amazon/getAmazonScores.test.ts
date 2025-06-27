@@ -4,7 +4,6 @@ import { scrapeAmazonJobs } from './scrapeAmazonJobs';
 import { calculateScores } from './calculateScores';
 import { getEqualScores } from './getEqualScores';
 
-// Mock dependencies
 jest.mock('./scrapeAmazonJobs');
 jest.mock('./calculateScores');
 jest.mock('./getEqualScores');
@@ -19,9 +18,11 @@ jest.mock('../../util', () => ({
 const mockScrapeAmazonJobs = scrapeAmazonJobs as jest.MockedFunction<
   typeof scrapeAmazonJobs
 >;
+
 const mockCalculateScores = calculateScores as jest.MockedFunction<
   typeof calculateScores
 >;
+
 const mockGetEqualScores = getEqualScores as jest.MockedFunction<
   typeof getEqualScores
 >;
