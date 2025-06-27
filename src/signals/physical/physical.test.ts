@@ -1,9 +1,9 @@
-import { States } from '../types';
-import { getBroadbandScores } from '../signals';
+import { States } from '../../types';
+import { getPhysicalScores } from './physical';
 
-describe('getBroadbandScores', () => {
+describe('getPhysicalScores', () => {
   it('should return a score for every state', async () => {
-    const result = await getBroadbandScores();
+    const result = await getPhysicalScores();
 
     expect(typeof result).toBe('object');
 

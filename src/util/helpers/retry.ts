@@ -1,27 +1,29 @@
 import { logger } from '../logger';
 import { MAX_RETRIES, RETRY_DELAY } from '../../constants';
 
-const delay = (ms: number): Promise<void> => {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-};
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const retryWithBackoff = async <T>(
+export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
-  maxRetries: number = MAX_RETRIES,
-): Promise<T> => {
-  let lastError: Error;
+  maxRetries = MAX_RETRIES,
+): Promise<T> {
+  let error: Error;
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       return await fn();
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      logger.errorWithContext(`Attempt ${attempt} failed:`, lastError);
-      if (attempt < maxRetries) {
-        const delayMs = RETRY_DELAY * Math.pow(2, attempt - 1);
-        logger.performance('retry_delay', delayMs, { attempt, maxRetries });
-        await delay(delayMs);
-      }
+    } catch (err) {
+      error = err instanceof Error ? err : new Error(String(err));
+      logger.errorWithContext(`Attempt ${attempt} failed:`, error);
+
+      const isLastAttempt = attempt === maxRetries;
+      if (isLastAttempt) break;
+
+      const delayMs = RETRY_DELAY * 2 ** (attempt - 1);
+      logger.performance('retry_delay', delayMs, { attempt, maxRetries });
+      await sleep(delayMs);
     }
   }
-  throw lastError!;
-};
+
+  throw error!;
+}

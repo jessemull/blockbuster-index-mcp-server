@@ -1,6 +1,6 @@
-import { States } from '../types';
+import { States } from '../../types';
 
-export async function getStreamingScores(): Promise<Record<string, number>> {
+export async function getBroadbandScores(): Promise<Record<string, number>> {
   return {
     [States.AK]: 0.12,
     [States.AL]: 0.18,

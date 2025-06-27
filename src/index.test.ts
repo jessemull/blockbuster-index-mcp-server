@@ -1,9 +1,16 @@
+jest.mock('puppeteer', () => ({
+  default: {
+    launch: jest.fn(),
+  },
+  launch: jest.fn(),
+}));
+
 import * as signals from './signals';
 import fs from 'fs';
 import path from 'path';
 import { CONFIG } from './config';
 import { logger, uploadToS3 } from './util';
-import { main } from './index';
+import { main } from './main';
 
 jest.mock('fs');
 

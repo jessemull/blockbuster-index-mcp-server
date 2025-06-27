@@ -1,9 +1,9 @@
-import { States } from '../types';
-import { getAmazonScores } from '../signals';
+import { States } from '../../types';
+import { getCommerceScores } from './ecommerce';
 
-describe('getAmazonScores', () => {
+describe('getCommerceScores', () => {
   it('should return a score for every state', async () => {
-    const result = await getAmazonScores();
+    const result = await getCommerceScores();
 
     expect(typeof result).toBe('object');
 
