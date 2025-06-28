@@ -81,7 +81,7 @@ export class AmazonSignalService {
 
   private getStartOfDayTimestamp(date: Date = new Date()): number {
     const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
+    startOfDay.setUTCHours(0, 0, 0, 0);
     return Math.floor(startOfDay.getTime() / 1000); // Unix timestamp in seconds
   }
 }
