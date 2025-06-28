@@ -72,7 +72,7 @@
     "dev:signal": "sh scripts/local-signal.sh",
     "commit": "git-cz",
     "coverage:open": "open ./coverage/lcov-report/index.html",
-    "ecs:run": "node scripts/run-ecs-task.js",
+    "ecs:run": "sh scripts/run-ecs-task.sh",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint --ext .ts",
