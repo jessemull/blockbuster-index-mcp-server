@@ -76,6 +76,8 @@ Resources:
               Value: !If [IsDev, 'development', 'production']
             - Name: AWS_REGION
               Value: !Ref AWS::Region
+            - Name: DYNAMODB_TABLE_NAME
+              Value: !Sub 'blockbuster-index-amazon-jobs-${Environment}'
             - Name: S3_BUCKET_NAME
               Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]
             - Name: LOG_LEVEL
