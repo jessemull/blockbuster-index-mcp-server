@@ -1,35 +1,39 @@
-# Build Stage
+FROM node:20-alpine
 
-FROM node:20-alpine AS builder
+# Install System Dependencies for Chromium
+
+RUN apk add --no-cache \
+  chromium \
+  nss \
+  freetype \
+  harfbuzz \
+  ca-certificates \
+  ttf-freefont \
+  nodejs \
+  yarn \
+  udev \
+  bash
+
+# Define Path to Chromium Binary
+
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+# Set Working Directory
 WORKDIR /app
 
-# Copy Package.json & Install Dependencies
+# Install Node Dependencies
 
 COPY package*.json ./
 RUN npm ci
 
-# Install Chrome for Puppeteer
-
-RUN npx puppeteer browsers install chrome
-
-# Copy Source Files
+# Copy App Code
 
 COPY . .
 
-# Build
+# Build App
 
 RUN npm run build
 
-# Runtime
-
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Copy Output, Package.json and Dependencies
-
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
+# Run App
 
 CMD ["node", "dist/index.js"]

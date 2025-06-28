@@ -10,6 +10,7 @@ export async function scrapeAmazonJobs(
   timestamp?: number,
 ): Promise<Record<string, number>> {
   const browser = await puppeteer.launch({
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
