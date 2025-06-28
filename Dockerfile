@@ -3,14 +3,14 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Ensure Puppeteer Downloads Chrome
-
-ENV PUPPETEER_PRODUCT=chrome
-
 # Copy Package.json & Install Dependencies
 
 COPY package*.json ./
 RUN npm ci
+
+# Install Chrome for Puppeteer
+
+RUN npx puppeteer browsers install chrome
 
 # Copy Source Files
 
