@@ -1,4 +1,4 @@
-import { DynamoDBJobSignalRepository } from '../../src/repositories/DynamoDBJobSignalRepository';
+import { DynamoDBJobSignalRepository } from '../../src/repositories/dynamodb-job-signal-repository';
 import { scrapeAmazonJobs } from '../../src/signals/amazon';
 
 (async () => {

@@ -1,5 +1,5 @@
-import { getJobCountFromFilters } from './getJobCountFromFilters';
-import { getTotalJobsFromPagination } from './getTotalJobsFromPagination';
+import { getJobCountFromFilters } from './get-job-count-from-filters';
+import { getTotalJobsFromPagination } from './get-total-jobs-from-pagination';
 
 describe('getJobCountFromFilters', () => {
   it('returns 0 when no full time button is present', () => {

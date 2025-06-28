@@ -1,10 +1,7 @@
 import { getAmazonScores } from '../signals/amazon';
-import {
-  JobSignalRecord,
-  JobSignalRepository,
-} from '../repositories/JobSignalRepository';
-import { States } from '../types';
 import { logger } from '../util';
+import { States } from '../types';
+import type { JobSignalRecord, JobSignalRepository } from '../types';
 
 export class AmazonSignalService {
   private repository: JobSignalRepository;

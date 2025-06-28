@@ -1,4 +1,4 @@
-import { getEqualScores } from './getEqualScores';
+import { getEqualScores } from './get-equal-scores';
 
 jest.mock('../../types', () => ({
   States: {

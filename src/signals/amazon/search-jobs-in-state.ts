@@ -1,5 +1,6 @@
 import { Browser } from 'puppeteer';
 import { logger } from '../../util';
+import type { BrowserDocument } from '../../types/browser';
 
 export async function searchJobsInState(
   browser: Browser,
@@ -26,18 +27,8 @@ export async function searchJobsInState(
       });
 
     const jobCount = await page.evaluate(() => {
-      // Browser context - document is available but TypeScript doesn't know about it
-      const document = (globalThis as unknown as { document: unknown })
-        .document as {
-        querySelector: (selector: string) => {
-          querySelector: (
-            selector: string,
-          ) => { textContent: string | null } | null;
-        } | null;
-        querySelectorAll: (
-          selector: string,
-        ) => { getAttribute: (name: string) => string | null }[];
-      };
+      const document = (globalThis as unknown as { document: BrowserDocument })
+        .document;
 
       function getTotalJobsFromPagination(
         pageButtons: { getAttribute: (name: string) => string | null }[],

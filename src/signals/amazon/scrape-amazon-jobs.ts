@@ -1,12 +1,12 @@
 import puppeteer from 'puppeteer';
-import { States } from '../../types';
 import { logger } from '../../util';
+import { States } from '../../types';
 import { STATE_ABBR_TO_NAME } from '../../constants';
-import { searchJobsInState } from './searchJobsInState';
-import {
-  JobSignalRepository,
+import { searchJobsInState } from './search-jobs-in-state';
+import type {
   JobSignalRecord,
-} from '../../repositories/JobSignalRepository';
+  JobSignalRepository,
+} from '../../repositories/job-signal-repository';
 
 export async function scrapeAmazonJobs(
   repository?: JobSignalRepository,

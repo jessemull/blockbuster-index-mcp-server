@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Browser } from 'puppeteer';
 import { logger } from '../../util';
-import { searchJobsInState } from './searchJobsInState';
+import { searchJobsInState } from './search-jobs-in-state';
 
 declare global {
   var globalThis: {

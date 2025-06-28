@@ -1,12 +1,12 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
   DynamoDBDocumentClient,
+  GetCommand,
   PutCommand,
   QueryCommand,
-  GetCommand,
 } from '@aws-sdk/lib-dynamodb';
-import { JobSignalRecord, JobSignalRepository } from './JobSignalRepository';
 import { logger } from '../util';
+import type { JobSignalRecord, JobSignalRepository } from '../types';
 
 export class DynamoDBJobSignalRepository implements JobSignalRepository {
   private client: DynamoDBDocumentClient;

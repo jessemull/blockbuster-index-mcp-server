@@ -1,16 +1,16 @@
 export interface JobSignalRecord {
+  jobCount: number;
   state: string;
   timestamp: number;
-  jobCount: number;
 }
 
 export interface JobSignalRepository {
-  save(record: JobSignalRecord): Promise<void>;
-  saveBatch(records: JobSignalRecord[]): Promise<void>;
+  exists(state: string, timestamp?: number): Promise<boolean>;
   query(
     state: string,
     start?: number,
     end?: number,
   ): Promise<JobSignalRecord[]>;
-  exists(state: string, timestamp?: number): Promise<boolean>;
+  save(record: JobSignalRecord): Promise<void>;
+  saveBatch(records: JobSignalRecord[]): Promise<void>;
 }

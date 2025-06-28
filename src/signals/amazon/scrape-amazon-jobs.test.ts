@@ -1,10 +1,10 @@
 import puppeteer from 'puppeteer';
-import { scrapeAmazonJobs } from './scrapeAmazonJobs';
-import { searchJobsInState } from './searchJobsInState';
+import { scrapeAmazonJobs } from './scrape-amazon-jobs';
+import { searchJobsInState } from './search-jobs-in-state';
 
 jest.mock('puppeteer');
 
-jest.mock('./searchJobsInState');
+jest.mock('./search-jobs-in-state');
 
 jest.mock('../../util', () => ({
   logger: {
