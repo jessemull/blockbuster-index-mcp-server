@@ -26,8 +26,18 @@ export async function searchJobsInState(
       });
 
     const jobCount = await page.evaluate(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const document = (globalThis as any).document;
+      // Browser context - document is available but TypeScript doesn't know about it
+      const document = (globalThis as unknown as { document: unknown })
+        .document as {
+        querySelector: (selector: string) => {
+          querySelector: (
+            selector: string,
+          ) => { textContent: string | null } | null;
+        } | null;
+        querySelectorAll: (
+          selector: string,
+        ) => { getAttribute: (name: string) => string | null }[];
+      };
 
       function getTotalJobsFromPagination(
         pageButtons: { getAttribute: (name: string) => string | null }[],
