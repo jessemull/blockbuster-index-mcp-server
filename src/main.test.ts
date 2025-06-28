@@ -5,6 +5,18 @@ jest.mock('puppeteer', () => ({
   launch: jest.fn(),
 }));
 
+jest.mock('@aws-sdk/client-dynamodb', () => ({
+  DynamoDBClient: jest.fn(),
+}));
+
+jest.mock('@aws-sdk/lib-dynamodb', () => ({
+  DynamoDBDocumentClient: {
+    from: jest.fn(),
+  },
+  GetCommand: jest.fn(),
+  PutCommand: jest.fn(),
+}));
+
 import * as signals from './signals';
 import fs from 'fs';
 import path from 'path';
