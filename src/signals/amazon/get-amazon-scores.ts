@@ -2,7 +2,7 @@ import { logger } from '../../util';
 import { calculateScores } from './calculate-scores';
 import { scrapeAmazonJobs } from './scrape-amazon-jobs';
 import { getEqualScores } from './get-equal-scores';
-import { JobSignalRepository } from '../../repositories/job-signal-repository';
+import type { JobSignalRepository } from '../../types';
 
 export async function getAmazonScores(
   repository?: JobSignalRepository,

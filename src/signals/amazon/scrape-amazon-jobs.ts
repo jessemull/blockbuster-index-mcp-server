@@ -3,10 +3,7 @@ import { logger } from '../../util';
 import { States } from '../../types';
 import { STATE_ABBR_TO_NAME } from '../../constants';
 import { searchJobsInState } from './search-jobs-in-state';
-import type {
-  JobSignalRecord,
-  JobSignalRepository,
-} from '../../repositories/job-signal-repository';
+import type { JobSignalRepository, JobSignalRecord } from '../../types';
 
 export async function scrapeAmazonJobs(
   repository?: JobSignalRepository,

@@ -149,8 +149,8 @@ describe('scrapeAmazonJobs', () => {
 
     it('continues processing when storage fails for one state', async () => {
       mockRepository.save
-        .mockResolvedValueOnce(undefined) // First call succeeds
-        .mockRejectedValueOnce(new Error('Storage failed')); // Second call fails
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValueOnce(new Error('Storage failed'));
 
       const jobs = await scrapeAmazonJobs(mockRepository, timestamp);
 

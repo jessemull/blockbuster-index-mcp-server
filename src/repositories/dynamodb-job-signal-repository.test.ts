@@ -11,11 +11,9 @@ import {
 import { DynamoDBJobSignalRepository } from './dynamodb-job-signal-repository';
 import { logger } from '../util';
 
-// Mock AWS SDK
 jest.mock('@aws-sdk/client-dynamodb');
 jest.mock('@aws-sdk/lib-dynamodb');
 
-// Patch command constructors to assign input properties
 const mockedPutCommand = PutCommand as unknown as jest.Mock;
 mockedPutCommand.mockImplementation(function (
   this: PutCommand,
@@ -40,7 +38,6 @@ mockedGetCommand.mockImplementation(function (
   Object.assign(this, input);
 });
 
-// Mock DocumentClient
 const mockSend = jest.fn();
 const mockDynamoDBDocumentClient: jest.Mocked<DynamoDBDocumentClient> = {
   send: mockSend,
@@ -50,7 +47,6 @@ const mockDynamoDBDocumentClient: jest.Mocked<DynamoDBDocumentClient> = {
   mockDynamoDBDocumentClient,
 );
 
-// Type-safe logger mock
 jest.mock('../util', () => ({
   logger: {
     info: jest.fn(),

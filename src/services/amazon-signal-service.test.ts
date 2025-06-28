@@ -4,7 +4,6 @@ import { logger } from '../util';
 import { States } from '../types';
 import type { JobSignalRecord, JobSignalRepository } from '../types';
 
-// Mock dependencies
 jest.mock('../signals/amazon');
 jest.mock('../util', () => ({
   logger: {
@@ -18,7 +17,6 @@ const mockGetAmazonScores = getAmazonScores as jest.MockedFunction<
   typeof getAmazonScores
 >;
 
-// Interface to access the private method without using 'any'
 interface AmazonSignalServiceWithPrivate {
   getStartOfDayTimestamp(date?: Date): number;
 }
@@ -48,7 +46,7 @@ describe('AmazonSignalService', () => {
 
   describe('collectAndStoreSignals', () => {
     it('successfully collects and stores signals', async () => {
-      const mockTimestamp = 1750809600; // 2025-06-25T00:00:00Z
+      const mockTimestamp = 1750809600;
 
       jest
         .spyOn(
@@ -138,7 +136,6 @@ describe('AmazonSignalService', () => {
     ];
 
     beforeEach(() => {
-      // Use real timestamp logic to ensure consistency
       const serviceWithPrivate =
         service as unknown as AmazonSignalServiceWithPrivate;
       startTimestamp = serviceWithPrivate.getStartOfDayTimestamp(startDate);
@@ -226,7 +223,6 @@ describe('AmazonSignalService', () => {
   });
 });
 
-// Separate test suite for getStartOfDayTimestamp to avoid mock conflicts
 describe('AmazonSignalService - getStartOfDayTimestamp', () => {
   let service: AmazonSignalService;
   let mockRepository: jest.Mocked<JobSignalRepository>;
@@ -271,11 +267,9 @@ describe('AmazonSignalService - getStartOfDayTimestamp', () => {
     it('returns start of day timestamp when no date is provided (uses current date)', () => {
       const result = serviceWithPrivate.getStartOfDayTimestamp();
 
-      // Should return a valid Unix timestamp (seconds since epoch)
       expect(typeof result).toBe('number');
       expect(result).toBeGreaterThan(0);
 
-      // Should be start of day (00:00:00 UTC)
       const resultDate = new Date(result * 1000);
       expect(resultDate.getUTCHours()).toBe(0);
       expect(resultDate.getUTCMinutes()).toBe(0);
