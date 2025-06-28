@@ -3,6 +3,10 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# Ensure Puppeteer Downloads Chrome
+
+ENV PUPPETEER_PRODUCT=chrome
+
 # Copy Package.json & Install Dependencies
 
 COPY package*.json ./
