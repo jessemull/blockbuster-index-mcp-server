@@ -2,15 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { CONFIG, validateConfig } from './config';
 import { WEIGHTS } from './constants';
-import {
-  getAmazonScores,
-  getAnalogScores,
-  getBroadbandScores,
-  getCommerceScores,
-  getPhysicalScores,
-  getStreamingScores,
-  getWalmartScores,
-} from './signals';
+import { getAmazonScores } from './signals';
 import { BlockbusterIndexResponse, Signal, StateScore, States } from './types';
 import { logger, retryWithBackoff, uploadToS3 } from './util';
 
@@ -18,8 +10,6 @@ export const main = async () => {
   const startTime = Date.now();
 
   try {
-    // Validate configuration...
-
     if (!CONFIG.IS_DEVELOPMENT) {
       validateConfig();
     }
@@ -27,21 +17,10 @@ export const main = async () => {
     logger.startOperation('blockbuster_index_calculation');
     logger.performance('calculation_start', Date.now() - startTime);
 
-    // Fetch all signals with retry logic...
-
-    const [amazon, analog, broadband, ecommerce, media, streaming, walmart] =
-      await Promise.all([
-        retryWithBackoff(() => getAmazonScores()),
-        retryWithBackoff(() => getAnalogScores()),
-        retryWithBackoff(() => getBroadbandScores()),
-        retryWithBackoff(() => getCommerceScores()),
-        retryWithBackoff(() => getPhysicalScores()),
-        retryWithBackoff(() => getStreamingScores()),
-        retryWithBackoff(() => getWalmartScores()),
-      ]);
+    const amazon = await retryWithBackoff(() => getAmazonScores());
 
     logger.performance('signals_fetched', Date.now() - startTime, {
-      totalSignals: 7,
+      totalSignals: 1,
     });
 
     const states: Record<string, StateScore> = {};
@@ -49,12 +28,6 @@ export const main = async () => {
     for (const state of Object.values(States)) {
       const components = {
         [Signal.AMAZON]: amazon[state] ?? 0,
-        [Signal.ANALOG]: analog[state] ?? 0,
-        [Signal.BROADBAND]: broadband[state] ?? 0,
-        [Signal.ECOMMERCE]: ecommerce[state] ?? 0,
-        [Signal.PHYSICAL]: media[state] ?? 0,
-        [Signal.STREAMING]: streaming[state] ?? 0,
-        [Signal.WALMART]: walmart[state] ?? 0,
       };
 
       const score = Object.entries(components).reduce(
@@ -66,8 +39,6 @@ export const main = async () => {
         score: parseFloat(score.toFixed(2)),
         components,
       };
-
-      // Log individual signal scores for monitoring...
 
       logger.signal('combined', state, states[state].score, { components });
     }

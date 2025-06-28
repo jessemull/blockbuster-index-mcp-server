@@ -40,13 +40,7 @@ jest.mock('./config', () => ({
 
 jest.mock('./constants', () => ({
   WEIGHTS: {
-    AMAZON: 1,
-    ANALOG: 1,
-    BROADBAND: 1,
-    ECOMMERCE: 1,
-    PHYSICAL: 1,
-    STREAMING: 1,
-    WALMART: 1,
+    AMAZON: 1.0,
   },
 }));
 
@@ -75,12 +69,6 @@ describe('main', () => {
 
     Object.assign(signals, {
       getAmazonScores: jest.fn().mockResolvedValue(mockScores),
-      getAnalogScores: jest.fn().mockResolvedValue(mockScores),
-      getBroadbandScores: jest.fn().mockResolvedValue(mockScores),
-      getCommerceScores: jest.fn().mockResolvedValue(mockScores),
-      getPhysicalScores: jest.fn().mockResolvedValue(mockScores),
-      getStreamingScores: jest.fn().mockResolvedValue(mockScores),
-      getWalmartScores: jest.fn().mockResolvedValue(mockScores),
     });
 
     Object.assign(CONFIG, {
