@@ -99,6 +99,19 @@ Resources:
                 Resource:
                   - !Sub 'arn:aws:s3:::blockbuster-index-client-${Environment}'
                   - !Sub 'arn:aws:s3:::blockbuster-index-client-${Environment}/*'
+        - PolicyName: 'DynamoDBAmazonJobsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterAmazonJobsTableArn'
 
   EventBridgeInvokeRole:
     Type: AWS::IAM::Role
