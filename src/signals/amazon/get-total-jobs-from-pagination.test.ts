@@ -1,4 +1,4 @@
-import { getTotalJobsFromPagination } from './getTotalJobsFromPagination';
+import { getTotalJobsFromPagination } from './get-total-jobs-from-pagination';
 
 describe('getTotalJobsFromPagination', () => {
   it('returns 500 when no page buttons are present', () => {

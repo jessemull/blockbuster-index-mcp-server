@@ -1,14 +1,41 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { getAmazonScores } from '../../src/signals';
+import { DynamoDBJobSignalRepository } from '../../src/repositories';
+import { scrapeAmazonJobs } from '../../src/signals';
 
 (async () => {
-  const scoresDir = path.resolve(__dirname, '../scores');
-  const file = path.join(scoresDir, 'amazon-scores.json');
+  try {
+    // Initialize the repository with your DynamoDB table name...
 
-  await fs.mkdir(scoresDir, { recursive: true });
+    const region = process.env.AWS_REGION || 'us-west-2';
+    const tableName =
+      process.env.DYNAMODB_TABLE_NAME || 'blockbuster-index-amazon-jobs-dev';
 
-  const scores = await getAmazonScores();
-  await fs.writeFile(file, JSON.stringify(scores, null, 2));
-  console.log(`Amazon signal written to: ${file}`);
+    console.log('Starting Amazon signal collection and storage...');
+    console.log(`Region: ${region}`);
+    console.log(`Table: ${tableName}`);
+
+    const repository = new DynamoDBJobSignalRepository(tableName, region);
+
+    // Get current timestamp for start of day...
+
+    const now = new Date();
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const timestamp = Math.floor(startOfDay.getTime() / 1000);
+
+    // Get Amazon job counts and store data while scraping...
+
+    const jobCounts = await scrapeAmazonJobs(repository, timestamp);
+
+    console.log('Amazon signal collection and storage completed successfully!');
+    console.log(
+      `Total jobs found: ${Object.values(jobCounts).reduce((sum, count) => sum + count, 0)}`,
+    );
+    console.log(`Total states processed: ${Object.keys(jobCounts).length}`);
+  } catch (error: unknown) {
+    console.error(
+      'Failed to store Amazon signals:',
+      error instanceof Error ? error.message : String(error),
+    );
+    process.exit(1);
+  }
 })();

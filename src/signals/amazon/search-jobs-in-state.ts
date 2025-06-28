@@ -1,5 +1,6 @@
 import { Browser } from 'puppeteer';
 import { logger } from '../../util';
+import type { BrowserDocument } from '../../types/browser';
 
 export async function searchJobsInState(
   browser: Browser,
@@ -26,8 +27,8 @@ export async function searchJobsInState(
       });
 
     const jobCount = await page.evaluate(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const document = (globalThis as any).document;
+      const document = (globalThis as unknown as { document: BrowserDocument })
+        .document;
 
       function getTotalJobsFromPagination(
         pageButtons: { getAttribute: (name: string) => string | null }[],

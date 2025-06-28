@@ -19,5 +19,5 @@ const proc = spawn('npx', ['ts-node', ...tsNodeArgs], {
 });
 
 proc.on('exit', (code) => {
-  console.log(`Process exited with code: ${code}...`);
+  console.log(`Process exited with code: ${code}`);
 });

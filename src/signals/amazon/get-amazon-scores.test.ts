@@ -1,12 +1,12 @@
-import { calculateScores } from './calculateScores';
-import { getAmazonScores } from './getAmazonScores';
-import { getEqualScores } from './getEqualScores';
+import { calculateScores } from './calculate-scores';
+import { getAmazonScores } from './get-amazon-scores';
+import { getEqualScores } from './get-equal-scores';
 import { logger } from '../../util';
-import { scrapeAmazonJobs } from './scrapeAmazonJobs';
+import { scrapeAmazonJobs } from './scrape-amazon-jobs';
 
-jest.mock('./scrapeAmazonJobs');
-jest.mock('./calculateScores');
-jest.mock('./getEqualScores');
+jest.mock('./scrape-amazon-jobs');
+jest.mock('./calculate-scores');
+jest.mock('./get-equal-scores');
 jest.mock('../../util', () => ({
   logger: {
     error: jest.fn(),

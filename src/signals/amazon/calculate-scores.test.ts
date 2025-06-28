@@ -1,4 +1,4 @@
-import { calculateScores } from './calculateScores';
+import { calculateScores } from './calculate-scores';
 
 describe('calculateScores', () => {
   it('returns equal scores if all job counts are the same', () => {
