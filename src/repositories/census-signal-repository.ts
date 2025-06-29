@@ -16,6 +16,12 @@ export class DynamoDBCensusSignalRepository extends DynamoDBSignalRepository<Cen
         new PutCommand({
           Item: item,
           TableName: this.tableName,
+          ConditionExpression:
+            'attribute_not_exists(#state) AND attribute_not_exists(#timestamp)',
+          ExpressionAttributeNames: {
+            '#state': 'state',
+            '#timestamp': 'timestamp',
+          },
         }),
       );
 

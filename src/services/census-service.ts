@@ -6,6 +6,7 @@ import {
   CensusPopulationData,
 } from '../types';
 import { logger } from '../util';
+import { retryWithBackoff } from '../util/helpers/retry';
 
 const STATE_CODE_TO_ABBR: Record<string, string> = {
   '01': 'AL',
@@ -69,7 +70,10 @@ export const fetchCensusEstablishmentData = async (
   const url = `https://api.census.gov/data/${year}/cbp?get=ESTAB,NAICS2017_LABEL&for=state:*&NAICS2017=44-45`;
 
   try {
-    const response = await axios.get(url);
+    const response = await retryWithBackoff(async () => {
+      return await axios.get(url);
+    });
+
     const data = response.data as [string, string, string, string][];
 
     const establishments: CensusEstablishmentData = {};
@@ -99,7 +103,10 @@ export const fetchCensusPopulationData = async (
   const url = `https://api.census.gov/data/${year}/acs/acs1?get=NAME,B01003_001E&for=state:*`;
 
   try {
-    const response = await axios.get(url);
+    const response = await retryWithBackoff(async () => {
+      return await axios.get(url);
+    });
+
     const data = response.data as [string, string, string, string][];
 
     const population: CensusPopulationData = {};
