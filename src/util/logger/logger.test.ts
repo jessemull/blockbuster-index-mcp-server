@@ -1,5 +1,9 @@
 import { logger } from './index';
 
+// Unmock the logger for these tests so we can test the actual implementation
+jest.unmock('./index');
+jest.unmock('./logger');
+
 jest.mock('bunyan-cloudwatch', () => jest.fn(() => ({ write: jest.fn() })));
 
 const originalStdout = process.stdout.write;
