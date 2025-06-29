@@ -90,7 +90,12 @@ export const fetchCensusEstablishmentData = async (
     );
     return establishments;
   } catch (error) {
-    logger.error('Failed to fetch Census establishment data:', error);
+    // Log error details without the full error object to avoid source code in logs
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorCode = (error as { code: string })?.code || 'UNKNOWN';
+    logger.error(
+      `Failed to fetch Census establishment data for year ${year}: ${errorMessage} (code: ${errorCode})`,
+    );
     throw new Error(
       `Failed to fetch Census establishment data for year ${year}`,
     );
@@ -125,7 +130,12 @@ export const fetchCensusPopulationData = async (
     );
     return population;
   } catch (error) {
-    logger.error('Failed to fetch Census population data:', error);
+    // Log error details without the full error object to avoid source code in logs
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorCode = (error as { code: string })?.code || 'UNKNOWN';
+    logger.error(
+      `Failed to fetch Census population data for year ${year}: ${errorMessage} (code: ${errorCode})`,
+    );
     throw new Error(`Failed to fetch Census population data for year ${year}`);
   }
 };

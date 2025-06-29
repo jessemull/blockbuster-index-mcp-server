@@ -66,8 +66,7 @@ describe('CensusService', () => {
         'Failed to fetch Census establishment data for year 2022',
       );
       expect(logger.error).toHaveBeenCalledWith(
-        'Failed to fetch Census establishment data:',
-        expect.any(Error),
+        'Failed to fetch Census establishment data for year 2022: network error (code: UNKNOWN)',
       );
     });
   });
@@ -105,8 +104,7 @@ describe('CensusService', () => {
         'Failed to fetch Census population data for year 2022',
       );
       expect(logger.error).toHaveBeenCalledWith(
-        'Failed to fetch Census population data:',
-        expect.any(Error),
+        'Failed to fetch Census population data for year 2022: population API fail (code: UNKNOWN)',
       );
     });
   });
