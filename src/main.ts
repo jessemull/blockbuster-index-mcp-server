@@ -19,7 +19,7 @@ export const main = async () => {
 
     const [amazon, census] = await Promise.all([
       retryWithBackoff(() => getAmazonScores()),
-      retryWithBackoff(() => getCensusScores()),
+      getCensusScores(),
     ]);
 
     logger.performance('signals_fetched', Date.now() - startTime, {
