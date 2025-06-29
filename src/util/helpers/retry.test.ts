@@ -5,6 +5,7 @@ jest.mock('../logger', () => ({
   logger: {
     errorWithContext: jest.fn(),
     performance: jest.fn(),
+    error: jest.fn(),
   },
 }));
 
