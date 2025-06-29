@@ -40,7 +40,8 @@ jest.mock('./config', () => ({
 
 jest.mock('./constants', () => ({
   WEIGHTS: {
-    AMAZON: 1.0,
+    AMAZON: 0.5,
+    CENSUS: 0.5,
   },
 }));
 
@@ -69,6 +70,7 @@ describe('main', () => {
 
     Object.assign(signals, {
       getAmazonScores: jest.fn().mockResolvedValue(mockScores),
+      getCensusScores: jest.fn().mockResolvedValue(mockScores),
     });
 
     Object.assign(CONFIG, {

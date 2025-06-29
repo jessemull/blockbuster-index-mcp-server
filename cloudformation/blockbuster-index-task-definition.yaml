@@ -72,31 +72,33 @@ Resources:
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: 'blockbuster-index'
           Environment:
-            - Name: NODE_ENV
-              Value: !If [IsDev, 'development', 'production']
+            - Name: AMAZON_DYNAMODB_TABLE_NAME
+              Value: !Sub 'blockbuster-index-amazon-jobs-${Environment}'
             - Name: AWS_REGION
               Value: !Ref AWS::Region
-            - Name: DYNAMODB_TABLE_NAME
-              Value: !Sub 'blockbuster-index-amazon-jobs-${Environment}'
-            - Name: S3_BUCKET_NAME
-              Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]
-            - Name: LOG_LEVEL
-              Value: !FindInMap [EnvConfig, !Ref Environment, LogLevel]
+            - Name: CACHE_CONTROL
+              Value: 'max-age=300'
+            - Name: CENSUS_DYNAMODB_TABLE_NAME
+              Value: !Sub 'blockbuster-index-census-signals-${Environment}'
             - Name: CW_LOG_GROUP
               Value: !ImportValue
                 Fn::Sub: '${Environment}-BlockbusterLogGroupName'
             - Name: CW_LOG_STREAM
               Value: !Sub 'blockbuster-index-mcp-${Environment}-${AWS::StackName}'
+            - Name: LOG_LEVEL
+              Value: !FindInMap [EnvConfig, !Ref Environment, LogLevel]
             - Name: MAX_RETRIES
               Value: '3'
-            - Name: RETRY_DELAY
-              Value: '1000'
-            - Name: CACHE_CONTROL
-              Value: 'max-age=300'
+            - Name: NODE_ENV
+              Value: !If [IsDev, 'development', 'production']
             - Name: npm_package_version
               Value: '1.0.0'
             - Name: OPENAI_API_KEY
               Value: !Sub '{{resolve:secretsmanager:blockbuster-index-openai-${Environment}:SecretString:apiKey}}'
+            - Name: RETRY_DELAY
+              Value: '1000'
+            - Name: S3_BUCKET_NAME
+              Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]
 
   ScheduledTaskRule:
     Type: AWS::Events::Rule

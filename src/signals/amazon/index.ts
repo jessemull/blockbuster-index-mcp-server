@@ -16,7 +16,8 @@ export {
   searchJobsInState,
 };
 
-// Default export for easier importing
+// Default export for easier importing...
+
 export default {
   calculateScores,
   getAmazonScores,

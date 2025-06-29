@@ -4,13 +4,8 @@ export interface JobSignalRecord {
   timestamp: number;
 }
 
-export interface JobSignalRepository {
+export interface SignalRepository<T> {
   exists(state: string, timestamp?: number): Promise<boolean>;
-  query(
-    state: string,
-    start?: number,
-    end?: number,
-  ): Promise<JobSignalRecord[]>;
-  save(record: JobSignalRecord): Promise<void>;
-  saveBatch(records: JobSignalRecord[]): Promise<void>;
+  save(record: T): Promise<void>;
+  query?(state: string, start?: number, end?: number): Promise<T[]>;
 }
