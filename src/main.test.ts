@@ -54,6 +54,7 @@ jest.mock('./util', () => ({
     performance: jest.fn(),
     signal: jest.fn(),
     errorWithContext: jest.fn(),
+    info: jest.fn(),
   },
   retryWithBackoff: jest.fn((fn) => fn()),
   uploadToS3: jest.fn(),

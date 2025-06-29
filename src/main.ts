@@ -9,6 +9,25 @@ import { logger, retryWithBackoff, uploadToS3 } from './util';
 export const main = async () => {
   const startTime = Date.now();
 
+  // Log all environment variables at startup for debugging
+  logger.info('Environment variables at startup:', {
+    NODE_ENV: process.env.NODE_ENV,
+    IS_DEVELOPMENT: CONFIG.IS_DEVELOPMENT,
+    CENSUS_DYNAMODB_TABLE_NAME:
+      process.env.CENSUS_DYNAMODB_TABLE_NAME || 'NOT_SET',
+    AMAZON_DYNAMODB_TABLE_NAME:
+      process.env.AMAZON_DYNAMODB_TABLE_NAME || 'NOT_SET',
+    AWS_REGION: process.env.AWS_REGION || 'NOT_SET',
+    LOG_LEVEL: process.env.LOG_LEVEL || 'NOT_SET',
+    MAX_RETRIES: process.env.MAX_RETRIES || 'NOT_SET',
+    RETRY_DELAY: process.env.RETRY_DELAY || 'NOT_SET',
+    S3_BUCKET_NAME: process.env.S3_BUCKET_NAME || 'NOT_SET',
+    CW_LOG_GROUP: process.env.CW_LOG_GROUP || 'NOT_SET',
+    CW_LOG_STREAM: process.env.CW_LOG_STREAM || 'NOT_SET',
+    FORCE_REFRESH: process.env.FORCE_REFRESH || 'NOT_SET',
+    npm_package_version: process.env.npm_package_version || 'NOT_SET',
+  });
+
   try {
     if (!CONFIG.IS_DEVELOPMENT) {
       validateConfig();

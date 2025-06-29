@@ -1,4 +1,4 @@
-jest.mock('./src/util/logger', () => ({
+jest.mock('./src/util', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
@@ -12,6 +12,8 @@ jest.mock('./src/util/logger', () => ({
     signal: jest.fn(),
     startOperation: jest.fn(),
   },
+  retryWithBackoff: jest.fn(),
+  uploadToS3: jest.fn(),
 }));
 
 global.console = {
