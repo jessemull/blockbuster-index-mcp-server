@@ -72,41 +72,12 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
     AWS_REGION: process.env.AWS_REGION || 'NOT_SET',
   });
 
-  // In production, always create a repository
-  // In development, only create if CENSUS_DYNAMODB_TABLE_NAME is explicitly set
-  if (!CONFIG.IS_DEVELOPMENT) {
-    const { DynamoDBCensusSignalRepository } = await import(
-      '../../repositories'
-    );
-    const tableName = process.env.CENSUS_DYNAMODB_TABLE_NAME;
-    if (!tableName) {
-      throw new Error(
-        'CENSUS_DYNAMODB_TABLE_NAME environment variable is required in production. ' +
-          'This should be set to the DynamoDB table name for Census signals (e.g., blockbuster-index-census-signals-prod). ' +
-          'Check the ECS task definition and ensure the DynamoDB table exists.',
-      );
-    }
-    repository = new DynamoDBCensusSignalRepository(tableName);
-    logger.info(
-      'Census repository created successfully for production with table:',
-      tableName,
-    );
-  } else if (process.env.CENSUS_DYNAMODB_TABLE_NAME) {
-    const { DynamoDBCensusSignalRepository } = await import(
-      '../../repositories'
-    );
-    repository = new DynamoDBCensusSignalRepository(
-      process.env.CENSUS_DYNAMODB_TABLE_NAME,
-    );
-    logger.info(
-      'Census repository created successfully for development with table:',
-      process.env.CENSUS_DYNAMODB_TABLE_NAME,
-    );
-  } else {
-    logger.info(
-      'No Census repository created - running in development mode without table name',
-    );
-  }
+  // HARDCODED PRODUCTION MODE - always create repository
+  console.log('=== HARDCODED CENSUS PRODUCTION MODE ===');
+  const { DynamoDBCensusSignalRepository } = await import('../../repositories');
+  const tableName = 'blockbuster-index-census-signals-prod';
+  repository = new DynamoDBCensusSignalRepository(tableName);
+  console.log('HARDCODED Census repository created with table:', tableName);
 
   const scores: Record<string, number> = {};
   const forceRefresh = process.env.FORCE_REFRESH === 'true';
