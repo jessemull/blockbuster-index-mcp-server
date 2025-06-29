@@ -9,8 +9,8 @@ import { logger, retryWithBackoff, uploadToS3 } from './util';
 export const main = async () => {
   const startTime = Date.now();
 
-  // Log all environment variables at startup for debugging
-  logger.info('Environment variables at startup:', {
+  // Log all environment variables at startup for debugging - use both console and logger
+  const envVars = {
     NODE_ENV: process.env.NODE_ENV,
     IS_DEVELOPMENT: CONFIG.IS_DEVELOPMENT,
     CENSUS_DYNAMODB_TABLE_NAME:
@@ -26,7 +26,13 @@ export const main = async () => {
     CW_LOG_STREAM: process.env.CW_LOG_STREAM || 'NOT_SET',
     FORCE_REFRESH: process.env.FORCE_REFRESH || 'NOT_SET',
     npm_package_version: process.env.npm_package_version || 'NOT_SET',
-  });
+  };
+
+  console.log('=== ENVIRONMENT VARIABLES AT STARTUP ===');
+  console.log(JSON.stringify(envVars, null, 2));
+  console.log('=== END ENVIRONMENT VARIABLES ===');
+
+  logger.info('Environment variables at startup:', envVars);
 
   try {
     if (!CONFIG.IS_DEVELOPMENT) {
