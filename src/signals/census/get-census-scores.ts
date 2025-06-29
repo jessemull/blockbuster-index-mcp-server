@@ -4,13 +4,11 @@ import { SignalRepository } from '../../types/amazon';
 import { fetchCensusData } from '../../services/census-service';
 import { logger } from '../../util';
 
-const getStartOfDayTimestamp = (date: Date = new Date()): number => {
+const getStartOfDayTimestamp = (date: Date): number => {
   const startOfDay = new Date(date);
   startOfDay.setUTCHours(0, 0, 0, 0);
   return Math.floor(startOfDay.getTime() / 1000);
 };
-
-const DEFAULT_TABLE = 'blockbuster-index-census-signals-dev';
 
 export const getCensusScores = async (): Promise<Record<string, number>> => {
   logger.info('Starting Census retail establishment calculation...');
@@ -66,7 +64,7 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
       '../../repositories'
     );
     repository = new DynamoDBCensusSignalRepository(
-      process.env.CENSUS_DYNAMODB_TABLE_NAME || DEFAULT_TABLE,
+      process.env.CENSUS_DYNAMODB_TABLE_NAME as string,
     );
   }
 
