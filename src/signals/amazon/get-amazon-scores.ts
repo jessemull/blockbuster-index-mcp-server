@@ -6,10 +6,16 @@ import { logger } from '../../util';
 
 const DEFAULT_TABLE = 'blockbuster-index-amazon-jobs-dev';
 
+function getStartOfDayTimestamp(date: Date = new Date()): number {
+  const startOfDay = new Date(date);
+  startOfDay.setUTCHours(0, 0, 0, 0);
+  return Math.floor(startOfDay.getTime() / 1000); // Unix timestamp in seconds
+}
+
 export const getAmazonScores = async (): Promise<Record<string, number>> => {
   logger.info('Starting Amazon job presence calculation...');
 
-  const timestamp = Math.floor(Date.now() / 1000);
+  const timestamp = getStartOfDayTimestamp();
 
   let repository: SignalRepository<JobSignalRecord> | undefined = undefined;
 
