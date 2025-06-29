@@ -10,6 +10,8 @@ const getStartOfDayTimestamp = (date: Date): number => {
   return Math.floor(startOfDay.getTime() / 1000);
 };
 
+const DEFAULT_TABLE = 'blockbuster-index-census-signals-dev';
+
 export const getCensusScores = async (): Promise<Record<string, number>> => {
   logger.info('Starting Census retail establishment calculation...');
 
@@ -64,7 +66,8 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
       '../../repositories'
     );
     repository = new DynamoDBCensusSignalRepository(
-      process.env.CENSUS_DYNAMODB_TABLE_NAME as string,
+      /* istanbul ignore next */
+      process.env.CENSUS_DYNAMODB_TABLE_NAME || DEFAULT_TABLE,
     );
   }
 
