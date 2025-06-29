@@ -93,10 +93,21 @@ export const main = async () => {
     const error = err instanceof Error ? err : new Error(String(err));
     const duration = Date.now() - startTime;
 
-    logger.errorWithContext('Blockbuster index calculation failed:', error, {
-      duration,
-      environment: CONFIG.NODE_ENV,
-    });
+    // Sanitize the error to prevent large objects from being logged
+    const sanitizedError = {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+    };
+
+    logger.errorWithContext(
+      'Blockbuster index calculation failed:',
+      sanitizedError as Error,
+      {
+        duration,
+        environment: CONFIG.NODE_ENV,
+      },
+    );
 
     process.exit(1);
   }

@@ -91,7 +91,9 @@ export const fetchCensusEstablishmentData = async (
     return establishments;
   } catch (error) {
     logger.error('Failed to fetch Census establishment data:', error);
-    throw new Error(`Failed to fetch Census establishment data: ${error}`);
+    throw new Error(
+      `Failed to fetch Census establishment data for year ${year}`,
+    );
   }
 };
 
@@ -124,7 +126,7 @@ export const fetchCensusPopulationData = async (
     return population;
   } catch (error) {
     logger.error('Failed to fetch Census population data:', error);
-    throw new Error(`Failed to fetch Census population data: ${error}`);
+    throw new Error(`Failed to fetch Census population data for year ${year}`);
   }
 };
 

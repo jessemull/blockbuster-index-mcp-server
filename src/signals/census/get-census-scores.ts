@@ -10,8 +10,6 @@ const getStartOfDayTimestamp = (date: Date): number => {
   return Math.floor(startOfDay.getTime() / 1000);
 };
 
-const DEFAULT_TABLE = 'blockbuster-index-census-signals-dev';
-
 export const getCensusScores = async (): Promise<Record<string, number>> => {
   logger.info('Starting Census retail establishment calculation...');
 
@@ -45,11 +43,15 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
       );
       if (attempt === 2) {
         // If we've tried 3 years and still no data, throw the error...
-
+        logger.error(
+          `All attempts failed. Last error for year ${yearToTry}:`,
+          error,
+        );
         throw new Error(
           `No Census data available for years ${currentYear - 1} through ${currentYear - 3}`,
         );
       }
+      logger.info(`Moving to next year (attempt ${attempt + 1} of 3)`);
     }
   }
 
@@ -61,13 +63,48 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
 
   let repository: SignalRepository<CensusSignalRecord> | null = null;
 
-  if (!CONFIG.IS_DEVELOPMENT || process.env.CENSUS_DYNAMODB_TABLE_NAME) {
+  // Temporary debug logging for production troubleshooting
+  logger.info('Census signal environment check:', {
+    IS_DEVELOPMENT: CONFIG.IS_DEVELOPMENT,
+    NODE_ENV: process.env.NODE_ENV,
+    CENSUS_DYNAMODB_TABLE_NAME:
+      process.env.CENSUS_DYNAMODB_TABLE_NAME || 'NOT_SET',
+    AWS_REGION: process.env.AWS_REGION || 'NOT_SET',
+  });
+
+  // In production, always create a repository
+  // In development, only create if CENSUS_DYNAMODB_TABLE_NAME is explicitly set
+  if (!CONFIG.IS_DEVELOPMENT) {
+    const { DynamoDBCensusSignalRepository } = await import(
+      '../../repositories'
+    );
+    const tableName = process.env.CENSUS_DYNAMODB_TABLE_NAME;
+    if (!tableName) {
+      throw new Error(
+        'CENSUS_DYNAMODB_TABLE_NAME environment variable is required in production. ' +
+          'This should be set to the DynamoDB table name for Census signals (e.g., blockbuster-index-census-signals-prod). ' +
+          'Check the ECS task definition and ensure the DynamoDB table exists.',
+      );
+    }
+    repository = new DynamoDBCensusSignalRepository(tableName);
+    logger.info(
+      'Census repository created successfully for production with table:',
+      tableName,
+    );
+  } else if (process.env.CENSUS_DYNAMODB_TABLE_NAME) {
     const { DynamoDBCensusSignalRepository } = await import(
       '../../repositories'
     );
     repository = new DynamoDBCensusSignalRepository(
-      /* istanbul ignore next */
-      process.env.CENSUS_DYNAMODB_TABLE_NAME || DEFAULT_TABLE,
+      process.env.CENSUS_DYNAMODB_TABLE_NAME,
+    );
+    logger.info(
+      'Census repository created successfully for development with table:',
+      process.env.CENSUS_DYNAMODB_TABLE_NAME,
+    );
+  } else {
+    logger.info(
+      'No Census repository created - running in development mode without table name',
     );
   }
 

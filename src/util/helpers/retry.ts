@@ -14,7 +14,18 @@ export async function retryWithBackoff<T>(
       return await fn();
     } catch (err) {
       error = err instanceof Error ? err : new Error(String(err));
-      logger.errorWithContext(`Attempt ${attempt} failed:`, error);
+
+      // Sanitize the error to prevent large objects from being logged
+      const sanitizedError = {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+      };
+
+      logger.errorWithContext(
+        `Attempt ${attempt} failed:`,
+        sanitizedError as Error,
+      );
 
       const isLastAttempt = attempt === maxRetries;
       if (isLastAttempt) break;

@@ -94,7 +94,11 @@ describe('retryWithBackoff', () => {
     await expect(promise).rejects.toThrow('oops');
     expect(logger.errorWithContext).toHaveBeenCalledWith(
       'Attempt 1 failed:',
-      expect.any(Error),
+      expect.objectContaining({
+        message: 'oops',
+        name: 'Error',
+        stack: expect.stringContaining('oops'),
+      }),
     );
   });
 });

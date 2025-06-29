@@ -147,7 +147,11 @@ describe('main', () => {
     await expect(main()).rejects.toThrow('process.exit');
     expect(logger.errorWithContext).toHaveBeenCalledWith(
       'Blockbuster index calculation failed:',
-      error,
+      expect.objectContaining({
+        message: 'mock failure',
+        name: 'Error',
+        stack: expect.stringContaining('mock failure'),
+      }),
       expect.objectContaining({ environment: 'development' }),
     );
 
@@ -166,7 +170,11 @@ describe('main', () => {
     await expect(main()).rejects.toThrow('process.exit');
     expect(logger.errorWithContext).toHaveBeenCalledWith(
       'Blockbuster index calculation failed:',
-      expect.any(Error),
+      expect.objectContaining({
+        message: 'string error',
+        name: 'Error',
+        stack: expect.stringContaining('string error'),
+      }),
       expect.objectContaining({ environment: 'development' }),
     );
 
