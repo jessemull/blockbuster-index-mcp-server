@@ -5,6 +5,7 @@ import { getAmazonScores } from '../../src/signals';
     console.log('Starting Amazon signal collection and storage...');
 
     // Get Amazon job counts and store data while scraping...
+
     const scores = await getAmazonScores();
 
     console.log('Amazon signal collection and storage completed successfully!');

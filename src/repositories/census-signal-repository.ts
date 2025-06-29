@@ -32,7 +32,7 @@ export class DynamoDBCensusSignalRepository extends DynamoDBSignalRepository<Cen
           state: record.state,
           timestamp: record.timestamp,
         });
-        return; // Not an error, just a duplicate
+        return;
       }
 
       logger.error('Failed to save census signal record', {

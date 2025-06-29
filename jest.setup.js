@@ -1,7 +1,3 @@
-// Global logger mock to suppress console output during tests
-// This provides a default mock that can be overridden by individual tests
-
-// Mock the logger module with a default mock
 jest.mock('./src/util/logger', () => ({
   logger: {
     info: jest.fn(),
@@ -18,7 +14,6 @@ jest.mock('./src/util/logger', () => ({
   },
 }));
 
-// Suppress console output during tests
 global.console = {
   ...console,
   log: jest.fn(),

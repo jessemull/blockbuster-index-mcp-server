@@ -17,12 +17,14 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
 
   const currentYear = new Date().getFullYear();
 
-  // Try to find the most recent available Census data
-  // Start with current year - 1 and go backwards until we find available data
+  // Try to find the most recent available Census data...
+  // Start with current year - 1 and go backwards until we find available data...
+
   let lastAvailableYear = currentYear - 1;
   let censusData = null;
 
-  // Try up to 3 years back to find available data
+  // Try up to 3 years back to find available data...
+
   for (let attempt = 0; attempt < 3; attempt++) {
     const yearToTry = currentYear - 1 - attempt;
     logger.info(
@@ -42,7 +44,8 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
         error,
       );
       if (attempt === 2) {
-        // If we've tried 3 years and still no data, throw the error
+        // If we've tried 3 years and still no data, throw the error...
+
         throw new Error(
           `No Census data available for years ${currentYear - 1} through ${currentYear - 3}`,
         );

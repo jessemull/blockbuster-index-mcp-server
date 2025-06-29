@@ -7,7 +7,6 @@ import {
 import { logger } from '../util';
 
 jest.mock('axios');
-jest.mock('../util');
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
@@ -21,8 +20,8 @@ describe('CensusService', () => {
       mockedAxios.get.mockResolvedValueOnce({
         data: [
           ['ESTAB', 'NAICS2017_LABEL', 'state', 'state_code'],
-          ['123', 'Retail Trade', '44', '41'], // OR
-          ['456', 'Retail Trade', '44', '06'], // CA
+          ['123', 'Retail Trade', '44', '41'],
+          ['456', 'Retail Trade', '44', '06'],
         ],
       });
 
@@ -37,7 +36,7 @@ describe('CensusService', () => {
       mockedAxios.get.mockResolvedValueOnce({
         data: [
           ['ESTAB', 'NAICS2017_LABEL', 'state', 'state_code'],
-          ['789', 'Retail Trade', '44', '99'], // not mapped
+          ['789', 'Retail Trade', '44', '99'],
         ],
       });
 
@@ -49,7 +48,7 @@ describe('CensusService', () => {
       mockedAxios.get.mockResolvedValueOnce({
         data: [
           ['ESTAB', 'NAICS2017_LABEL', 'state', 'state_code'],
-          ['notanumber', 'Retail Trade', '44', '41'], // OR
+          ['notanumber', 'Retail Trade', '44', '41'],
         ],
       });
 
@@ -116,7 +115,7 @@ describe('CensusService', () => {
           data: [
             ['ESTAB', 'NAICS2017_LABEL', 'state', 'state_code'],
             ['10', '', '', '41'],
-          ], // OR
+          ],
         })
         .mockResolvedValueOnce({
           data: [

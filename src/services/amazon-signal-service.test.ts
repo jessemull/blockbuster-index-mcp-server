@@ -221,11 +221,9 @@ describe('AmazonSignalService', () => {
     });
 
     it('throws error when repository query method is not implemented', async () => {
-      // Create a mock repository without the query method
       const mockRepositoryWithoutQuery = {
         exists: jest.fn(),
         save: jest.fn(),
-        // query method is intentionally missing
       } as unknown as jest.Mocked<SignalRepository<JobSignalRecord>>;
 
       const serviceWithoutQuery = new AmazonSignalService(

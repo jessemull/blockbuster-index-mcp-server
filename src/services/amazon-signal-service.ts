@@ -52,7 +52,8 @@ export class AmazonSignalService {
     try {
       const records: JobSignalRecord[] = [];
 
-      // Query each state for the date range
+      // Query each state for the date range...
+
       for (const state of Object.values(States)) {
         if (this.repository.query) {
           const stateRecords = await this.repository.query(

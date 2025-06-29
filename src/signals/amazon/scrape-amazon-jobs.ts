@@ -19,11 +19,13 @@ export async function scrapeAmazonJobs(
     const jobCounts: Record<string, number> = {};
 
     // Initialize job count for all states...
+
     for (const state of Object.values(States)) {
       jobCounts[state] = 0;
     }
 
     // Query job data per state and store immediately if repository is provided...
+
     for (const state of Object.values(States)) {
       logger.info(`Searching for Amazon jobs in ${state}`);
 
@@ -32,10 +34,12 @@ export async function scrapeAmazonJobs(
 
       jobCounts[state] = stateJobCount;
 
-      // Store the data immediately if repository is provided
+      // Store the data immediately if repository is provided...
+
       if (repository && timestamp) {
         try {
-          // Check if record already exists for today
+          // Check if record already exists for today...
+
           const exists = await repository.exists(state, timestamp);
 
           if (!exists) {
@@ -68,7 +72,6 @@ export async function scrapeAmazonJobs(
             error: storageError,
             timestamp,
           });
-          // Continue with other states even if storage fails for one
         }
       }
 

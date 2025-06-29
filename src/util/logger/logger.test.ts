@@ -1,6 +1,4 @@
 import { logger } from './index';
-
-// Unmock the logger for these tests so we can test the actual implementation
 jest.unmock('./index');
 jest.unmock('./logger');
 
@@ -83,5 +81,34 @@ describe('Logger', () => {
     expect(productionLogger.fields.name).toBe('blockbuster-index-mcp-logger');
 
     expect(() => productionLogger.info('test production log')).not.toThrow();
+  });
+});
+
+describe('logger', () => {
+  it('should log info messages', () => {
+    const spy = jest
+      .spyOn(process.stdout, 'write')
+      .mockImplementation(() => true);
+    logger.info('test info');
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('should log error messages', () => {
+    const spy = jest
+      .spyOn(process.stdout, 'write')
+      .mockImplementation(() => true);
+    logger.error('test error');
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('should log warn messages', () => {
+    const spy = jest
+      .spyOn(process.stdout, 'write')
+      .mockImplementation(() => true);
+    logger.warn('test warn');
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
   });
 });

@@ -51,7 +51,6 @@ describe('getCensusScores', () => {
     mockCONFIG.IS_DEVELOPMENT = false;
     process.env.CENSUS_DYNAMODB_TABLE_NAME = 'test-table';
 
-    // Set up default mock for repository
     const defaultMockRepository = {
       save: jest.fn(),
       exists: jest.fn().mockResolvedValue(false),
@@ -73,9 +72,9 @@ describe('getCensusScores', () => {
       const scores = await getCensusScores();
 
       expect(scores).toEqual({
-        AL: 20, // 1000 establishments / 5000000 population * 100000
-        CA: 13, // 5000 establishments / 40000000 population * 100000 = 12.5, rounded to 13
-        TX: 10, // 3000 establishments / 30000000 population * 100000
+        AL: 20,
+        CA: 13,
+        TX: 10,
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -125,13 +124,13 @@ describe('getCensusScores', () => {
 
       const scores = await getCensusScores();
 
-      expect(scores.CA).toBe(123); // 1234 / 1000000 * 100000 = 123.4, rounded to 123
+      expect(scores.CA).toBe(123);
     });
 
     it('handles states with missing population data', async () => {
       const censusDataWithMissingPopulation = {
         establishments: { AL: 1000, CA: 5000 },
-        population: { AL: 5000000 }, // CA missing
+        population: { AL: 5000000 },
         year: 2023,
       };
 
@@ -149,10 +148,9 @@ describe('getCensusScores', () => {
 
   describe('fallback mechanism', () => {
     it('tries multiple years when data is not available', async () => {
-      // First attempt fails (2024)
       mockFetchCensusData
         .mockRejectedValueOnce(new Error('404 Not Found'))
-        .mockResolvedValueOnce(mockCensusData); // Second attempt succeeds (2023)
+        .mockResolvedValueOnce(mockCensusData);
 
       const scores = await getCensusScores();
 
@@ -191,7 +189,6 @@ describe('getCensusScores', () => {
     });
 
     it('throws error when censusData is null after fallback attempts', async () => {
-      // Mock fetchCensusData to resolve with null (simulating a case where it returns null)
       mockFetchCensusData.mockResolvedValue(null as unknown as CensusData);
 
       await expect(getCensusScores()).rejects.toThrow(
@@ -282,7 +279,7 @@ describe('getCensusScores', () => {
       expect(mockRepository.save).toHaveBeenCalledWith({
         retailStores: 20,
         state: 'AL',
-        timestamp: 1704067200, // 2024-01-01 00:00:00 UTC
+        timestamp: 1704067200,
       });
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Stored Census data for AL: 20 establishments per 100k',
@@ -369,18 +366,14 @@ describe('getCensusScores', () => {
     });
 
     it('covers default parameter for getStartOfDayTimestamp', async () => {
-      // This test ensures the default parameter branch is covered
-      // by calling getCensusScores without any specific date context
       mockFetchCensusData.mockResolvedValue(mockCensusData);
 
       await getCensusScores();
 
-      // The function should complete successfully, covering the default parameter
       expect(mockFetchCensusData).toHaveBeenCalled();
     });
 
     it('covers repository creation when both conditions are false', async () => {
-      // Test the case where CONFIG.IS_DEVELOPMENT is true AND no env var is set
       mockCONFIG.IS_DEVELOPMENT = true;
       delete process.env.CENSUS_DYNAMODB_TABLE_NAME;
       mockFetchCensusData.mockResolvedValue(mockCensusData);
@@ -392,7 +385,6 @@ describe('getCensusScores', () => {
         CA: 13,
         TX: 10,
       });
-      // Should not create repository when both conditions are false
       expect(mockDynamoDBCensusSignalRepository).not.toHaveBeenCalled();
     });
   });
