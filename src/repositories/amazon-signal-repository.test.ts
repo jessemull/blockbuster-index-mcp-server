@@ -196,6 +196,23 @@ describe('DynamoDBAmazonSignalRepository', () => {
         },
       );
     });
+
+    it('handles non-Error exceptions in exists check', async () => {
+      const error = 'String error';
+      mockSend.mockRejectedValue(error);
+
+      await expect(repository.exists('CA', 1234567890)).rejects.toBe(
+        'String error',
+      );
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        'Failed to check if record exists',
+        {
+          error: 'String error',
+          state: 'CA',
+          timestamp: 1234567890,
+        },
+      );
+    });
   });
 
   describe('query', () => {
@@ -259,6 +276,22 @@ describe('DynamoDBAmazonSignalRepository', () => {
         'Failed to query job signal records',
         {
           error: 'Query failed',
+          state: 'CA',
+          start: undefined,
+          end: undefined,
+        },
+      );
+    });
+
+    it('handles non-Error exceptions in query', async () => {
+      const error = 'String error';
+      mockSend.mockRejectedValue(error);
+
+      await expect(repository.query('CA')).rejects.toBe('String error');
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        'Failed to query job signal records',
+        {
+          error: 'String error',
           state: 'CA',
           start: undefined,
           end: undefined,
@@ -350,6 +383,44 @@ describe('DynamoDBCensusSignalRepository', () => {
         },
       );
     });
+
+    it('handles non-Error exceptions in exists check', async () => {
+      const error = 'String error';
+      mockSend.mockRejectedValue(error);
+
+      await expect(repository.exists('TX', 1234567890)).rejects.toBe(
+        'String error',
+      );
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        'Failed to check if census record exists',
+        {
+          error: 'String error',
+          state: 'TX',
+          timestamp: 1234567890,
+        },
+      );
+    });
+
+    it('handles non-Error exceptions in save', async () => {
+      const error = 'String error';
+      mockSend.mockRejectedValue(error);
+
+      const mockRecord = {
+        state: 'TX',
+        timestamp: 1234567890,
+        retailStores: 100,
+      };
+
+      await expect(repository.save(mockRecord)).rejects.toBe('String error');
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        'Failed to save census signal record',
+        {
+          error: 'String error',
+          state: 'TX',
+          timestamp: 1234567890,
+        },
+      );
+    });
   });
 
   describe('exists', () => {
@@ -389,6 +460,23 @@ describe('DynamoDBCensusSignalRepository', () => {
         'Failed to check if census record exists',
         {
           error: 'Get failed',
+          state: 'TX',
+          timestamp: 1234567890,
+        },
+      );
+    });
+
+    it('handles non-Error exceptions in exists check', async () => {
+      const error = 'String error';
+      mockSend.mockRejectedValue(error);
+
+      await expect(repository.exists('TX', 1234567890)).rejects.toBe(
+        'String error',
+      );
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        'Failed to check if census record exists',
+        {
+          error: 'String error',
           state: 'TX',
           timestamp: 1234567890,
         },

@@ -72,12 +72,6 @@ export const fetchCensusEstablishmentData = async (
     const response = await axios.get(url);
     const data = response.data as [string, string, string, string][];
 
-    // Debug log: print all state codes returned
-    console.log(
-      'Raw establishment state codes:',
-      data.slice(1).map((row) => row[3]),
-    );
-
     const establishments: CensusEstablishmentData = {};
 
     for (const [estab, , , stateCode] of data.slice(1)) {
@@ -107,12 +101,6 @@ export const fetchCensusPopulationData = async (
   try {
     const response = await axios.get(url);
     const data = response.data as [string, string, string, string][];
-
-    // Debug log: print the raw response structure
-    console.log(
-      'Raw population data response:',
-      JSON.stringify(data.slice(0, 5), null, 2),
-    );
 
     const population: CensusPopulationData = {};
 

@@ -3,6 +3,7 @@ import { fetchCensusData } from '../../services/census-service';
 import { logger } from '../../util';
 import { getCensusScores } from './get-census-scores';
 import { DynamoDBCensusSignalRepository } from '../../repositories';
+import { CensusData } from '../../types';
 
 jest.mock('../../config');
 jest.mock('../../services/census-service');
@@ -188,6 +189,15 @@ describe('getCensusScores', () => {
       expect(mockFetchCensusData).toHaveBeenCalledWith(2023);
       expect(mockFetchCensusData).toHaveBeenCalledWith(2022);
     });
+
+    it('throws error when censusData is null after fallback attempts', async () => {
+      // Mock fetchCensusData to resolve with null (simulating a case where it returns null)
+      mockFetchCensusData.mockResolvedValue(null as unknown as CensusData);
+
+      await expect(getCensusScores()).rejects.toThrow(
+        'Failed to fetch Census data after multiple attempts',
+      );
+    });
   });
 
   describe('repository interactions', () => {
@@ -356,6 +366,34 @@ describe('getCensusScores', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Completed Census calculation: processed 0 states',
       );
+    });
+
+    it('covers default parameter for getStartOfDayTimestamp', async () => {
+      // This test ensures the default parameter branch is covered
+      // by calling getCensusScores without any specific date context
+      mockFetchCensusData.mockResolvedValue(mockCensusData);
+
+      await getCensusScores();
+
+      // The function should complete successfully, covering the default parameter
+      expect(mockFetchCensusData).toHaveBeenCalled();
+    });
+
+    it('covers repository creation when both conditions are false', async () => {
+      // Test the case where CONFIG.IS_DEVELOPMENT is true AND no env var is set
+      mockCONFIG.IS_DEVELOPMENT = true;
+      delete process.env.CENSUS_DYNAMODB_TABLE_NAME;
+      mockFetchCensusData.mockResolvedValue(mockCensusData);
+
+      const scores = await getCensusScores();
+
+      expect(scores).toEqual({
+        AL: 20,
+        CA: 13,
+        TX: 10,
+      });
+      // Should not create repository when both conditions are false
+      expect(mockDynamoDBCensusSignalRepository).not.toHaveBeenCalled();
     });
   });
 });
