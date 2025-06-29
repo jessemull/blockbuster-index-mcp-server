@@ -1,12 +1,13 @@
 import { getAmazonScores } from '../signals/amazon';
 import { logger } from '../util';
 import { States } from '../types';
-import type { JobSignalRecord, JobSignalRepository } from '../types';
+import type { JobSignalRecord } from '../types/amazon';
+import type { SignalRepository } from '../types/amazon';
 
 export class AmazonSignalService {
-  private repository: JobSignalRepository;
+  private repository: SignalRepository<JobSignalRecord>;
 
-  constructor(repository: JobSignalRepository) {
+  constructor(repository: SignalRepository<JobSignalRecord>) {
     this.repository = repository;
   }
 
@@ -19,8 +20,7 @@ export class AmazonSignalService {
         totalStates: Object.keys(States).length,
       });
 
-      // Get Amazon job scores and store data while scraping
-      const jobScores = await getAmazonScores(this.repository, timestamp);
+      const jobScores = await getAmazonScores();
 
       logger.info(
         'Successfully completed Amazon signal collection and storage',
@@ -54,12 +54,16 @@ export class AmazonSignalService {
 
       // Query each state for the date range
       for (const state of Object.values(States)) {
-        const stateRecords = await this.repository.query(
-          state,
-          startTimestamp,
-          endTimestamp,
-        );
-        records.push(...stateRecords);
+        if (this.repository.query) {
+          const stateRecords = await this.repository.query(
+            state,
+            startTimestamp,
+            endTimestamp,
+          );
+          records.push(...stateRecords);
+        } else {
+          throw new Error('Query method not implemented for this repository');
+        }
       }
 
       logger.info('Retrieved Amazon signal records for date range', {

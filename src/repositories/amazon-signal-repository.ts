@@ -1,23 +1,9 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import {
-  DynamoDBDocumentClient,
-  GetCommand,
-  PutCommand,
-  QueryCommand,
-} from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { logger } from '../util';
-import type { JobSignalRecord, JobSignalRepository } from '../types';
+import type { JobSignalRecord } from '../types/amazon';
+import { DynamoDBSignalRepository } from './base-signal-repository';
 
-export class DynamoDBJobSignalRepository implements JobSignalRepository {
-  private client: DynamoDBDocumentClient;
-  private tableName: string;
-
-  constructor(tableName: string, region?: string) {
-    const dynamoClient = new DynamoDBClient({ region: region || 'us-west-2' });
-    this.client = DynamoDBDocumentClient.from(dynamoClient);
-    this.tableName = tableName;
-  }
-
+export class DynamoDBAmazonSignalRepository extends DynamoDBSignalRepository<JobSignalRecord> {
   async save(record: JobSignalRecord): Promise<void> {
     try {
       const item = {
@@ -58,16 +44,26 @@ export class DynamoDBJobSignalRepository implements JobSignalRepository {
     }
   }
 
-  async saveBatch(records: JobSignalRecord[]): Promise<void> {
-    const batchSize = 25; // DynamoDB batch write limit
-    const batches = [];
+  async exists(state: string, timestamp?: number): Promise<boolean> {
+    try {
+      const response = await this.client.send(
+        new GetCommand({
+          TableName: this.tableName,
+          Key: {
+            state: state,
+            timestamp: timestamp || Math.floor(Date.now() / 1000),
+          },
+        }),
+      );
 
-    for (let i = 0; i < records.length; i += batchSize) {
-      batches.push(records.slice(i, i + batchSize));
-    }
-
-    for (const batch of batches) {
-      await Promise.all(batch.map((record) => this.save(record)));
+      return !!response.Item;
+    } catch (error: unknown) {
+      logger.error('Failed to check if record exists', {
+        error: error instanceof Error ? error.message : String(error),
+        state,
+        timestamp,
+      });
+      throw error;
     }
   }
 
@@ -104,29 +100,6 @@ export class DynamoDBJobSignalRepository implements JobSignalRepository {
         error: error instanceof Error ? error.message : String(error),
         start,
         state,
-      });
-      throw error;
-    }
-  }
-
-  async exists(state: string, timestamp?: number): Promise<boolean> {
-    try {
-      const response = await this.client.send(
-        new GetCommand({
-          TableName: this.tableName,
-          Key: {
-            state: state,
-            timestamp: timestamp || Math.floor(Date.now() / 1000),
-          },
-        }),
-      );
-
-      return !!response.Item;
-    } catch (error: unknown) {
-      logger.error('Failed to check if record exists', {
-        error: error instanceof Error ? error.message : String(error),
-        state,
-        timestamp,
       });
       throw error;
     }

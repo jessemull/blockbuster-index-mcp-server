@@ -2,7 +2,8 @@ import { AmazonSignalService } from './amazon-signal-service';
 import { getAmazonScores } from '../signals/amazon';
 import { logger } from '../util';
 import { States } from '../types';
-import type { JobSignalRecord, JobSignalRepository } from '../types';
+import type { JobSignalRecord } from '../types/amazon';
+import type { SignalRepository } from '../types/amazon';
 
 jest.mock('../signals/amazon');
 jest.mock('../util', () => ({
@@ -23,7 +24,7 @@ interface AmazonSignalServiceWithPrivate {
 
 describe('AmazonSignalService', () => {
   let service: AmazonSignalService;
-  let mockRepository: jest.Mocked<JobSignalRepository>;
+  let mockRepository: jest.Mocked<SignalRepository<JobSignalRecord>>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -32,8 +33,7 @@ describe('AmazonSignalService', () => {
       exists: jest.fn(),
       query: jest.fn(),
       save: jest.fn(),
-      saveBatch: jest.fn(),
-    };
+    } as unknown as jest.Mocked<SignalRepository<JobSignalRecord>>;
 
     service = new AmazonSignalService(mockRepository);
   });
@@ -58,10 +58,7 @@ describe('AmazonSignalService', () => {
 
       await service.collectAndStoreSignals();
 
-      expect(mockGetAmazonScores).toHaveBeenCalledWith(
-        mockRepository,
-        mockTimestamp,
-      );
+      expect(mockGetAmazonScores).toHaveBeenCalledWith();
       expect(logger.info).toHaveBeenCalledWith(
         'Starting Amazon signal collection and storage',
         {
@@ -143,7 +140,7 @@ describe('AmazonSignalService', () => {
     });
 
     it('successfully retrieves signals for date range', async () => {
-      mockRepository.query.mockResolvedValue(mockRecords);
+      (mockRepository.query as jest.Mock).mockResolvedValue(mockRecords);
 
       const result = await service.getSignalsForDateRange(startDate, endDate);
 
@@ -172,7 +169,7 @@ describe('AmazonSignalService', () => {
     });
 
     it('handles empty results from repository', async () => {
-      mockRepository.query.mockResolvedValue([]);
+      (mockRepository.query as jest.Mock).mockResolvedValue([]);
 
       const result = await service.getSignalsForDateRange(startDate, endDate);
 
@@ -188,7 +185,9 @@ describe('AmazonSignalService', () => {
     });
 
     it('handles errors during retrieval', async () => {
-      mockRepository.query.mockRejectedValue(new Error('Query failed'));
+      (mockRepository.query as jest.Mock).mockRejectedValue(
+        new Error('Query failed'),
+      );
 
       await expect(
         service.getSignalsForDateRange(startDate, endDate),
@@ -205,7 +204,7 @@ describe('AmazonSignalService', () => {
     });
 
     it('handles non-Error exceptions during retrieval', async () => {
-      mockRepository.query.mockRejectedValue('String error');
+      (mockRepository.query as jest.Mock).mockRejectedValue('String error');
 
       await expect(
         service.getSignalsForDateRange(startDate, endDate),
@@ -225,7 +224,7 @@ describe('AmazonSignalService', () => {
 
 describe('AmazonSignalService - getStartOfDayTimestamp', () => {
   let service: AmazonSignalService;
-  let mockRepository: jest.Mocked<JobSignalRepository>;
+  let mockRepository: jest.Mocked<SignalRepository<JobSignalRecord>>;
   let serviceWithPrivate: AmazonSignalServiceWithPrivate;
 
   beforeEach(() => {
@@ -236,8 +235,7 @@ describe('AmazonSignalService - getStartOfDayTimestamp', () => {
       exists: jest.fn(),
       query: jest.fn(),
       save: jest.fn(),
-      saveBatch: jest.fn(),
-    };
+    } as unknown as jest.Mocked<SignalRepository<JobSignalRecord>>;
 
     service = new AmazonSignalService(mockRepository);
     serviceWithPrivate = service as unknown as AmazonSignalServiceWithPrivate;

@@ -54,18 +54,12 @@ describe('getAmazonScores', () => {
     );
   });
 
-  it('returns equal scores if scrape fails', async () => {
+  it('throws error if scrape fails', async () => {
     const mockEqualScores = { CA: 0.1, TX: 0.1 };
 
     mockScrapeAmazonJobs.mockRejectedValue(new Error('Scrape failed'));
     mockGetEqualScores.mockReturnValue(mockEqualScores);
 
-    const scores = await getAmazonScores();
-
-    expect(scores).toEqual(mockEqualScores);
-    expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to calculate Amazon job scores: '),
-      expect.any(Error),
-    );
+    await expect(getAmazonScores()).rejects.toThrow('Scrape failed');
   });
 });

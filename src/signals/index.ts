@@ -7,10 +7,12 @@ import {
   scrapeAmazonJobs,
   searchJobsInState,
 } from './amazon';
+import { getCensusScores } from './census';
 
 export {
   calculateScores,
   getAmazonScores,
+  getCensusScores,
   getEqualScores,
   getJobCountFromFilters,
   getTotalJobsFromPagination,

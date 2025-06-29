@@ -3,10 +3,10 @@ import { logger } from '../../util';
 import { States } from '../../types';
 import { STATE_ABBR_TO_NAME } from '../../constants';
 import { searchJobsInState } from './search-jobs-in-state';
-import type { JobSignalRepository, JobSignalRecord } from '../../types';
+import type { SignalRepository, JobSignalRecord } from '../../types/amazon';
 
 export async function scrapeAmazonJobs(
-  repository?: JobSignalRepository,
+  repository?: SignalRepository<JobSignalRecord>,
   timestamp?: number,
 ): Promise<Record<string, number>> {
   const browser = await puppeteer.launch({

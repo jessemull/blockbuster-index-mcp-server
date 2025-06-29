@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { CONFIG, validateConfig } from './config';
 import { WEIGHTS } from './constants';
-import { getAmazonScores } from './signals';
+import { getAmazonScores, getCensusScores } from './signals';
 import { BlockbusterIndexResponse, Signal, StateScore, States } from './types';
 import { logger, retryWithBackoff, uploadToS3 } from './util';
 
@@ -17,10 +17,13 @@ export const main = async () => {
     logger.startOperation('blockbuster_index_calculation');
     logger.performance('calculation_start', Date.now() - startTime);
 
-    const amazon = await retryWithBackoff(() => getAmazonScores());
+    const [amazon, census] = await Promise.all([
+      retryWithBackoff(() => getAmazonScores()),
+      retryWithBackoff(() => getCensusScores()),
+    ]);
 
     logger.performance('signals_fetched', Date.now() - startTime, {
-      totalSignals: 1,
+      totalSignals: 2,
     });
 
     const states: Record<string, StateScore> = {};
@@ -28,6 +31,7 @@ export const main = async () => {
     for (const state of Object.values(States)) {
       const components = {
         [Signal.AMAZON]: amazon[state] ?? 0,
+        [Signal.CENSUS]: census[state] ?? 0,
       };
 
       const score = Object.entries(components).reduce(
