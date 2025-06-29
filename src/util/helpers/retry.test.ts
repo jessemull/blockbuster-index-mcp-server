@@ -97,7 +97,6 @@ describe('retryWithBackoff', () => {
       expect.objectContaining({
         message: 'oops',
         name: 'Error',
-        stack: expect.stringContaining('oops'),
       }),
     );
   });

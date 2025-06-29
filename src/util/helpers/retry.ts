@@ -3,6 +3,27 @@ import { MAX_RETRIES, RETRY_DELAY } from '../../constants';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Custom replacer to handle Error objects and circular references
+function errorReplacer() {
+  const seen = new WeakSet<object>();
+  return function (key: string, value: unknown): unknown {
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) {
+        return '[Circular]';
+      }
+      seen.add(value);
+    }
+    if (value instanceof Error) {
+      const errorObj: Record<string, unknown> = {};
+      Object.getOwnPropertyNames(value).forEach((prop) => {
+        errorObj[prop] = (value as Error & { [key: string]: unknown })[prop];
+      });
+      return errorObj;
+    }
+    return value;
+  };
+}
+
 export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   maxRetries = MAX_RETRIES,
@@ -15,16 +36,19 @@ export async function retryWithBackoff<T>(
     } catch (err) {
       error = err instanceof Error ? err : new Error(String(err));
 
-      // Sanitize the error to prevent large objects from being logged
-      const sanitizedError = {
+      // Log simplified error for quick readability
+      const simplifiedError = {
         message: error.message,
         name: error.name,
-        stack: error.stack,
       };
-
       logger.errorWithContext(
         `Attempt ${attempt} failed:`,
-        sanitizedError as Error,
+        simplifiedError as Error,
+      );
+
+      // Log the entire error object as JSON for full debugging, safely handling circular refs
+      logger.error(
+        `Attempt ${attempt} failed (full error object): ${JSON.stringify(error, errorReplacer(), 2)}`,
       );
 
       const isLastAttempt = attempt === maxRetries;
