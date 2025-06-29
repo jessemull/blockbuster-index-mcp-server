@@ -7,6 +7,9 @@ import {
 import { logger } from '../util';
 
 jest.mock('axios');
+jest.mock('../util/helpers/retry', () => ({
+  retryWithBackoff: jest.fn((fn) => fn()),
+}));
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 

@@ -67,4 +67,6 @@ Outputs:
     Value: !Ref CensusSignalsTable
   CensusSignalsTableArn:
     Description: 'Census Signals Table ARN'
-    Value: !GetAtt CensusSignalsTable.Arn 
+    Value: !GetAtt CensusSignalsTable.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterCensusSignalsTableArn' 

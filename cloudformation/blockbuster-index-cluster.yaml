@@ -112,6 +112,19 @@ Resources:
                   - dynamodb:DescribeTable
                 Resource: !ImportValue
                   Fn::Sub: '${Environment}-BlockbusterAmazonJobsTableArn'
+        - PolicyName: 'DynamoDBCensusSignalsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterCensusSignalsTableArn'
 
   EventBridgeInvokeRole:
     Type: AWS::IAM::Role
