@@ -3,8 +3,7 @@ import { retryWithBackoff } from './retry';
 
 jest.mock('../logger', () => ({
   logger: {
-    errorWithContext: jest.fn(),
-    performance: jest.fn(),
+    info: jest.fn(),
     error: jest.fn(),
   },
 }));
@@ -29,7 +28,7 @@ describe('retryWithBackoff', () => {
     const result = await retryWithBackoff(fn);
     expect(result).toBe('success');
     expect(fn).toHaveBeenCalledTimes(1);
-    expect(logger.errorWithContext).not.toHaveBeenCalled();
+    expect(logger.error).not.toHaveBeenCalled();
   });
 
   it('succeeds after 2 failures', async () => {
@@ -48,12 +47,14 @@ describe('retryWithBackoff', () => {
 
     expect(result).toBe('eventual success');
     expect(fn).toHaveBeenCalledTimes(3);
-    expect(logger.errorWithContext).toHaveBeenCalledTimes(2);
-    expect(logger.performance).toHaveBeenCalledWith('retry_delay', 100, {
+    expect(logger.error).toHaveBeenCalledTimes(2);
+    expect(logger.info).toHaveBeenCalledWith('Retry delay', {
+      delayMs: 100,
       attempt: 1,
       maxRetries: 3,
     });
-    expect(logger.performance).toHaveBeenCalledWith('retry_delay', 200, {
+    expect(logger.info).toHaveBeenCalledWith('Retry delay', {
+      delayMs: 200,
       attempt: 2,
       maxRetries: 3,
     });
@@ -66,8 +67,8 @@ describe('retryWithBackoff', () => {
 
     await expect(retryWithBackoff(fn)).rejects.toThrow('final failure');
     expect(fn).toHaveBeenCalledTimes(3);
-    expect(logger.errorWithContext).toHaveBeenCalledTimes(3);
-    expect(logger.performance).toHaveBeenCalledTimes(2);
+    expect(logger.error).toHaveBeenCalledTimes(3);
+    expect(logger.info).toHaveBeenCalledTimes(2);
   }, 10000);
 
   it('respects custom maxRetries', async () => {
@@ -82,7 +83,8 @@ describe('retryWithBackoff', () => {
     const result = await promise;
     expect(result).toBe('done');
     expect(fn).toHaveBeenCalledTimes(2);
-    expect(logger.performance).toHaveBeenCalledWith('retry_delay', 100, {
+    expect(logger.info).toHaveBeenCalledWith('Retry delay', {
+      delayMs: 100,
       attempt: 1,
       maxRetries: 2,
     });
@@ -93,11 +95,12 @@ describe('retryWithBackoff', () => {
 
     const promise = retryWithBackoff(fn, 1);
     await expect(promise).rejects.toThrow('oops');
-    expect(logger.errorWithContext).toHaveBeenCalledWith(
+    expect(logger.error).toHaveBeenCalledWith(
       'Attempt 1 failed:',
       expect.objectContaining({
-        message: 'oops',
+        error: 'oops',
         name: 'Error',
+        stack: expect.any(String),
       }),
     );
   });

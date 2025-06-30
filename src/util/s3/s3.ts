@@ -34,13 +34,15 @@ export const uploadToS3 = async (options: S3UploadOptions): Promise<void> => {
 
     await s3Client.send(command);
 
-    logger.performance('s3_upload_success', 0, {
+    logger.info('S3 upload success', {
       bucket: options.bucket,
       key: options.key,
     });
   } catch (error) {
     const s3Error = error as S3ServiceException;
-    logger.errorWithContext('S3 upload failed:', s3Error, {
+    logger.error('S3 upload failed:', {
+      error: s3Error.message,
+      stack: s3Error.stack,
       bucket: options.bucket,
       code: s3Error.name,
       key: options.key,
@@ -66,7 +68,7 @@ export const downloadFromS3 = async (
       throw new Error('Empty response body from S3');
     }
 
-    logger.performance('s3_download_success', 0, {
+    logger.info('S3 download success', {
       bucket,
       key,
     });
@@ -74,7 +76,9 @@ export const downloadFromS3 = async (
     return body;
   } catch (error) {
     const s3Error = error as S3ServiceException;
-    logger.errorWithContext('S3 download failed:', s3Error, {
+    logger.error('S3 download failed:', {
+      error: s3Error.message,
+      stack: s3Error.stack,
       bucket,
       code: s3Error.name,
       key,
