@@ -87,7 +87,6 @@ export const fetchCensusEstablishmentData = async (
     );
     return establishments;
   } catch (error) {
-    // Log error details without the full error object to avoid source code in logs
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorCode = (error as { code: string })?.code || 'UNKNOWN';
     logger.error(
@@ -125,7 +124,6 @@ export const fetchCensusPopulationData = async (
     );
     return population;
   } catch (error) {
-    // Log error details without the full error object to avoid source code in logs
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorCode = (error as { code: string })?.code || 'UNKNOWN';
     logger.error(

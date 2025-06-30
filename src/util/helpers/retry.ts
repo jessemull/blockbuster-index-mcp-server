@@ -3,7 +3,6 @@ import { MAX_RETRIES, RETRY_DELAY } from '../../constants';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Custom replacer to handle Error objects and circular references
 function errorReplacer() {
   const seen = new WeakSet<object>();
   return function (key: string, value: unknown): unknown {
@@ -36,17 +35,16 @@ export async function retryWithBackoff<T>(
     } catch (err) {
       error = err instanceof Error ? err : new Error(String(err));
 
-      // Log simplified error for quick readability
       const simplifiedError = {
         message: error.message,
         name: error.name,
       };
+
       logger.errorWithContext(
         `Attempt ${attempt} failed:`,
         simplifiedError as Error,
       );
 
-      // Log the entire error object as JSON for full debugging, safely handling circular refs
       logger.error(
         `Attempt ${attempt} failed (full error object): ${JSON.stringify(error, errorReplacer(), 2)}`,
       );
