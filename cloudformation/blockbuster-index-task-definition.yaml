@@ -26,6 +26,7 @@ Mappings:
 
 Conditions:
   IsDev: !Equals [!Ref Environment, 'dev']
+  IsProd: !Equals [!Ref Environment, 'prod']
 
 Parameters:
   Environment:
@@ -41,8 +42,8 @@ Parameters:
 
   ScheduleExpression:
     Type: String
-    Default: 'rate(1 day)'
-    Description: 'EventBridge schedule expression (cron or rate)'
+    Default: 'cron(0 10 * * ? *)'
+    Description: 'EventBridge schedule expression (cron or rate) - default is daily at 2AM PST (10AM UTC)'
 
 Resources:
   ECSTaskDefinition:
@@ -102,6 +103,7 @@ Resources:
 
   ScheduledTaskRule:
     Type: AWS::Events::Rule
+    Condition: IsProd
     Properties:
       Name: !Sub 'blockbuster-index-scheduled-task-rule-${Environment}'
       ScheduleExpression: !Ref ScheduleExpression

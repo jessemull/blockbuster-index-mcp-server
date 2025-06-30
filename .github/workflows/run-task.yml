@@ -1,0 +1,42 @@
+name: Run Task
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Choose environment (dev/prod)'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  run-task:
+    name: Run ECS Task
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set Up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Run ECS Task
+        run: |
+          if [[ "${{ github.event.inputs.environment }}" == "prod" ]]; then
+            CLUSTER="blockbuster-index-prod"
+            TASK_DEF="blockbuster-index-task-prod"
+          else
+            CLUSTER="blockbuster-index-dev"
+            TASK_DEF="blockbuster-index-task-dev"
+          fi
+          TASK_ARN=$(aws ecs run-task \
+            --cluster $CLUSTER \
+            --task-definition $TASK_DEF \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[subnet-02ce757a,subnet-2655df7b,subnet-e22085a8,subnet-badfdd91],securityGroups=[sg-09812900f87093af6],assignPublicIp=ENABLED}" \
+            --query 'tasks[0].taskArn' \
+            --output text) 
