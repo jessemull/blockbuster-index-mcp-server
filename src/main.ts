@@ -14,8 +14,7 @@ export const main = async () => {
       validateConfig();
     }
 
-    logger.startOperation('blockbuster_index_calculation');
-    logger.performance('calculation_start', Date.now() - startTime);
+    logger.info('Starting blockbuster index calculation');
 
     const results = await Promise.allSettled([
       retryWithBackoff(() => getAmazonScores()),
@@ -41,7 +40,7 @@ export const main = async () => {
       throw new Error('All signals failed - cannot generate index');
     }
 
-    logger.performance('signals_fetched', Date.now() - startTime, {
+    logger.info('Signals fetched', {
       totalSignals: results.length,
       successfulSignals: results.length - failedSignals,
       failedSignals,
@@ -65,7 +64,11 @@ export const main = async () => {
         components,
       };
 
-      logger.signal('combined', state, states[state].score, { components });
+      logger.info('Combined signal', {
+        state,
+        score: states[state].score,
+        components,
+      });
     }
 
     const response: BlockbusterIndexResponse = {
@@ -84,8 +87,8 @@ export const main = async () => {
 
     const processingTime = Date.now() - startTime;
 
-    logger.endOperation('blockbuster_index_calculation', processingTime);
-    logger.performance('index_calculation', processingTime, {
+    logger.info('Blockbuster index calculation completed', {
+      processingTime,
       totalStates: response.metadata.totalStates,
       signalStatus: response.metadata.signalStatus,
     });
@@ -95,7 +98,7 @@ export const main = async () => {
       const filePath = path.join(scoresDir, 'blockbuster-index.json');
       fs.mkdirSync(scoresDir, { recursive: true });
       fs.writeFileSync(filePath, JSON.stringify(response, null, 2));
-      logger.performance('file_written', Date.now() - startTime, { filePath });
+      logger.info('File written', { filePath });
     } else {
       await retryWithBackoff(async () => {
         await uploadToS3({
@@ -109,18 +112,20 @@ export const main = async () => {
         });
       });
 
-      logger.performance('s3_uploaded', Date.now() - startTime, {
+      logger.info('S3 uploaded', {
         bucket: CONFIG.S3_BUCKET_NAME!,
         key: 'data/data.json',
       });
     }
 
-    logger.performance('calculation_completed', Date.now() - startTime);
+    logger.info('Calculation completed');
   } catch (err) {
     const error = err instanceof Error ? err : new Error(String(err));
     const duration = Date.now() - startTime;
 
-    logger.errorWithContext('Blockbuster index calculation failed:', error, {
+    logger.error('Blockbuster index calculation failed:', {
+      error: error.message,
+      stack: error.stack,
       duration,
       environment: CONFIG.NODE_ENV,
     });

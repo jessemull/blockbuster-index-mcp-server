@@ -49,13 +49,10 @@ jest.mock('./signals');
 
 jest.mock('./util', () => ({
   logger: {
-    startOperation: jest.fn(),
-    endOperation: jest.fn(),
-    performance: jest.fn(),
-    signal: jest.fn(),
-    errorWithContext: jest.fn(),
-    error: jest.fn(),
     info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
   },
   retryWithBackoff: jest.fn((fn) => fn()),
   uploadToS3: jest.fn(),
@@ -100,9 +97,8 @@ describe('main', () => {
       expect.stringContaining('"version": "1.0.0"'),
     );
 
-    expect(logger.performance).toHaveBeenCalledWith(
-      'file_written',
-      expect.any(Number),
+    expect(logger.info).toHaveBeenCalledWith(
+      'File written',
       expect.objectContaining({ filePath: expect.any(String) }),
     );
   });
@@ -122,10 +118,12 @@ describe('main', () => {
       }),
     );
 
-    expect(logger.performance).toHaveBeenCalledWith(
-      's3_uploaded',
-      expect.any(Number),
-      expect.objectContaining({ bucket: 'fake-bucket' }),
+    expect(logger.info).toHaveBeenCalledWith(
+      'S3 uploaded',
+      expect.objectContaining({
+        bucket: 'fake-bucket',
+        key: 'data/data.json',
+      }),
     );
   });
 
@@ -148,16 +146,16 @@ describe('main', () => {
     (signals.getCensusScores as jest.Mock).mockRejectedValueOnce(error);
 
     await expect(main()).rejects.toThrow('process.exit');
-    expect(logger.errorWithContext).toHaveBeenCalledWith(
+    expect(logger.error).toHaveBeenCalledWith(
       'Blockbuster index calculation failed:',
       expect.objectContaining({
-        message: 'All signals failed - cannot generate index',
-        name: 'Error',
+        error: 'All signals failed - cannot generate index',
         stack: expect.stringContaining(
           'All signals failed - cannot generate index',
         ),
+        duration: expect.any(Number),
+        environment: 'development',
       }),
-      expect.objectContaining({ environment: 'development' }),
     );
 
     mockExit.mockRestore();
@@ -176,16 +174,16 @@ describe('main', () => {
     );
 
     await expect(main()).rejects.toThrow('process.exit');
-    expect(logger.errorWithContext).toHaveBeenCalledWith(
+    expect(logger.error).toHaveBeenCalledWith(
       'Blockbuster index calculation failed:',
       expect.objectContaining({
-        message: 'All signals failed - cannot generate index',
-        name: 'Error',
+        error: 'All signals failed - cannot generate index',
         stack: expect.stringContaining(
           'All signals failed - cannot generate index',
         ),
+        duration: expect.any(Number),
+        environment: 'development',
       }),
-      expect.objectContaining({ environment: 'development' }),
     );
 
     mockExit.mockRestore();
@@ -215,9 +213,8 @@ describe('main', () => {
       expect.stringContaining('"signalStatus"'),
     );
 
-    expect(logger.performance).toHaveBeenCalledWith(
-      'signals_fetched',
-      expect.any(Number),
+    expect(logger.info).toHaveBeenCalledWith(
+      'Signals fetched',
       expect.objectContaining({
         totalSignals: 2,
         successfulSignals: 1,
@@ -249,12 +246,13 @@ describe('main', () => {
       expect.any(Error),
     );
 
-    expect(logger.errorWithContext).toHaveBeenCalledWith(
+    expect(logger.error).toHaveBeenCalledWith(
       'Blockbuster index calculation failed:',
       expect.objectContaining({
-        message: 'All signals failed - cannot generate index',
+        error: 'All signals failed - cannot generate index',
+        duration: expect.any(Number),
+        environment: 'development',
       }),
-      expect.objectContaining({ environment: 'development' }),
     );
 
     mockExit.mockRestore();

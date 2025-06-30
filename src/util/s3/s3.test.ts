@@ -22,8 +22,8 @@ jest.mock('../../config', () => ({
 
 jest.mock('../logger', () => ({
   logger: {
-    performance: jest.fn(),
-    errorWithContext: jest.fn(),
+    info: jest.fn(),
+    error: jest.fn(),
   },
 }));
 
@@ -48,9 +48,8 @@ describe('S3 Utils', () => {
       });
 
       expect(mockSend).toHaveBeenCalledWith(expect.any(PutObjectCommand));
-      expect(logger.performance).toHaveBeenCalledWith(
-        's3_upload_success',
-        0,
+      expect(logger.info).toHaveBeenCalledWith(
+        'S3 upload success',
         expect.objectContaining({
           bucket: 'my-bucket',
           key: 'my-key',
@@ -88,13 +87,14 @@ describe('S3 Utils', () => {
         }),
       ).rejects.toThrow('Access Denied');
 
-      expect(logger.errorWithContext).toHaveBeenCalledWith(
+      expect(logger.error).toHaveBeenCalledWith(
         'S3 upload failed:',
-        error,
         expect.objectContaining({
           bucket: 'b',
           key: 'k',
           code: 'AccessDenied',
+          error: 'Access Denied',
+          stack: expect.any(String),
         }),
       );
     });
@@ -112,9 +112,8 @@ describe('S3 Utils', () => {
 
       expect(result).toBe('file data');
       expect(mockBody.transformToString).toHaveBeenCalled();
-      expect(logger.performance).toHaveBeenCalledWith(
-        's3_download_success',
-        0,
+      expect(logger.info).toHaveBeenCalledWith(
+        'S3 download success',
         expect.objectContaining({
           bucket: 'my-bucket',
           key: 'my-key',
@@ -143,13 +142,14 @@ describe('S3 Utils', () => {
         'The specified key does not exist',
       );
 
-      expect(logger.errorWithContext).toHaveBeenCalledWith(
+      expect(logger.error).toHaveBeenCalledWith(
         'S3 download failed:',
-        error,
         expect.objectContaining({
           bucket: 'bucket',
           key: 'missing-key',
           code: 'NoSuchKey',
+          error: 'The specified key does not exist',
+          stack: expect.any(String),
         }),
       );
     });
