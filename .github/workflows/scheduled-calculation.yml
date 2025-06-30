@@ -1,0 +1,108 @@
+name: Scheduled Blockbuster Index Calculation
+
+on:
+  schedule:
+    # Run daily at 2:00 AM UTC (adjust timezone as needed)
+    # This is 6:00 PM PST / 7:00 PM PDT (previous day)
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Choose environment (dev/prod)'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  run-calculation:
+    name: Run Scheduled Blockbuster Index Calculation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set Up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Run ECS Task
+        run: |
+          # For scheduled runs, use prod environment by default
+          # For manual runs, use the selected environment
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            ENVIRONMENT="prod"
+          else
+            ENVIRONMENT="${{ github.event.inputs.environment }}"
+          fi
+          
+          echo "Running blockbuster index calculation for $ENVIRONMENT environment..."
+          
+          # Set cluster and task definition based on environment
+          if [[ "$ENVIRONMENT" == "prod" ]]; then
+            CLUSTER="blockbuster-index-prod"
+            TASK_DEF="blockbuster-index-task-prod"
+          else
+            CLUSTER="blockbuster-index-dev"
+            TASK_DEF="blockbuster-index-task-dev"
+          fi
+          
+          # Run the ECS task
+          TASK_ARN=$(aws ecs run-task \
+            --cluster $CLUSTER \
+            --task-definition $TASK_DEF \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[subnet-02ce757a,subnet-2655df7b,subnet-e22085a8,subnet-badfdd91],securityGroups=[sg-09812900f87093af6],assignPublicIp=ENABLED}" \
+            --query 'tasks[0].taskArn' \
+            --output text)
+          
+          echo "Started ECS task: $TASK_ARN"
+          
+          # Wait for the task to complete and get final status
+          echo "Waiting for task to complete..."
+          
+          # Wait up to 10 minutes for completion
+          for i in {1..60}; do
+            TASK_STATUS=$(aws ecs describe-tasks \
+              --cluster $CLUSTER \
+              --tasks $TASK_ARN \
+              --query 'tasks[0].lastStatus' \
+              --output text)
+            
+            echo "Task status: $TASK_STATUS (check $i/60)"
+            
+            if [[ "$TASK_STATUS" == "STOPPED" ]]; then
+              # Get exit code
+              EXIT_CODE=$(aws ecs describe-tasks \
+                --cluster $CLUSTER \
+                --tasks $TASK_ARN \
+                --query 'tasks[0].containers[0].exitCode' \
+                --output text)
+              
+              echo "Task completed with exit code: $EXIT_CODE"
+              
+              if [[ "$EXIT_CODE" == "0" ]]; then
+                echo "✅ Blockbuster index calculation completed successfully!"
+              else
+                echo "❌ Blockbuster index calculation failed with exit code: $EXIT_CODE"
+                exit 1
+              fi
+              break
+            fi
+            
+            sleep 10
+          done
+          
+          if [[ "$TASK_STATUS" != "STOPPED" ]]; then
+            echo "⚠️  Task is still running after 10 minutes. Check CloudWatch logs for progress."
+          fi
+          
+          echo "Monitor the task at: https://us-west-2.console.aws.amazon.com/ecs/home?region=us-west-2#/clusters/$CLUSTER/tasks"
+
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "🚨 Scheduled blockbuster index calculation failed!"
+          echo "Check the logs above and CloudWatch for details." 

@@ -72,3 +72,39 @@ jobs:
             --parameter-overrides ContainerImage=${{ env.CONTAINER_IMAGE_URI }} Environment=${{ github.event.inputs.environment }} \
             --capabilities CAPABILITY_NAMED_IAM \
             --region us-west-2
+
+      - name: Wait for Task Definition to be Available
+        if: github.event.inputs.environment == 'prod'
+        run: |
+          echo "Waiting for task definition to be available..."
+          sleep 30
+
+      - name: Run ECS Task After Production Deployment
+        if: github.event.inputs.environment == 'prod'
+        run: |
+          echo "🚀 Running blockbuster index calculation after PRODUCTION deployment..."
+          echo "ℹ️  Dev deployments skip task execution to avoid unnecessary costs and data."
+          
+          # Set network configuration for production
+          CLUSTER="blockbuster-index-prod"
+          TASK_DEF="blockbuster-index-task-prod"
+          
+          # Run the ECS task
+          TASK_ARN=$(aws ecs run-task \
+            --cluster $CLUSTER \
+            --task-definition $TASK_DEF \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[subnet-02ce757a,subnet-2655df7b,subnet-e22085a8,subnet-badfdd91],securityGroups=[sg-09812900f87093af6],assignPublicIp=ENABLED}" \
+            --query 'tasks[0].taskArn' \
+            --output text)
+          
+          echo "✅ Started production ECS task: $TASK_ARN"
+          echo "📊 Monitor the task at: https://us-west-2.console.aws.amazon.com/ecs/home?region=us-west-2#/clusters/$CLUSTER/tasks"
+          echo "📝 Task is running in background. Check CloudWatch logs for progress."
+
+      - name: Skip Task Execution for Dev Environment
+        if: github.event.inputs.environment == 'dev'
+        run: |
+          echo "ℹ️  Skipping task execution for DEV deployment to avoid unnecessary costs."
+          echo "🎯 Task will only run automatically for PRODUCTION deployments."
+          echo "🧪 To test the task in dev, run manually: ./scripts/run-ecs-task.sh dev"
