@@ -17,13 +17,34 @@ export const main = async () => {
     logger.startOperation('blockbuster_index_calculation');
     logger.performance('calculation_start', Date.now() - startTime);
 
-    const [amazon, census] = await Promise.all([
+    const results = await Promise.allSettled([
       retryWithBackoff(() => getAmazonScores()),
-      retryWithBackoff(() => getCensusScores()),
+      getCensusScores(),
     ]);
 
+    // Extract results and handle failures gracefully
+    const amazon = results[0].status === 'fulfilled' ? results[0].value : {};
+    const census = results[1].status === 'fulfilled' ? results[1].value : {};
+
+    // Log any failures but continue with available data
+    let failedSignals = 0;
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        const signalName = index === 0 ? 'Amazon' : 'Census';
+        failedSignals++;
+        logger.error(`${signalName} signal failed:`, result.reason);
+      }
+    });
+
+    // If both signals failed, we can't proceed
+    if (failedSignals === results.length) {
+      throw new Error('All signals failed - cannot generate index');
+    }
+
     logger.performance('signals_fetched', Date.now() - startTime, {
-      totalSignals: 2,
+      totalSignals: results.length,
+      successfulSignals: results.length - failedSignals,
+      failedSignals,
     });
 
     const states: Record<string, StateScore> = {};
@@ -53,6 +74,11 @@ export const main = async () => {
         calculatedAt: new Date().toISOString(),
         version: CONFIG.VERSION,
         totalStates: Object.keys(states).length,
+        signalStatus: {
+          total: results.length,
+          successful: results.length - failedSignals,
+          failed: failedSignals,
+        },
       },
     };
 
@@ -61,6 +87,7 @@ export const main = async () => {
     logger.endOperation('blockbuster_index_calculation', processingTime);
     logger.performance('index_calculation', processingTime, {
       totalStates: response.metadata.totalStates,
+      signalStatus: response.metadata.signalStatus,
     });
 
     if (CONFIG.IS_DEVELOPMENT) {
@@ -83,7 +110,7 @@ export const main = async () => {
       });
 
       logger.performance('s3_uploaded', Date.now() - startTime, {
-        bucket: CONFIG.S3_BUCKET_NAME,
+        bucket: CONFIG.S3_BUCKET_NAME!,
         key: 'data/data.json',
       });
     }

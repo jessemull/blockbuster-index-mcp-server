@@ -54,6 +54,8 @@ jest.mock('./util', () => ({
     performance: jest.fn(),
     signal: jest.fn(),
     errorWithContext: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
   },
   retryWithBackoff: jest.fn((fn) => fn()),
   uploadToS3: jest.fn(),
@@ -143,11 +145,18 @@ describe('main', () => {
     });
 
     (signals.getAmazonScores as jest.Mock).mockRejectedValueOnce(error);
+    (signals.getCensusScores as jest.Mock).mockRejectedValueOnce(error);
 
     await expect(main()).rejects.toThrow('process.exit');
     expect(logger.errorWithContext).toHaveBeenCalledWith(
       'Blockbuster index calculation failed:',
-      error,
+      expect.objectContaining({
+        message: 'All signals failed - cannot generate index',
+        name: 'Error',
+        stack: expect.stringContaining(
+          'All signals failed - cannot generate index',
+        ),
+      }),
       expect.objectContaining({ environment: 'development' }),
     );
 
@@ -162,11 +171,89 @@ describe('main', () => {
     (signals.getAmazonScores as jest.Mock).mockRejectedValueOnce(
       'string error',
     );
+    (signals.getCensusScores as jest.Mock).mockRejectedValueOnce(
+      'string error',
+    );
 
     await expect(main()).rejects.toThrow('process.exit');
     expect(logger.errorWithContext).toHaveBeenCalledWith(
       'Blockbuster index calculation failed:',
+      expect.objectContaining({
+        message: 'All signals failed - cannot generate index',
+        name: 'Error',
+        stack: expect.stringContaining(
+          'All signals failed - cannot generate index',
+        ),
+      }),
+      expect.objectContaining({ environment: 'development' }),
+    );
+
+    mockExit.mockRestore();
+  });
+
+  it('continues processing when one signal fails', async () => {
+    const resolve = path.resolve as jest.Mock;
+    const join = path.join as jest.Mock;
+
+    resolve.mockReturnValue('/mocked/dev/scores');
+    join.mockReturnValue('/mocked/dev/scores/blockbuster-index.json');
+
+    (signals.getAmazonScores as jest.Mock).mockRejectedValueOnce(
+      new Error('Amazon failed'),
+    );
+    (signals.getCensusScores as jest.Mock).mockResolvedValueOnce(mockScores);
+
+    await main();
+
+    expect(logger.error).toHaveBeenCalledWith(
+      'Amazon signal failed:',
       expect.any(Error),
+    );
+
+    expect(fs.writeFileSync).toHaveBeenCalledWith(
+      '/mocked/dev/scores/blockbuster-index.json',
+      expect.stringContaining('"signalStatus"'),
+    );
+
+    expect(logger.performance).toHaveBeenCalledWith(
+      'signals_fetched',
+      expect.any(Number),
+      expect.objectContaining({
+        totalSignals: 2,
+        successfulSignals: 1,
+        failedSignals: 1,
+      }),
+    );
+  });
+
+  it('fails when all signals fail', async () => {
+    const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit');
+    });
+
+    (signals.getAmazonScores as jest.Mock).mockRejectedValueOnce(
+      new Error('Amazon failed'),
+    );
+    (signals.getCensusScores as jest.Mock).mockRejectedValueOnce(
+      new Error('Census failed'),
+    );
+
+    await expect(main()).rejects.toThrow('process.exit');
+
+    expect(logger.error).toHaveBeenCalledWith(
+      'Amazon signal failed:',
+      expect.any(Error),
+    );
+    expect(logger.error).toHaveBeenCalledWith(
+      'Census signal failed:',
+      expect.any(Error),
+    );
+
+    expect(logger.errorWithContext).toHaveBeenCalledWith(
+      'Blockbuster index calculation failed:',
+      expect.objectContaining({
+        message: 'All signals failed - cannot generate index',
+      }),
       expect.objectContaining({ environment: 'development' }),
     );
 

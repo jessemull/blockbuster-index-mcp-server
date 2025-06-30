@@ -5,6 +5,7 @@ jest.mock('../logger', () => ({
   logger: {
     errorWithContext: jest.fn(),
     performance: jest.fn(),
+    error: jest.fn(),
   },
 }));
 
@@ -94,7 +95,10 @@ describe('retryWithBackoff', () => {
     await expect(promise).rejects.toThrow('oops');
     expect(logger.errorWithContext).toHaveBeenCalledWith(
       'Attempt 1 failed:',
-      expect.any(Error),
+      expect.objectContaining({
+        message: 'oops',
+        name: 'Error',
+      }),
     );
   });
 });

@@ -4,13 +4,13 @@ import { SignalRepository } from '../../types/amazon';
 import { fetchCensusData } from '../../services/census-service';
 import { logger } from '../../util';
 
+const DEFAULT_TABLE = 'blockbuster-index-census-signals-dev';
+
 const getStartOfDayTimestamp = (date: Date): number => {
   const startOfDay = new Date(date);
   startOfDay.setUTCHours(0, 0, 0, 0);
   return Math.floor(startOfDay.getTime() / 1000);
 };
-
-const DEFAULT_TABLE = 'blockbuster-index-census-signals-dev';
 
 export const getCensusScores = async (): Promise<Record<string, number>> => {
   logger.info('Starting Census retail establishment calculation...');
@@ -18,7 +18,7 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
   const currentYear = new Date().getFullYear();
 
   // Try to find the most recent available Census data...
-  // Start with current year - 1 and go backwards until we find available data...
+  // Start with previous year and go backwards until we find available data...
 
   let lastAvailableYear = currentYear - 1;
   let censusData = null;
@@ -45,11 +45,15 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
       );
       if (attempt === 2) {
         // If we've tried 3 years and still no data, throw the error...
-
+        logger.error(
+          `All attempts failed. Last error for year ${yearToTry}:`,
+          error,
+        );
         throw new Error(
           `No Census data available for years ${currentYear - 1} through ${currentYear - 3}`,
         );
       }
+      logger.info(`Moving to next year (attempt ${attempt + 1} of 3)`);
     }
   }
 
@@ -66,7 +70,6 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
       '../../repositories'
     );
     repository = new DynamoDBCensusSignalRepository(
-      /* istanbul ignore next */
       process.env.CENSUS_DYNAMODB_TABLE_NAME || DEFAULT_TABLE,
     );
   }

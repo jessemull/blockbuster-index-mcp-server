@@ -63,11 +63,10 @@ describe('CensusService', () => {
       mockedAxios.get.mockRejectedValueOnce(new Error('network error'));
 
       await expect(fetchCensusEstablishmentData(2022)).rejects.toThrow(
-        'Failed to fetch Census establishment data: Error: network error',
+        'Failed to fetch Census establishment data for year 2022',
       );
       expect(logger.error).toHaveBeenCalledWith(
-        'Failed to fetch Census establishment data:',
-        expect.any(Error),
+        'Failed to fetch Census establishment data for year 2022: network error (code: UNKNOWN)',
       );
     });
   });
@@ -102,11 +101,10 @@ describe('CensusService', () => {
       mockedAxios.get.mockRejectedValueOnce(new Error('population API fail'));
 
       await expect(fetchCensusPopulationData(2022)).rejects.toThrow(
-        'Failed to fetch Census population data: Error: population API fail',
+        'Failed to fetch Census population data for year 2022',
       );
       expect(logger.error).toHaveBeenCalledWith(
-        'Failed to fetch Census population data:',
-        expect.any(Error),
+        'Failed to fetch Census population data for year 2022: population API fail (code: UNKNOWN)',
       );
     });
   });
