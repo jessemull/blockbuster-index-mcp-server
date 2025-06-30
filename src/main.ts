@@ -21,11 +21,13 @@ export const main = async () => {
       getCensusScores(),
     ]);
 
-    // Extract results and handle failures gracefully
+    // Extract results and handle failures gracefully...
+
     const amazon = results[0].status === 'fulfilled' ? results[0].value : {};
     const census = results[1].status === 'fulfilled' ? results[1].value : {};
 
-    // Log any failures but continue with available data
+    // Log any failures but continue with available data...
+
     let failedSignals = 0;
     results.forEach((result, index) => {
       if (result.status === 'rejected') {
@@ -35,7 +37,8 @@ export const main = async () => {
       }
     });
 
-    // If both signals failed, we can't proceed
+    // If both signals failed, we can't proceed...
+
     if (failedSignals === results.length) {
       throw new Error('All signals failed - cannot generate index');
     }
@@ -118,7 +121,7 @@ export const main = async () => {
       });
     }
 
-    logger.info('Calculation completed');
+    logger.info('Calculation completed!');
   } catch (err) {
     const error = err instanceof Error ? err : new Error(String(err));
     const duration = Date.now() - startTime;
