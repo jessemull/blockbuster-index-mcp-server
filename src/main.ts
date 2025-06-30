@@ -126,7 +126,7 @@ export const main = async () => {
     const error = err instanceof Error ? err : new Error(String(err));
     const duration = Date.now() - startTime;
 
-    logger.error('Blockbuster index calculation failed: ', {
+    logger.error('Blockbuster index calculation failed:', {
       error: error.message,
       stack: error.stack,
       duration,
