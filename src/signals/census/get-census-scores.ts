@@ -4,6 +4,8 @@ import { SignalRepository } from '../../types/amazon';
 import { fetchCensusData } from '../../services/census-service';
 import { logger } from '../../util';
 
+const DEFAULT_TABLE = 'blockbuster-index-census-signals-dev';
+
 const getStartOfDayTimestamp = (date: Date): number => {
   const startOfDay = new Date(date);
   startOfDay.setUTCHours(0, 0, 0, 0);
@@ -63,21 +65,14 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
 
   let repository: SignalRepository<CensusSignalRecord> | null = null;
 
-  // Temporary debug logging for production troubleshooting
-  logger.info('Census signal environment check:', {
-    IS_DEVELOPMENT: CONFIG.IS_DEVELOPMENT,
-    NODE_ENV: process.env.NODE_ENV,
-    CENSUS_DYNAMODB_TABLE_NAME:
-      process.env.CENSUS_DYNAMODB_TABLE_NAME || 'NOT_SET',
-    AWS_REGION: process.env.AWS_REGION || 'NOT_SET',
-  });
-
-  // HARDCODED PRODUCTION MODE - always create repository
-  console.log('=== HARDCODED CENSUS PRODUCTION MODE ===');
-  const { DynamoDBCensusSignalRepository } = await import('../../repositories');
-  const tableName = 'blockbuster-index-census-signals-prod';
-  repository = new DynamoDBCensusSignalRepository(tableName);
-  console.log('HARDCODED Census repository created with table:', tableName);
+  if (!CONFIG.IS_DEVELOPMENT || process.env.CENSUS_DYNAMODB_TABLE_NAME) {
+    const { DynamoDBCensusSignalRepository } = await import(
+      '../../repositories'
+    );
+    repository = new DynamoDBCensusSignalRepository(
+      process.env.CENSUS_DYNAMODB_TABLE_NAME || DEFAULT_TABLE,
+    );
+  }
 
   const scores: Record<string, number> = {};
   const forceRefresh = process.env.FORCE_REFRESH === 'true';
