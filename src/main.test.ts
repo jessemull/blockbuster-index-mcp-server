@@ -144,7 +144,6 @@ describe('main', () => {
       throw new Error('process.exit');
     });
 
-    // Mock both signals to fail to trigger the error case
     (signals.getAmazonScores as jest.Mock).mockRejectedValueOnce(error);
     (signals.getCensusScores as jest.Mock).mockRejectedValueOnce(error);
 
@@ -169,7 +168,6 @@ describe('main', () => {
       throw new Error('process.exit');
     });
 
-    // Mock both signals to fail to trigger the error case
     (signals.getAmazonScores as jest.Mock).mockRejectedValueOnce(
       'string error',
     );
@@ -200,7 +198,6 @@ describe('main', () => {
     resolve.mockReturnValue('/mocked/dev/scores');
     join.mockReturnValue('/mocked/dev/scores/blockbuster-index.json');
 
-    // Mock Amazon signal to fail, but Census to succeed
     (signals.getAmazonScores as jest.Mock).mockRejectedValueOnce(
       new Error('Amazon failed'),
     );
@@ -208,19 +205,16 @@ describe('main', () => {
 
     await main();
 
-    // Should log the Amazon failure
     expect(logger.error).toHaveBeenCalledWith(
       'Amazon signal failed:',
       expect.any(Error),
     );
 
-    // Should still write the file with Census data only
     expect(fs.writeFileSync).toHaveBeenCalledWith(
       '/mocked/dev/scores/blockbuster-index.json',
       expect.stringContaining('"signalStatus"'),
     );
 
-    // Should log performance with signal status
     expect(logger.performance).toHaveBeenCalledWith(
       'signals_fetched',
       expect.any(Number),
@@ -237,7 +231,6 @@ describe('main', () => {
       throw new Error('process.exit');
     });
 
-    // Mock both signals to fail
     (signals.getAmazonScores as jest.Mock).mockRejectedValueOnce(
       new Error('Amazon failed'),
     );
@@ -247,7 +240,6 @@ describe('main', () => {
 
     await expect(main()).rejects.toThrow('process.exit');
 
-    // Should log both failures
     expect(logger.error).toHaveBeenCalledWith(
       'Amazon signal failed:',
       expect.any(Error),
@@ -257,7 +249,6 @@ describe('main', () => {
       expect.any(Error),
     );
 
-    // Should fail with "All signals failed" error
     expect(logger.errorWithContext).toHaveBeenCalledWith(
       'Blockbuster index calculation failed:',
       expect.objectContaining({
