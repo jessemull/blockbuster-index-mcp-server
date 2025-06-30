@@ -5,6 +5,11 @@ export interface BlockbusterIndexResponse {
     calculatedAt: string;
     totalStates: number;
     version: string;
+    signalStatus: {
+      total: number;
+      successful: number;
+      failed: number;
+    };
   };
   states: Record<string, StateScore>;
 }
