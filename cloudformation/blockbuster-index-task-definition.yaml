@@ -20,7 +20,7 @@ Mappings:
         - subnet-e22085a8
         - subnet-badfdd91
       SecurityGroups:
-        - sg-08bcf61562fda9041
+        - sg-03003b7a95e81b834
       S3BucketName: 'blockbuster-index-client-prod'
       LogLevel: 'warn'
 
