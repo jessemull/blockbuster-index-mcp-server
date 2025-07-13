@@ -1,42 +1,30 @@
 #!/usr/bin/env ts-node
 
-import path from 'path';
-import { BroadbandService } from '../../src/services/broadband-service';
+import { getBroadbandScores } from '../../src/signals/broadband/get-broadband-scores';
 import { logger } from '../../src/util';
 
 async function runBroadbandTest() {
   try {
     logger.info('Starting broadband signal test...');
 
-    const service = new BroadbandService();
-    const csvPath = path.resolve(__dirname, '../../AK-Fixed-Jun2021-v1.csv');
+    // Run the full broadband signal
+    const scores = await getBroadbandScores();
 
-    logger.info(`Processing CSV file: ${csvPath}`);
-
-    const metrics = await service.processBroadbandCsv(csvPath);
-
-    logger.info('Broadband metrics calculated:', {
-      statesProcessed: Object.keys(metrics).length,
-      metrics: JSON.stringify(metrics, null, 2),
+    logger.info('Broadband signal results:', {
+      totalStates: Object.keys(scores).length,
+      statesWithData: Object.values(scores).filter((score) => score > 0).length,
+      sampleScores: Object.entries(scores)
+        .filter(([, score]) => score > 0)
+        .slice(0, 5)
+        .reduce((acc, [state, score]) => ({ ...acc, [state]: score }), {}),
+      averageScore:
+        Object.values(scores).reduce((sum, score) => sum + score, 0) /
+        Object.values(scores).length,
     });
 
-    // Focus on Alaska results
-    if (metrics.AK) {
-      logger.info('Alaska broadband metrics:', {
-        totalBlocks: metrics.AK.totalCensusBlocks,
-        broadbandAvailability: `${metrics.AK.broadbandAvailabilityPercent}%`,
-        highSpeedAvailability: `${metrics.AK.highSpeedAvailabilityPercent}%`,
-        gigabitAvailability: `${metrics.AK.gigabitAvailabilityPercent}%`,
-        averageSpeed: `${metrics.AK.averageDownloadSpeed} Mbps`,
-        medianSpeed: `${metrics.AK.medianDownloadSpeed} Mbps`,
-        finalScore: metrics.AK.broadbandScore,
-        technologyCounts: metrics.AK.technologyCounts,
-      });
-    }
-
-    logger.info('Broadband test completed successfully!');
+    logger.info('Broadband signal test completed successfully!');
   } catch (error) {
-    logger.error('Broadband test failed:', error);
+    logger.error('Broadband signal test failed:', error);
     process.exit(1);
   }
 }

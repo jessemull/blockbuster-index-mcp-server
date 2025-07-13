@@ -49,4 +49,5 @@ export interface BroadbandMetrics {
 export interface BroadbandSignalRecord extends BroadbandMetrics {
   state: string;
   timestamp: number;
+  dataVersion?: string; // FCC data version (e.g., "Dec 21v1")
 }

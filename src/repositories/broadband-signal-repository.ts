@@ -9,6 +9,7 @@ export class DynamoDBBroadbandSignalRepository extends DynamoDBSignalRepository<
       const item = {
         state: record.state,
         timestamp: record.timestamp,
+        dataVersion: record.dataVersion,
         totalCensusBlocks: record.totalCensusBlocks,
         blocksWithBroadband: record.blocksWithBroadband,
         broadbandAvailabilityPercent: record.broadbandAvailabilityPercent,
@@ -76,6 +77,32 @@ export class DynamoDBBroadbandSignalRepository extends DynamoDBSignalRepository<
       return !!result.Item;
     } catch (error: unknown) {
       logger.error('Failed to check if broadband signal record exists', {
+        error: error instanceof Error ? error.message : String(error),
+        state,
+        timestamp,
+      });
+      throw error;
+    }
+  }
+
+  async get(
+    state: string,
+    timestamp: number,
+  ): Promise<BroadbandSignalRecord | null> {
+    try {
+      const result = await this.client.send(
+        new GetCommand({
+          TableName: this.tableName,
+          Key: {
+            state,
+            timestamp,
+          },
+        }),
+      );
+
+      return result.Item as BroadbandSignalRecord | null;
+    } catch (error: unknown) {
+      logger.error('Failed to get broadband signal record', {
         error: error instanceof Error ? error.message : String(error),
         state,
         timestamp,

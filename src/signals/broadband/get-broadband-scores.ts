@@ -1,147 +1,295 @@
-import { CONFIG } from '../../config';
-import { BroadbandSignalRecord } from '../../types/broadband';
-import { SignalRepository } from '../../types/amazon';
+import { logger } from '../../util/logger';
+import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband-signal-repository';
+import { BroadbandSignalRecord } from '../../types';
+import { BrowserDocument } from '../../types/browser';
 import { BroadbandService } from '../../services/broadband-service';
-import { logger } from '../../util';
+import { scrapeBroadbandData } from './scrape-broadband-data';
+import * as fs from 'fs';
+import * as path from 'path';
 
-const DEFAULT_TABLE = 'blockbuster-index-broadband-signals-dev';
+const STATES = [
+  'AK',
+  'AL',
+  'AR',
+  'AZ',
+  'CA',
+  'CO',
+  'CT',
+  'DE',
+  'FL',
+  'GA',
+  'HI',
+  'IA',
+  'ID',
+  'IL',
+  'IN',
+  'KS',
+  'KY',
+  'LA',
+  'MA',
+  'MD',
+  'ME',
+  'MI',
+  'MN',
+  'MO',
+  'MS',
+  'MT',
+  'NC',
+  'ND',
+  'NE',
+  'NH',
+  'NJ',
+  'NM',
+  'NV',
+  'NY',
+  'OH',
+  'OK',
+  'OR',
+  'PA',
+  'RI',
+  'SC',
+  'SD',
+  'TN',
+  'TX',
+  'UT',
+  'VA',
+  'VT',
+  'WA',
+  'WI',
+  'WV',
+  'WY',
+];
 
 const getStartOfDayTimestamp = (date: Date = new Date()): number => {
   const startOfDay = new Date(date);
-  startOfDay.setUTCHours(0, 0, 0, 0);
-  return Math.floor(startOfDay.getTime() / 1000);
+  startOfDay.setHours(0, 0, 0, 0);
+  return startOfDay.getTime();
 };
 
-export const getBroadbandScores = async (): Promise<Record<string, number>> => {
-  logger.info('Starting broadband infrastructure calculation...');
+/**
+ * Get the current FCC data version by scraping the FCC broadband page
+ */
+async function getCurrentFccDataVersion(): Promise<string> {
+  const puppeteer = await import('puppeteer');
+  const browser = await puppeteer.default.launch({
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
 
-  const timestamp = getStartOfDayTimestamp();
-
-  let repository: SignalRepository<BroadbandSignalRecord> | null = null;
-
-  if (!CONFIG.IS_DEVELOPMENT || process.env.BROADBAND_DYNAMODB_TABLE_NAME) {
-    const { DynamoDBBroadbandSignalRepository } = await import(
-      '../../repositories'
+  try {
+    const page = await browser.newPage();
+    await page.goto(
+      'https://www.fcc.gov/general/broadband-deployment-data-fcc-form-477',
+      {
+        waitUntil: 'networkidle2',
+      },
     );
-    repository = new DynamoDBBroadbandSignalRepository(
-      process.env.BROADBAND_DYNAMODB_TABLE_NAME || DEFAULT_TABLE,
-    );
+
+    // Extract version from the first download link (e.g., "AK - Fixed - Dec 21v1")
+    const version = await page.evaluate(() => {
+      const firstLink = (
+        globalThis as unknown as { document: BrowserDocument }
+      ).document.querySelector('div.field-item.even a');
+      if (firstLink) {
+        const text = firstLink.querySelector('*')?.textContent?.trim();
+        // Extract version like "Dec 21v1" from "AK - Fixed - Dec 21v1"
+        const versionMatch = text?.match(/- ([\w\s\d]+)$/);
+        return versionMatch ? versionMatch[1].trim() : 'unknown';
+      }
+      return 'unknown';
+    });
+
+    return version;
+  } finally {
+    await browser.close();
+  }
+}
+
+/**
+ * Check if we need to scrape new data by comparing FCC data version with our stored data
+ */
+async function checkIfScrapingNeeded(
+  repository: DynamoDBBroadbandSignalRepository | undefined,
+  timestamp: number,
+  forceRefresh: boolean,
+): Promise<{ needsScraping: boolean; currentDataVersion?: string }> {
+  if (forceRefresh) {
+    logger.info('Force refresh enabled, will scrape new data');
+    return { needsScraping: true };
   }
 
+  if (!repository) {
+    logger.info('No repository available, will scrape new data');
+    return { needsScraping: true };
+  }
+
+  try {
+    // Get the current FCC data version from their website
+    const currentFccVersion = await getCurrentFccDataVersion();
+    logger.info('Current FCC data version:', { version: currentFccVersion });
+
+    // Check our most recent data (use California as reference state)
+    const existingRecord = await repository.get('CA', timestamp);
+
+    if (!existingRecord || !existingRecord.dataVersion) {
+      logger.info(
+        'No existing data found or no version info, will scrape new data',
+      );
+      return { needsScraping: true, currentDataVersion: currentFccVersion };
+    }
+
+    const needsScraping = existingRecord.dataVersion !== currentFccVersion;
+
+    logger.info('Data version comparison completed', {
+      storedVersion: existingRecord.dataVersion,
+      currentFccVersion,
+      needsScraping,
+    });
+
+    return { needsScraping, currentDataVersion: currentFccVersion };
+  } catch (error) {
+    logger.error('Failed to check data versions, defaulting to scrape', error);
+    return { needsScraping: true };
+  }
+}
+
+/**
+ * Load existing broadband data from DynamoDB for today's timestamp
+ */
+async function loadExistingBroadbandData(
+  repository: DynamoDBBroadbandSignalRepository,
+  timestamp: number,
+): Promise<Record<string, number>> {
+  const scores: Record<string, number> = {};
+
+  // Load data for each state
+  for (const state of STATES) {
+    try {
+      const record = await repository.get(state, timestamp);
+
+      if (record) {
+        scores[state] = record.broadbandScore;
+      } else {
+        scores[state] = 0;
+      }
+    } catch (error) {
+      logger.error(`Failed to load broadband data for ${state}`, error);
+      scores[state] = 0;
+    }
+  }
+
+  logger.info('Loaded existing broadband data', {
+    statesWithData: Object.values(scores).filter((score) => score > 0).length,
+    totalStates: STATES.length,
+  });
+
+  return scores;
+}
+
+export const getBroadbandScores = async (): Promise<Record<string, number>> => {
+  const repository = process.env.BROADBAND_DYNAMODB_TABLE_NAME
+    ? new DynamoDBBroadbandSignalRepository(
+        process.env.BROADBAND_DYNAMODB_TABLE_NAME,
+      )
+    : undefined;
+
+  const timestamp = getStartOfDayTimestamp();
   const scores: Record<string, number> = {};
   const forceRefresh = process.env.FORCE_REFRESH === 'true';
 
   try {
-    // For now, we'll use the Alaska CSV file for testing
-    // In the future, this should download/process multiple state CSV files
-    const csvPath =
-      '/Users/jessemull/Development/blockbuster-index-mcp-server/AK-Fixed-Jun2021-v1.csv';
-
-    const broadbandService = new BroadbandService();
-    const metricsMap = await broadbandService.processBroadbandCsv(csvPath);
-
-    for (const [state, metrics] of Object.entries(metricsMap)) {
-      // Use the calculated broadband score from the service
-      scores[state] = metrics.broadbandScore;
-
-      // Store in DynamoDB if repository is available
-      if (repository) {
-        let exists = false;
-        if (!forceRefresh) {
-          exists = await repository.exists(state, timestamp);
-        }
-
-        if (!exists || forceRefresh) {
-          const record: BroadbandSignalRecord = {
-            state,
-            timestamp,
-            ...metrics,
-          };
-
-          await repository.save(record);
-          logger.info(
-            `Stored broadband data for ${state}: ${metrics.broadbandScore.toFixed(4)} score`,
-          );
-        } else {
-          logger.info(
-            `Broadband record already exists for ${state}, skipping storage`,
-          );
-        }
-      }
-    }
-
-    // For testing, we'll only have Alaska data
-    // In production, we need to ensure all states have scores
-    // For now, set other states to 0 if they don't have data
-    const allStates = [
-      'AK',
-      'AL',
-      'AR',
-      'AZ',
-      'CA',
-      'CO',
-      'CT',
-      'DE',
-      'FL',
-      'GA',
-      'HI',
-      'IA',
-      'ID',
-      'IL',
-      'IN',
-      'KS',
-      'KY',
-      'LA',
-      'MA',
-      'MD',
-      'ME',
-      'MI',
-      'MN',
-      'MO',
-      'MS',
-      'MT',
-      'NC',
-      'ND',
-      'NE',
-      'NH',
-      'NJ',
-      'NM',
-      'NV',
-      'NY',
-      'OH',
-      'OK',
-      'OR',
-      'PA',
-      'RI',
-      'SC',
-      'SD',
-      'TN',
-      'TX',
-      'UT',
-      'VA',
-      'VT',
-      'WA',
-      'WI',
-      'WV',
-      'WY',
-    ];
-
-    for (const state of allStates) {
-      if (!(state in scores)) {
-        scores[state] = 0;
-        logger.warn(`No broadband data for ${state}, setting score to 0`);
-      }
-    }
-
-    logger.info(
-      `Completed broadband calculation: processed ${Object.keys(metricsMap).length} states with data`,
+    // Check if we have recent broadband data in DynamoDB instead of filesystem
+    const { needsScraping, currentDataVersion } = await checkIfScrapingNeeded(
+      repository,
+      timestamp,
+      forceRefresh,
     );
+
+    if (needsScraping) {
+      logger.info(
+        'No recent broadband data found in database, starting scraper...',
+      );
+
+      // Download CSV files to temporary directory
+      await scrapeBroadbandData();
+      const dataDir = path.resolve(process.cwd(), 'data', 'broadband');
+
+      if (!fs.existsSync(dataDir)) {
+        logger.warn(
+          'Scraper did not create data directory, using default scores',
+        );
+        return scores;
+      }
+
+      // Process all downloaded CSV files
+      const broadbandService = new BroadbandService();
+      const csvFiles = fs
+        .readdirSync(dataDir)
+        .filter((file: string) => file.endsWith('.csv'));
+
+      if (csvFiles.length === 0) {
+        logger.warn('No CSV files found after scraping, using default scores');
+        return scores;
+      }
+
+      logger.info(`Processing ${csvFiles.length} broadband CSV files`);
+
+      for (const csvFile of csvFiles) {
+        const csvPath = path.join(dataDir, csvFile);
+        const metricsMap = await broadbandService.processBroadbandCsv(csvPath);
+
+        for (const [state, metrics] of Object.entries(metricsMap)) {
+          // Use the calculated broadband score from the service
+          scores[state] = metrics.broadbandScore;
+
+          // Store in DynamoDB if repository is available
+          if (repository) {
+            const record: BroadbandSignalRecord = {
+              state,
+              timestamp,
+              dataVersion: currentDataVersion,
+              ...metrics,
+            };
+
+            try {
+              await repository.save(record);
+              logger.info(`Stored broadband signal for ${state}`, {
+                state,
+                timestamp,
+                dataVersion: currentDataVersion,
+                score: metrics.broadbandScore,
+              });
+            } catch (error) {
+              logger.error(
+                `Failed to store broadband signal for ${state}`,
+                error,
+              );
+            }
+          }
+        }
+      }
+    } else {
+      logger.info('Using existing broadband data from database');
+
+      // Load existing data from DynamoDB
+      if (repository) {
+        const existingData = await loadExistingBroadbandData(
+          repository,
+          timestamp,
+        );
+        Object.assign(scores, existingData);
+      }
+    }
+
+    logger.info('Broadband scores calculation completed', {
+      totalStates: Object.keys(scores).length,
+      sampleScores: Object.entries(scores).slice(0, 3),
+    });
 
     return scores;
   } catch (error) {
-    logger.error('Failed to calculate broadband scores', {
-      error: error instanceof Error ? error.message : String(error),
-    });
+    logger.error('Broadband scores calculation failed', error);
     throw error;
   }
 };
