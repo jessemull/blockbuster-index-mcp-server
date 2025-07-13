@@ -21,9 +21,11 @@ export async function scrapeBroadbandData(): Promise<void> {
       },
     );
 
-    // Extract download links from the page
+    // Extract download links from the page...
+
     const downloadLinks = await page.evaluate(() => {
-      // Find all anchor tags with Box.com download links
+      // Find all anchor tags with Box.com download links...
+
       const anchorElements = (
         globalThis as unknown as { document: BrowserDocument }
       ).document.querySelectorAll('a[href*="us-fcc.box.com/v/"]');
@@ -32,7 +34,8 @@ export async function scrapeBroadbandData(): Promise<void> {
       for (const element of anchorElements) {
         const href = element.getAttribute('href');
         if (href) {
-          // Extract state from href or assume text content through DOM
+          // Extract state from href or assume text content through DOM...
+
           const text =
             (
               element as unknown as { textContent?: string }
@@ -52,46 +55,55 @@ export async function scrapeBroadbandData(): Promise<void> {
 
     logger.info(`Found ${downloadLinks.length} download links`);
 
-    // Create data directory
+    // Create data directory...
+
     const dataDir = path.resolve(process.cwd(), 'data', 'broadband');
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
 
-    // Download each CSV file
+    // Download each CSV file...
+
     for (const { state, url } of downloadLinks) {
       try {
         logger.info(`Downloading CSV for ${state}...`);
 
-        // Navigate to the Box.com download page
+        // Navigate to the Box.com download page...
+
         await page.goto(url, { waitUntil: 'networkidle2' });
 
-        // Wait for the download button and click it
+        // Wait for the download button and click it...
+
         await page.waitForSelector('button[data-testid="download-btn"]', {
           timeout: 10000,
         });
 
-        // Enable request interception to handle the download
+        // Enable request interception to handle the download...
+
         await page.setRequestInterception(true);
 
         page.on('request', (request) => {
           if (request.url().includes('.csv')) {
-            // Handle CSV download
+            // Handle CSV download...
+
             request.continue();
           } else {
             request.continue();
           }
         });
 
-        // Click the download button
+        // Click the download button...
+
         await page.click('button[data-testid="download-btn"]');
 
-        // Wait a bit for the download to start
+        // Wait a bit for the download to start...
+
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         logger.info(`Downloaded CSV for ${state}`);
 
-        // Disable request interception for next iteration
+        // Disable request interception for next iteration...
+
         await page.setRequestInterception(false);
       } catch (error) {
         logger.error(`Failed to download CSV for ${state}:`, error);
