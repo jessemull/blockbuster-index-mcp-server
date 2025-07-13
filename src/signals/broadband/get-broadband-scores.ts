@@ -4,61 +4,9 @@ import { BroadbandSignalRecord } from '../../types';
 import { BrowserDocument } from '../../types/browser';
 import { BroadbandService } from '../../services/broadband-service';
 import { scrapeBroadbandData } from './scrape-broadband-data';
+import { States } from '../../types';
 import * as fs from 'fs';
 import * as path from 'path';
-
-const STATES = [
-  'AK',
-  'AL',
-  'AR',
-  'AZ',
-  'CA',
-  'CO',
-  'CT',
-  'DE',
-  'FL',
-  'GA',
-  'HI',
-  'IA',
-  'ID',
-  'IL',
-  'IN',
-  'KS',
-  'KY',
-  'LA',
-  'MA',
-  'MD',
-  'ME',
-  'MI',
-  'MN',
-  'MO',
-  'MS',
-  'MT',
-  'NC',
-  'ND',
-  'NE',
-  'NH',
-  'NJ',
-  'NM',
-  'NV',
-  'NY',
-  'OH',
-  'OK',
-  'OR',
-  'PA',
-  'RI',
-  'SC',
-  'SD',
-  'TN',
-  'TX',
-  'UT',
-  'VA',
-  'VT',
-  'WA',
-  'WI',
-  'WV',
-  'WY',
-];
 
 const getStartOfDayTimestamp = (date: Date = new Date()): number => {
   const startOfDay = new Date(date);
@@ -66,9 +14,8 @@ const getStartOfDayTimestamp = (date: Date = new Date()): number => {
   return startOfDay.getTime();
 };
 
-/**
- * Get the current FCC data version by scraping the FCC broadband page
- */
+// Get the current FCC data version by scraping the FCC broadband page...
+
 async function getCurrentFccDataVersion(): Promise<string> {
   const puppeteer = await import('puppeteer');
   const browser = await puppeteer.default.launch({
@@ -86,14 +33,15 @@ async function getCurrentFccDataVersion(): Promise<string> {
       },
     );
 
-    // Extract version from the first download link (e.g., "AK - Fixed - Dec 21v1")
     const version = await page.evaluate(() => {
       const firstLink = (
         globalThis as unknown as { document: BrowserDocument }
       ).document.querySelector('div.field-item.even a');
       if (firstLink) {
         const text = firstLink.querySelector('*')?.textContent?.trim();
-        // Extract version like "Dec 21v1" from "AK - Fixed - Dec 21v1"
+
+        // Extract version like "Dec 21v1" from "AK - Fixed - Dec 21v1".
+
         const versionMatch = text?.match(/- ([\w\s\d]+)$/);
         return versionMatch ? versionMatch[1].trim() : 'unknown';
       }
@@ -106,9 +54,8 @@ async function getCurrentFccDataVersion(): Promise<string> {
   }
 }
 
-/**
- * Check if we need to scrape new data by comparing FCC data version with our stored data
- */
+// Check if we need to scrape new data by comparing FCC data version with our stored data...
+
 async function checkIfScrapingNeeded(
   repository: DynamoDBBroadbandSignalRepository | undefined,
   timestamp: number,
@@ -125,11 +72,13 @@ async function checkIfScrapingNeeded(
   }
 
   try {
-    // Get the current FCC data version from their website
+    // Get the current FCC data version from their website...
+
     const currentFccVersion = await getCurrentFccDataVersion();
     logger.info('Current FCC data version:', { version: currentFccVersion });
 
-    // Check our most recent data (use California as reference state)
+    // Check our most recent data (use California as reference state)...
+
     const existingRecord = await repository.get('CA', timestamp);
 
     if (!existingRecord || !existingRecord.dataVersion) {
@@ -154,17 +103,16 @@ async function checkIfScrapingNeeded(
   }
 }
 
-/**
- * Load existing broadband data from DynamoDB for today's timestamp
- */
+// Load existing broadband data from DynamoDB for today's timestamp...
+
 async function loadExistingBroadbandData(
   repository: DynamoDBBroadbandSignalRepository,
   timestamp: number,
 ): Promise<Record<string, number>> {
   const scores: Record<string, number> = {};
 
-  // Load data for each state
-  for (const state of STATES) {
+  for (const state of Object.values(States)) {
+    // Load data for each state.
     try {
       const record = await repository.get(state, timestamp);
 
@@ -181,7 +129,7 @@ async function loadExistingBroadbandData(
 
   logger.info('Loaded existing broadband data', {
     statesWithData: Object.values(scores).filter((score) => score > 0).length,
-    totalStates: STATES.length,
+    totalStates: Object.keys(States).length,
   });
 
   return scores;
@@ -199,8 +147,9 @@ export const getBroadbandScores = async (): Promise<Record<string, number>> => {
   const forceRefresh = process.env.FORCE_REFRESH === 'true';
 
   try {
-    // Check if we have recent broadband data in DynamoDB instead of filesystem
     const { needsScraping, currentDataVersion } = await checkIfScrapingNeeded(
+      // Check if we have recent broadband data in DynamoDB instead of filesystem...
+
       repository,
       timestamp,
       forceRefresh,
@@ -211,7 +160,8 @@ export const getBroadbandScores = async (): Promise<Record<string, number>> => {
         'No recent broadband data found in database, starting scraper...',
       );
 
-      // Download CSV files to temporary directory
+      // Download CSV files to temporary directory...
+
       await scrapeBroadbandData();
       const dataDir = path.resolve(process.cwd(), 'data', 'broadband');
 
@@ -222,7 +172,8 @@ export const getBroadbandScores = async (): Promise<Record<string, number>> => {
         return scores;
       }
 
-      // Process all downloaded CSV files
+      // Process all downloaded CSV files...
+
       const broadbandService = new BroadbandService();
       const csvFiles = fs
         .readdirSync(dataDir)
@@ -240,10 +191,12 @@ export const getBroadbandScores = async (): Promise<Record<string, number>> => {
         const metricsMap = await broadbandService.processBroadbandCsv(csvPath);
 
         for (const [state, metrics] of Object.entries(metricsMap)) {
-          // Use the calculated broadband score from the service
+          // Use the calculated broadband score from the service...
+
           scores[state] = metrics.broadbandScore;
 
-          // Store in DynamoDB if repository is available
+          // Store in DynamoDB if repository is available...
+
           if (repository) {
             const record: BroadbandSignalRecord = {
               state,
@@ -272,7 +225,8 @@ export const getBroadbandScores = async (): Promise<Record<string, number>> => {
     } else {
       logger.info('Using existing broadband data from database');
 
-      // Load existing data from DynamoDB
+      // Load existing data from DynamoDB...
+
       if (repository) {
         const existingData = await loadExistingBroadbandData(
           repository,

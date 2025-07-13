@@ -7,7 +7,8 @@ async function runBroadbandTest() {
   try {
     logger.info('Starting broadband signal test...');
 
-    // Run the full broadband signal
+    // Get FCC broadband data while scraping...
+
     const scores = await getBroadbandScores();
 
     logger.info('Broadband signal results:', {

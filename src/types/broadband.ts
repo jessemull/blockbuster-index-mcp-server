@@ -1,4 +1,5 @@
-// Raw CSV data structure from FCC broadband files
+// Raw CSV data structure from FCC broadband files.
+
 export interface BroadbandCsvRecord {
   LogRecNo: string;
   Provider_Id: string;
@@ -17,7 +18,8 @@ export interface BroadbandCsvRecord {
   Business: string;
 }
 
-// Technology categories for grouping FCC tech codes
+// Technology categories for grouping FCC tech codes.
+
 export interface TechnologyCounts {
   fiber: number; // Tech codes 70, 30
   cable: number; // Tech codes 60, 20
@@ -26,15 +28,16 @@ export interface TechnologyCounts {
   other: number; // Tech codes 12, 43, 50
 }
 
-// Processed broadband metrics for a state
+// Processed broadband metrics for a state.
+
 export interface BroadbandMetrics {
   totalCensusBlocks: number;
   blocksWithBroadband: number;
   broadbandAvailabilityPercent: number;
 
-  blocksWithHighSpeed: number; // 25+ Mbps
+  blocksWithHighSpeed: number; // 25+ Mbps.
   highSpeedAvailabilityPercent: number;
-  blocksWithGigabit: number; // 1000+ Mbps
+  blocksWithGigabit: number; // 1000+ Mbps.
   gigabitAvailabilityPercent: number;
 
   technologyCounts: TechnologyCounts;
@@ -45,7 +48,8 @@ export interface BroadbandMetrics {
   broadbandScore: number;
 }
 
-// DynamoDB record structure
+// DynamoDB record structure.
+
 export interface BroadbandSignalRecord extends BroadbandMetrics {
   state: string;
   timestamp: number;

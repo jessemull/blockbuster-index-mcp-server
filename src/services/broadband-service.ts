@@ -10,9 +10,8 @@ import {
 import { TECHNOLOGY_CODES, SPEED_THRESHOLDS } from '../constants/broadband';
 
 export class BroadbandService {
-  /**
-   * Process a broadband CSV file and extract metrics for all states
-   */
+  // Process a broadband CSV file and extract metrics for all states...
+
   async processBroadbandCsv(
     filePath: string,
   ): Promise<Record<string, BroadbandMetrics>> {
@@ -30,10 +29,12 @@ export class BroadbandService {
 
     logger.info(`Parsed ${records.length} broadband records from CSV`);
 
-    // Group records by state
+    // Group records by state...
+
     const recordsByState = this.groupRecordsByState(records);
 
-    // Calculate metrics for each state
+    // Calculate metrics for each state...
+
     const metricsMap: Record<string, BroadbandMetrics> = {};
 
     for (const [state, stateRecords] of Object.entries(recordsByState)) {
@@ -53,9 +54,8 @@ export class BroadbandService {
     return metricsMap;
   }
 
-  /**
-   * Group CSV records by state
-   */
+  // Group CSV records by state...
+
   private groupRecordsByState(
     records: BroadbandCsvRecord[],
   ): Record<string, BroadbandCsvRecord[]> {
@@ -74,17 +74,18 @@ export class BroadbandService {
     return grouped;
   }
 
-  /**
-   * Calculate broadband metrics for a single state
-   */
+  // Calculate broadband metrics for a single state...
+
   private calculateBroadbandMetrics(
     records: BroadbandCsvRecord[],
   ): BroadbandMetrics {
-    // Get unique census blocks
+    // Get unique census blocks...
+
     const uniqueBlocks = new Set(records.map((r) => r.BlockCode));
     const totalCensusBlocks = uniqueBlocks.size;
 
-    // Calculate coverage metrics
+    // Calculate coverage metrics...
+
     const blocksWithBroadband = this.countBlocksWithBroadband(records);
     const blocksWithHighSpeed = this.countBlocksWithSpeed(
       records,
@@ -95,7 +96,8 @@ export class BroadbandService {
       SPEED_THRESHOLDS.GIGABIT,
     );
 
-    // Calculate percentages
+    // Calculate percentages...
+
     const broadbandAvailabilityPercent =
       totalCensusBlocks > 0
         ? (blocksWithBroadband / totalCensusBlocks) * 100
@@ -107,15 +109,18 @@ export class BroadbandService {
     const gigabitAvailabilityPercent =
       totalCensusBlocks > 0 ? (blocksWithGigabit / totalCensusBlocks) * 100 : 0;
 
-    // Calculate technology counts
+    // Calculate technology counts...
+
     const technologyCounts = this.calculateTechnologyCounts(records);
 
-    // Calculate speed statistics
+    // Calculate speed statistics...
+
     const speeds = this.extractSpeeds(records);
     const averageDownloadSpeed = this.calculateAverage(speeds);
     const medianDownloadSpeed = this.calculateMedian(speeds);
 
-    // Calculate overall broadband score
+    // Calculate overall broadband score...
+
     const broadbandScore = this.calculateBroadbandScore({
       broadbandAvailabilityPercent,
       highSpeedAvailabilityPercent,
@@ -137,13 +142,12 @@ export class BroadbandService {
       technologyCounts,
       averageDownloadSpeed: Math.round(averageDownloadSpeed * 100) / 100,
       medianDownloadSpeed: Math.round(medianDownloadSpeed * 100) / 100,
-      broadbandScore: Math.round(broadbandScore * 10000) / 10000, // 4 decimal places
+      broadbandScore: Math.round(broadbandScore * 10000) / 10000,
     };
   }
 
-  /**
-   * Count census blocks with any broadband service
-   */
+  // Count census blocks with any broadband service...
+
   private countBlocksWithBroadband(records: BroadbandCsvRecord[]): number {
     const blocksWithService = new Set<string>();
 
@@ -157,9 +161,8 @@ export class BroadbandService {
     return blocksWithService.size;
   }
 
-  /**
-   * Count census blocks with service meeting speed threshold
-   */
+  // Count census blocks with service meeting speed threshold...
+
   private countBlocksWithSpeed(
     records: BroadbandCsvRecord[],
     speedThreshold: number,
@@ -176,9 +179,8 @@ export class BroadbandService {
     return blocksWithSpeed.size;
   }
 
-  /**
-   * Calculate technology distribution
-   */
+  // Calculate technology distribution...
+
   private calculateTechnologyCounts(
     records: BroadbandCsvRecord[],
   ): TechnologyCounts {
@@ -209,26 +211,23 @@ export class BroadbandService {
     return counts;
   }
 
-  /**
-   * Extract download speeds from records
-   */
+  // Extract download speeds from records...
+
   private extractSpeeds(records: BroadbandCsvRecord[]): number[] {
     return records
       .map((r) => parseFloat(r.MaxAdDown))
       .filter((speed) => speed > 0);
   }
 
-  /**
-   * Calculate average of number array
-   */
+  // Calculate average of number array...
+
   private calculateAverage(numbers: number[]): number {
     if (numbers.length === 0) return 0;
     return numbers.reduce((sum, num) => sum + num, 0) / numbers.length;
   }
 
-  /**
-   * Calculate median of number array
-   */
+  // Calculate median of number array...
+
   private calculateMedian(numbers: number[]): number {
     if (numbers.length === 0) return 0;
 
@@ -242,16 +241,16 @@ export class BroadbandService {
     }
   }
 
-  /**
-   * Calculate overall broadband score (0-1 range)
-   */
+  // Calculate overall broadband score (0-1 range)...
+
   private calculateBroadbandScore(metrics: {
     broadbandAvailabilityPercent: number;
     highSpeedAvailabilityPercent: number;
     gigabitAvailabilityPercent: number;
     technologyCounts: TechnologyCounts;
   }): number {
-    // Technology diversity score (0-1)
+    // Technology diversity score (0-1)...
+
     const totalTech = Object.values(metrics.technologyCounts).reduce(
       (sum, count) => sum + count,
       0,
@@ -262,13 +261,14 @@ export class BroadbandService {
             .length / 5
         : 0;
 
-    // Weighted score calculation
-    const score =
-      (metrics.broadbandAvailabilityPercent / 100) * 0.3 + // Basic availability
-      (metrics.highSpeedAvailabilityPercent / 100) * 0.4 + // Quality (25+ Mbps)
-      (metrics.gigabitAvailabilityPercent / 100) * 0.2 + // Future-ready infrastructure
-      diversityScore * 0.1; // Infrastructure resilience
+    // Weighted score calculation...
 
-    return Math.min(1, Math.max(0, score)); // Clamp to 0-1 range
+    const score =
+      (metrics.broadbandAvailabilityPercent / 100) * 0.3 + // Basic availability.
+      (metrics.highSpeedAvailabilityPercent / 100) * 0.4 + // Quality (25+ Mbps).
+      (metrics.gigabitAvailabilityPercent / 100) * 0.2 + // Future-ready infrastructure.
+      diversityScore * 0.1; // Infrastructure resilience.
+
+    return Math.min(1, Math.max(0, score)); // Clamp to 0-1 range.
   }
 }

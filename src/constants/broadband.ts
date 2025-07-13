@@ -1,4 +1,5 @@
-// FCC Technology Code mappings
+// FCC Technology Code mappings.
+
 export const TECHNOLOGY_CODES = {
   FIBER: [70, 30] as number[],
   CABLE: [60, 20] as number[],
@@ -7,8 +8,9 @@ export const TECHNOLOGY_CODES = {
   OTHER: [12, 43, 50] as number[],
 };
 
-// Broadband speed thresholds (Mbps)
+// Broadband speed thresholds (Mbps).
+
 export const SPEED_THRESHOLDS = {
-  BROADBAND_MIN: 25, // FCC definition of broadband
-  GIGABIT: 1000, // Gigabit threshold
+  BROADBAND_MIN: 25, // FCC definition of broadband.
+  GIGABIT: 1000, // Gigabit threshold.
 } as const;
