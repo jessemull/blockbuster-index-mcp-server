@@ -8,11 +8,13 @@ import {
   searchJobsInState,
 } from './amazon';
 import { getCensusScores } from './census';
+import { getBroadbandScores } from './broadband';
 
 export {
   calculateScores,
   getAmazonScores,
   getCensusScores,
+  getBroadbandScores,
   getEqualScores,
   getJobCountFromFilters,
   getTotalJobsFromPagination,

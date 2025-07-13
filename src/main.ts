@@ -2,7 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import { CONFIG, validateConfig } from './config';
 import { WEIGHTS } from './constants';
-import { getAmazonScores, getCensusScores } from './signals';
+import {
+  getAmazonScores,
+  getCensusScores,
+  getBroadbandScores,
+} from './signals';
 import { BlockbusterIndexResponse, Signal, StateScore, States } from './types';
 import { logger, retryWithBackoff, uploadToS3 } from './util';
 
@@ -19,25 +23,28 @@ export const main = async () => {
     const results = await Promise.allSettled([
       retryWithBackoff(() => getAmazonScores()),
       getCensusScores(),
+      getBroadbandScores(),
     ]);
 
     // Extract results and handle failures gracefully...
 
     const amazon = results[0].status === 'fulfilled' ? results[0].value : {};
     const census = results[1].status === 'fulfilled' ? results[1].value : {};
+    const broadband = results[2].status === 'fulfilled' ? results[2].value : {};
 
     // Log any failures but continue with available data...
 
     let failedSignals = 0;
     results.forEach((result, index) => {
       if (result.status === 'rejected') {
-        const signalName = index === 0 ? 'Amazon' : 'Census';
+        const signalName =
+          index === 0 ? 'Amazon' : index === 1 ? 'Census' : 'Broadband';
         failedSignals++;
         logger.error(`${signalName} signal failed:`, result.reason);
       }
     });
 
-    // If both signals failed, we can't proceed...
+    // If all signals failed, we can't proceed...
 
     if (failedSignals === results.length) {
       throw new Error('All signals failed - cannot generate index');
@@ -55,6 +62,7 @@ export const main = async () => {
       const components = {
         [Signal.AMAZON]: amazon[state] ?? 0,
         [Signal.CENSUS]: census[state] ?? 0,
+        [Signal.BROADBAND]: broadband[state] ?? 0,
       };
 
       const score = Object.entries(components).reduce(

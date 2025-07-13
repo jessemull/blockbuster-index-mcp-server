@@ -1,609 +1,414 @@
 {
   "states": {
     "AK": {
-      "score": 0.12,
+      "score": 109.15,
       "components": {
-        "AMAZON": 0.12,
-        "ANALOG": 0.12,
-        "BROADBAND": 0.12,
-        "ECOMMERCE": 0.12,
-        "PHYSICAL": 0.12,
-        "STREAMING": 0.12,
-        "WALMART": 0.12
+        "AMAZON": 0.05,
+        "CENSUS": 330,
+        "BROADBAND": 0.6872
       }
     },
     "AL": {
-      "score": 0.18,
+      "score": 115.52,
       "components": {
-        "AMAZON": 0.18,
-        "ANALOG": 0.18,
-        "BROADBAND": 0.18,
-        "ECOMMERCE": 0.18,
-        "PHYSICAL": 0.18,
-        "STREAMING": 0.18,
-        "WALMART": 0.18
+        "AMAZON": 0.05,
+        "CENSUS": 350,
+        "BROADBAND": 0
       }
     },
     "AR": {
-      "score": 0.14,
+      "score": 113.54,
       "components": {
-        "AMAZON": 0.14,
-        "ANALOG": 0.14,
-        "BROADBAND": 0.14,
-        "ECOMMERCE": 0.14,
-        "PHYSICAL": 0.14,
-        "STREAMING": 0.14,
-        "WALMART": 0.14
+        "AMAZON": 0.05,
+        "CENSUS": 344,
+        "BROADBAND": 0
       }
     },
     "AZ": {
-      "score": 0.17,
+      "score": 79.22,
       "components": {
-        "AMAZON": 0.17,
-        "ANALOG": 0.17,
-        "BROADBAND": 0.17,
-        "ECOMMERCE": 0.17,
-        "PHYSICAL": 0.17,
-        "STREAMING": 0.17,
-        "WALMART": 0.17
+        "AMAZON": 0.06,
+        "CENSUS": 240,
+        "BROADBAND": 0
       }
     },
     "CA": {
-      "score": 0.1,
+      "score": 90.46,
       "components": {
-        "AMAZON": 0.1,
-        "ANALOG": 0.1,
-        "BROADBAND": 0.1,
-        "ECOMMERCE": 0.1,
-        "PHYSICAL": 0.1,
-        "STREAMING": 0.1,
-        "WALMART": 0.1
+        "AMAZON": 0.11,
+        "CENSUS": 274,
+        "BROADBAND": 0
       }
     },
     "CO": {
-      "score": 0.09,
+      "score": 104.3,
       "components": {
-        "AMAZON": 0.09,
-        "ANALOG": 0.09,
-        "BROADBAND": 0.09,
-        "ECOMMERCE": 0.09,
-        "PHYSICAL": 0.09,
-        "STREAMING": 0.09,
-        "WALMART": 0.09
+        "AMAZON": 0.06,
+        "CENSUS": 316,
+        "BROADBAND": 0
       }
     },
     "CT": {
-      "score": 0.11,
+      "score": 106.61,
       "components": {
-        "AMAZON": 0.11,
-        "ANALOG": 0.11,
-        "BROADBAND": 0.11,
-        "ECOMMERCE": 0.11,
-        "PHYSICAL": 0.11,
-        "STREAMING": 0.11,
-        "WALMART": 0.11
+        "AMAZON": 0.05,
+        "CENSUS": 323,
+        "BROADBAND": 0
       }
     },
     "DE": {
-      "score": 0.13,
+      "score": 119.81,
       "components": {
-        "AMAZON": 0.13,
-        "ANALOG": 0.13,
-        "BROADBAND": 0.13,
-        "ECOMMERCE": 0.13,
-        "PHYSICAL": 0.13,
-        "STREAMING": 0.13,
-        "WALMART": 0.13
+        "AMAZON": 0.05,
+        "CENSUS": 363,
+        "BROADBAND": 0
       }
     },
     "FL": {
-      "score": 0.2,
+      "score": 110.9,
       "components": {
-        "AMAZON": 0.2,
-        "ANALOG": 0.2,
-        "BROADBAND": 0.2,
-        "ECOMMERCE": 0.2,
-        "PHYSICAL": 0.2,
-        "STREAMING": 0.2,
-        "WALMART": 0.2
+        "AMAZON": 0.05,
+        "CENSUS": 336,
+        "BROADBAND": 0
       }
     },
     "GA": {
-      "score": 0.16,
+      "score": 107.27,
       "components": {
-        "AMAZON": 0.16,
-        "ANALOG": 0.16,
-        "BROADBAND": 0.16,
-        "ECOMMERCE": 0.16,
-        "PHYSICAL": 0.16,
-        "STREAMING": 0.16,
-        "WALMART": 0.16
+        "AMAZON": 0.06,
+        "CENSUS": 325,
+        "BROADBAND": 0
       }
     },
     "HI": {
-      "score": 0.07,
+      "score": 101,
       "components": {
-        "AMAZON": 0.07,
-        "ANALOG": 0.07,
-        "BROADBAND": 0.07,
-        "ECOMMERCE": 0.07,
-        "PHYSICAL": 0.07,
-        "STREAMING": 0.07,
-        "WALMART": 0.07
+        "AMAZON": 0.05,
+        "CENSUS": 306,
+        "BROADBAND": 0
       }
     },
     "IA": {
-      "score": 0.1,
+      "score": 112.88,
       "components": {
-        "AMAZON": 0.1,
-        "ANALOG": 0.1,
-        "BROADBAND": 0.1,
-        "ECOMMERCE": 0.1,
-        "PHYSICAL": 0.1,
-        "STREAMING": 0.1,
-        "WALMART": 0.1
+        "AMAZON": 0.05,
+        "CENSUS": 342,
+        "BROADBAND": 0
       }
     },
     "ID": {
-      "score": 0.15,
+      "score": 105.29,
       "components": {
-        "AMAZON": 0.15,
-        "ANALOG": 0.15,
-        "BROADBAND": 0.15,
-        "ECOMMERCE": 0.15,
-        "PHYSICAL": 0.15,
-        "STREAMING": 0.15,
-        "WALMART": 0.15
+        "AMAZON": 0.05,
+        "CENSUS": 319,
+        "BROADBAND": 0
       }
     },
     "IL": {
-      "score": 0.11,
+      "score": 94.07,
       "components": {
-        "AMAZON": 0.11,
-        "ANALOG": 0.11,
-        "BROADBAND": 0.11,
-        "ECOMMERCE": 0.11,
-        "PHYSICAL": 0.11,
-        "STREAMING": 0.11,
-        "WALMART": 0.11
+        "AMAZON": 0.06,
+        "CENSUS": 285,
+        "BROADBAND": 0
       }
     },
     "IN": {
-      "score": 0.14,
+      "score": 101,
       "components": {
-        "AMAZON": 0.14,
-        "ANALOG": 0.14,
-        "BROADBAND": 0.14,
-        "ECOMMERCE": 0.14,
-        "PHYSICAL": 0.14,
-        "STREAMING": 0.14,
-        "WALMART": 0.14
+        "AMAZON": 0.06,
+        "CENSUS": 306,
+        "BROADBAND": 0
       }
     },
     "KS": {
-      "score": 0.13,
+      "score": 107.6,
       "components": {
-        "AMAZON": 0.13,
-        "ANALOG": 0.13,
-        "BROADBAND": 0.13,
-        "ECOMMERCE": 0.13,
-        "PHYSICAL": 0.13,
-        "STREAMING": 0.13,
-        "WALMART": 0.13
+        "AMAZON": 0.05,
+        "CENSUS": 326,
+        "BROADBAND": 0
       }
     },
     "KY": {
-      "score": 0.12,
+      "score": 109.58,
       "components": {
-        "AMAZON": 0.12,
-        "ANALOG": 0.12,
-        "BROADBAND": 0.12,
-        "ECOMMERCE": 0.12,
-        "PHYSICAL": 0.12,
-        "STREAMING": 0.12,
-        "WALMART": 0.12
+        "AMAZON": 0.05,
+        "CENSUS": 332,
+        "BROADBAND": 0
       }
     },
     "LA": {
-      "score": 0.18,
+      "score": 114.53,
       "components": {
-        "AMAZON": 0.18,
-        "ANALOG": 0.18,
-        "BROADBAND": 0.18,
-        "ECOMMERCE": 0.18,
-        "PHYSICAL": 0.18,
-        "STREAMING": 0.18,
-        "WALMART": 0.18
+        "AMAZON": 0.05,
+        "CENSUS": 347,
+        "BROADBAND": 0
       }
     },
     "MA": {
-      "score": 0.09,
+      "score": 106.28,
       "components": {
-        "AMAZON": 0.09,
-        "ANALOG": 0.09,
-        "BROADBAND": 0.09,
-        "ECOMMERCE": 0.09,
-        "PHYSICAL": 0.09,
-        "STREAMING": 0.09,
-        "WALMART": 0.09
+        "AMAZON": 0.07,
+        "CENSUS": 322,
+        "BROADBAND": 0
       }
     },
     "MD": {
-      "score": 0.1,
+      "score": 89.12,
       "components": {
-        "AMAZON": 0.1,
-        "ANALOG": 0.1,
-        "BROADBAND": 0.1,
-        "ECOMMERCE": 0.1,
-        "PHYSICAL": 0.1,
-        "STREAMING": 0.1,
-        "WALMART": 0.1
+        "AMAZON": 0.05,
+        "CENSUS": 270,
+        "BROADBAND": 0
       }
     },
     "ME": {
-      "score": 0.06,
+      "score": 142.91,
       "components": {
-        "AMAZON": 0.06,
-        "ANALOG": 0.06,
-        "BROADBAND": 0.06,
-        "ECOMMERCE": 0.06,
-        "PHYSICAL": 0.06,
-        "STREAMING": 0.06,
-        "WALMART": 0.06
+        "AMAZON": 0.05,
+        "CENSUS": 433,
+        "BROADBAND": 0
       }
     },
     "MI": {
-      "score": 0.14,
+      "score": 107.93,
       "components": {
-        "AMAZON": 0.14,
-        "ANALOG": 0.14,
-        "BROADBAND": 0.14,
-        "ECOMMERCE": 0.14,
-        "PHYSICAL": 0.14,
-        "STREAMING": 0.14,
-        "WALMART": 0.14
+        "AMAZON": 0.05,
+        "CENSUS": 327,
+        "BROADBAND": 0
       }
     },
     "MN": {
-      "score": 0.1,
+      "score": 101.99,
       "components": {
-        "AMAZON": 0.1,
-        "ANALOG": 0.1,
-        "BROADBAND": 0.1,
-        "ECOMMERCE": 0.1,
-        "PHYSICAL": 0.1,
-        "STREAMING": 0.1,
-        "WALMART": 0.1
+        "AMAZON": 0.05,
+        "CENSUS": 309,
+        "BROADBAND": 0
       }
     },
     "MO": {
-      "score": 0.15,
+      "score": 106.28,
       "components": {
-        "AMAZON": 0.15,
-        "ANALOG": 0.15,
-        "BROADBAND": 0.15,
-        "ECOMMERCE": 0.15,
-        "PHYSICAL": 0.15,
-        "STREAMING": 0.15,
-        "WALMART": 0.15
+        "AMAZON": 0.05,
+        "CENSUS": 322,
+        "BROADBAND": 0
       }
     },
     "MS": {
-      "score": 0.19,
+      "score": 126.74,
       "components": {
-        "AMAZON": 0.19,
-        "ANALOG": 0.19,
-        "BROADBAND": 0.19,
-        "ECOMMERCE": 0.19,
-        "PHYSICAL": 0.19,
-        "STREAMING": 0.19,
-        "WALMART": 0.19
+        "AMAZON": 0.05,
+        "CENSUS": 384,
+        "BROADBAND": 0
       }
     },
     "MT": {
-      "score": 0.08,
+      "score": 136.97,
       "components": {
-        "AMAZON": 0.08,
-        "ANALOG": 0.08,
-        "BROADBAND": 0.08,
-        "ECOMMERCE": 0.08,
-        "PHYSICAL": 0.08,
-        "STREAMING": 0.08,
-        "WALMART": 0.08
+        "AMAZON": 0.05,
+        "CENSUS": 415,
+        "BROADBAND": 0
       }
     },
     "NC": {
-      "score": 0.17,
+      "score": 108.26,
       "components": {
-        "AMAZON": 0.17,
-        "ANALOG": 0.17,
-        "BROADBAND": 0.17,
-        "ECOMMERCE": 0.17,
-        "PHYSICAL": 0.17,
-        "STREAMING": 0.17,
-        "WALMART": 0.17
+        "AMAZON": 0.05,
+        "CENSUS": 328,
+        "BROADBAND": 0
       }
     },
     "ND": {
-      "score": 0.09,
+      "score": 130.7,
       "components": {
-        "AMAZON": 0.09,
-        "ANALOG": 0.09,
-        "BROADBAND": 0.09,
-        "ECOMMERCE": 0.09,
-        "PHYSICAL": 0.09,
-        "STREAMING": 0.09,
-        "WALMART": 0.09
+        "AMAZON": 0.05,
+        "CENSUS": 396,
+        "BROADBAND": 0
       }
     },
     "NE": {
-      "score": 0.11,
+      "score": 115.52,
       "components": {
-        "AMAZON": 0.11,
-        "ANALOG": 0.11,
-        "BROADBAND": 0.11,
-        "ECOMMERCE": 0.11,
-        "PHYSICAL": 0.11,
-        "STREAMING": 0.11,
-        "WALMART": 0.11
+        "AMAZON": 0.05,
+        "CENSUS": 350,
+        "BROADBAND": 0
       }
     },
     "NH": {
-      "score": 0.07,
+      "score": 134.33,
       "components": {
-        "AMAZON": 0.07,
-        "ANALOG": 0.07,
-        "BROADBAND": 0.07,
-        "ECOMMERCE": 0.07,
-        "PHYSICAL": 0.07,
-        "STREAMING": 0.07,
-        "WALMART": 0.07
+        "AMAZON": 0.05,
+        "CENSUS": 407,
+        "BROADBAND": 0
       }
     },
     "NJ": {
-      "score": 0.08,
+      "score": 105.62,
       "components": {
-        "AMAZON": 0.08,
-        "ANALOG": 0.08,
-        "BROADBAND": 0.08,
-        "ECOMMERCE": 0.08,
-        "PHYSICAL": 0.08,
-        "STREAMING": 0.08,
-        "WALMART": 0.08
+        "AMAZON": 0.05,
+        "CENSUS": 320,
+        "BROADBAND": 0
       }
     },
     "NM": {
-      "score": 0.14,
+      "score": 99.68,
       "components": {
-        "AMAZON": 0.14,
-        "ANALOG": 0.14,
-        "BROADBAND": 0.14,
-        "ECOMMERCE": 0.14,
-        "PHYSICAL": 0.14,
-        "STREAMING": 0.14,
-        "WALMART": 0.14
+        "AMAZON": 0.05,
+        "CENSUS": 302,
+        "BROADBAND": 0
       }
     },
     "NV": {
-      "score": 0.12,
+      "score": 93.41,
       "components": {
-        "AMAZON": 0.12,
-        "ANALOG": 0.12,
-        "BROADBAND": 0.12,
-        "ECOMMERCE": 0.12,
-        "PHYSICAL": 0.12,
-        "STREAMING": 0.12,
-        "WALMART": 0.12
+        "AMAZON": 0.05,
+        "CENSUS": 283,
+        "BROADBAND": 0
       }
     },
     "NY": {
-      "score": 0.05,
+      "score": 121.47,
       "components": {
-        "AMAZON": 0.05,
-        "ANALOG": 0.05,
-        "BROADBAND": 0.05,
-        "ECOMMERCE": 0.05,
-        "PHYSICAL": 0.05,
-        "STREAMING": 0.05,
-        "WALMART": 0.05
+        "AMAZON": 0.09,
+        "CENSUS": 368,
+        "BROADBAND": 0
       }
     },
     "OH": {
-      "score": 0.13,
+      "score": 96.05,
       "components": {
-        "AMAZON": 0.13,
-        "ANALOG": 0.13,
-        "BROADBAND": 0.13,
-        "ECOMMERCE": 0.13,
-        "PHYSICAL": 0.13,
-        "STREAMING": 0.13,
-        "WALMART": 0.13
+        "AMAZON": 0.05,
+        "CENSUS": 291,
+        "BROADBAND": 0
       }
     },
     "OK": {
-      "score": 0.16,
+      "score": 106.61,
       "components": {
-        "AMAZON": 0.16,
-        "ANALOG": 0.16,
-        "BROADBAND": 0.16,
-        "ECOMMERCE": 0.16,
-        "PHYSICAL": 0.16,
-        "STREAMING": 0.16,
-        "WALMART": 0.16
+        "AMAZON": 0.05,
+        "CENSUS": 323,
+        "BROADBAND": 0
       }
     },
     "OR": {
-      "score": 0.09,
+      "score": 107.6,
       "components": {
-        "AMAZON": 0.09,
-        "ANALOG": 0.09,
-        "BROADBAND": 0.09,
-        "ECOMMERCE": 0.09,
-        "PHYSICAL": 0.09,
-        "STREAMING": 0.09,
-        "WALMART": 0.09
+        "AMAZON": 0.05,
+        "CENSUS": 326,
+        "BROADBAND": 0
       }
     },
     "PA": {
-      "score": 0.11,
+      "score": 102.32,
       "components": {
-        "AMAZON": 0.11,
-        "ANALOG": 0.11,
-        "BROADBAND": 0.11,
-        "ECOMMERCE": 0.11,
-        "PHYSICAL": 0.11,
-        "STREAMING": 0.11,
-        "WALMART": 0.11
+        "AMAZON": 0.05,
+        "CENSUS": 310,
+        "BROADBAND": 0
       }
     },
     "RI": {
-      "score": 0.06,
+      "score": 107.27,
       "components": {
-        "AMAZON": 0.06,
-        "ANALOG": 0.06,
-        "BROADBAND": 0.06,
-        "ECOMMERCE": 0.06,
-        "PHYSICAL": 0.06,
-        "STREAMING": 0.06,
-        "WALMART": 0.06
+        "AMAZON": 0.05,
+        "CENSUS": 325,
+        "BROADBAND": 0
       }
     },
     "SC": {
-      "score": 0.17,
+      "score": 114.53,
       "components": {
-        "AMAZON": 0.17,
-        "ANALOG": 0.17,
-        "BROADBAND": 0.17,
-        "ECOMMERCE": 0.17,
-        "PHYSICAL": 0.17,
-        "STREAMING": 0.17,
-        "WALMART": 0.17
+        "AMAZON": 0.05,
+        "CENSUS": 347,
+        "BROADBAND": 0
       }
     },
     "SD": {
-      "score": 0.1,
+      "score": 137.63,
       "components": {
-        "AMAZON": 0.1,
-        "ANALOG": 0.1,
-        "BROADBAND": 0.1,
-        "ECOMMERCE": 0.1,
-        "PHYSICAL": 0.1,
-        "STREAMING": 0.1,
-        "WALMART": 0.1
+        "AMAZON": 0.05,
+        "CENSUS": 417,
+        "BROADBAND": 0
       }
     },
     "TN": {
-      "score": 0.15,
+      "score": 108.59,
       "components": {
-        "AMAZON": 0.15,
-        "ANALOG": 0.15,
-        "BROADBAND": 0.15,
-        "ECOMMERCE": 0.15,
-        "PHYSICAL": 0.15,
-        "STREAMING": 0.15,
-        "WALMART": 0.15
+        "AMAZON": 0.07,
+        "CENSUS": 329,
+        "BROADBAND": 0
       }
     },
     "TX": {
-      "score": 0.15,
+      "score": 91.44,
       "components": {
-        "AMAZON": 0.15,
-        "ANALOG": 0.15,
-        "BROADBAND": 0.15,
-        "ECOMMERCE": 0.15,
-        "PHYSICAL": 0.15,
-        "STREAMING": 0.15,
-        "WALMART": 0.15
+        "AMAZON": 0.09,
+        "CENSUS": 277,
+        "BROADBAND": 0
       }
     },
     "UT": {
-      "score": 0.12,
+      "score": 99.02,
       "components": {
-        "AMAZON": 0.12,
-        "ANALOG": 0.12,
-        "BROADBAND": 0.12,
-        "ECOMMERCE": 0.12,
-        "PHYSICAL": 0.12,
-        "STREAMING": 0.12,
-        "WALMART": 0.12
+        "AMAZON": 0.05,
+        "CENSUS": 300,
+        "BROADBAND": 0
       }
     },
     "VA": {
-      "score": 0.13,
+      "score": 98.04,
       "components": {
-        "AMAZON": 0.13,
-        "ANALOG": 0.13,
-        "BROADBAND": 0.13,
-        "ECOMMERCE": 0.13,
-        "PHYSICAL": 0.13,
-        "STREAMING": 0.13,
-        "WALMART": 0.13
+        "AMAZON": 0.1,
+        "CENSUS": 297,
+        "BROADBAND": 0
       }
     },
     "VT": {
-      "score": 0.07,
+      "score": 149.84,
       "components": {
-        "AMAZON": 0.07,
-        "ANALOG": 0.07,
-        "BROADBAND": 0.07,
-        "ECOMMERCE": 0.07,
-        "PHYSICAL": 0.07,
-        "STREAMING": 0.07,
-        "WALMART": 0.07
+        "AMAZON": 0.05,
+        "CENSUS": 454,
+        "BROADBAND": 0
       }
     },
     "WA": {
-      "score": 0.08,
+      "score": 86.86,
       "components": {
-        "AMAZON": 0.08,
-        "ANALOG": 0.08,
-        "BROADBAND": 0.08,
-        "ECOMMERCE": 0.08,
-        "PHYSICAL": 0.08,
-        "STREAMING": 0.08,
-        "WALMART": 0.08
+        "AMAZON": 0.2,
+        "CENSUS": 263,
+        "BROADBAND": 0
       }
     },
     "WI": {
-      "score": 0.11,
+      "score": 100.67,
       "components": {
-        "AMAZON": 0.11,
-        "ANALOG": 0.11,
-        "BROADBAND": 0.11,
-        "ECOMMERCE": 0.11,
-        "PHYSICAL": 0.11,
-        "STREAMING": 0.11,
-        "WALMART": 0.11
+        "AMAZON": 0.05,
+        "CENSUS": 305,
+        "BROADBAND": 0
       }
     },
     "WV": {
-      "score": 0.14,
+      "score": 106.28,
       "components": {
-        "AMAZON": 0.14,
-        "ANALOG": 0.14,
-        "BROADBAND": 0.14,
-        "ECOMMERCE": 0.14,
-        "PHYSICAL": 0.14,
-        "STREAMING": 0.14,
-        "WALMART": 0.14
+        "AMAZON": 0.05,
+        "CENSUS": 322,
+        "BROADBAND": 0
       }
     },
     "WY": {
-      "score": 0.1,
+      "score": 151.16,
       "components": {
-        "AMAZON": 0.1,
-        "ANALOG": 0.1,
-        "BROADBAND": 0.1,
-        "ECOMMERCE": 0.1,
-        "PHYSICAL": 0.1,
-        "STREAMING": 0.1,
-        "WALMART": 0.1
+        "AMAZON": 0.05,
+        "CENSUS": 458,
+        "BROADBAND": 0
       }
     }
   },
   "metadata": {
-    "calculatedAt": "2025-06-26T01:26:58.591Z",
+    "calculatedAt": "2025-07-13T03:24:01.002Z",
     "version": "1.0.0",
-    "totalStates": 50
+    "totalStates": 50,
+    "signalStatus": {
+      "total": 3,
+      "successful": 3,
+      "failed": 0
+    }
   }
 }

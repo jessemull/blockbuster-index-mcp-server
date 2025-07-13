@@ -15,6 +15,8 @@ Parameters:
 Resources:
   ECRRepository:
     Type: AWS::ECR::Repository
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       RepositoryName: !Sub 'blockbuster-index-${Environment}'
       ImageScanningConfiguration:
@@ -45,6 +47,8 @@ Resources:
 
   ECSLogGroup:
     Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       LogGroupName: !Sub '/ecs/blockbuster-index-${Environment}'
       RetentionInDays: 14
