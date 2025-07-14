@@ -7,11 +7,35 @@ import {
   getCensusScores,
   getBroadbandScores,
 } from './signals';
-import { BlockbusterIndexResponse, Signal, StateScore, States } from './types';
+import {
+  BlockbusterIndexResponse,
+  Signal,
+  StateScore,
+  States,
+  SignalConfig,
+} from './types';
 import { logger, retryWithBackoff, uploadToS3 } from './util';
 
 export const main = async () => {
   const startTime = Date.now();
+
+  const SIGNAL_CONFIGS: SignalConfig[] = [
+    {
+      name: 'Amazon',
+      signal: Signal.AMAZON,
+      getter: getAmazonScores,
+    },
+    {
+      name: 'Census',
+      signal: Signal.CENSUS,
+      getter: getCensusScores,
+    },
+    {
+      name: 'Broadband',
+      signal: Signal.BROADBAND,
+      getter: getBroadbandScores,
+    },
+  ];
 
   try {
     if (!CONFIG.IS_DEVELOPMENT) {
@@ -20,27 +44,31 @@ export const main = async () => {
 
     logger.info('Starting blockbuster index calculation');
 
-    const results = await Promise.allSettled([
-      retryWithBackoff(() => getAmazonScores()),
-      retryWithBackoff(() => getCensusScores()),
-      retryWithBackoff(() => getBroadbandScores()),
-    ]);
+    // Execute all signals with retry logic...
+
+    const signalPromises = SIGNAL_CONFIGS.map((config) =>
+      retryWithBackoff(config.getter),
+    );
+
+    const results = await Promise.allSettled(signalPromises);
 
     // Extract results and handle failures gracefully...
 
-    const amazon = results[0].status === 'fulfilled' ? results[0].value : {};
-    const census = results[1].status === 'fulfilled' ? results[1].value : {};
-    const broadband = results[2].status === 'fulfilled' ? results[2].value : {};
-
-    // Log any failures but continue with available data...
-
+    const signalResults: Record<Signal, Record<string, number>> = {} as Record<
+      Signal,
+      Record<string, number>
+    >;
     let failedSignals = 0;
+
     results.forEach((result, index) => {
-      if (result.status === 'rejected') {
-        const signalName =
-          index === 0 ? 'Amazon' : index === 1 ? 'Census' : 'Broadband';
+      const config = SIGNAL_CONFIGS[index];
+
+      if (result.status === 'fulfilled') {
+        signalResults[config.signal] = result.value;
+      } else {
         failedSignals++;
-        logger.error(`${signalName} signal failed:`, result.reason);
+        logger.error(`${config.name} signal failed:`, result.reason);
+        signalResults[config.signal] = {};
       }
     });
 
@@ -60,9 +88,9 @@ export const main = async () => {
 
     for (const state of Object.values(States)) {
       const components = {
-        [Signal.AMAZON]: amazon[state] ?? 0,
-        [Signal.CENSUS]: census[state] ?? 0,
-        [Signal.BROADBAND]: broadband[state] ?? 0,
+        [Signal.AMAZON]: signalResults[Signal.AMAZON]?.[state] ?? 0,
+        [Signal.CENSUS]: signalResults[Signal.CENSUS]?.[state] ?? 0,
+        [Signal.BROADBAND]: signalResults[Signal.BROADBAND]?.[state] ?? 0,
       };
 
       const score = Object.entries(components).reduce(

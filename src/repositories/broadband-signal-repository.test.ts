@@ -27,7 +27,6 @@ import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 const mockGetCommand = GetCommand as jest.MockedClass<typeof GetCommand>;
 const mockPutCommand = PutCommand as jest.MockedClass<typeof PutCommand>;
 
-// Type for accessing private members in tests
 type RepositoryWithPrivateMembers = DynamoDBBroadbandSignalRepository & {
   client: { send: jest.MockedFunction<(command: unknown) => Promise<unknown>> };
 };

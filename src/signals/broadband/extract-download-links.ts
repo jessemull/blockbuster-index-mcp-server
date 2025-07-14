@@ -5,14 +5,13 @@ export interface DownloadLink {
   url: string;
 }
 
-/**
- * Extracts download links for broadband data from FCC page elements
- * This function is extracted from page.evaluate() to make it testable
- */
+// Extracts download links for broadband data from FCC page elements...
+
 export function extractDownloadLinks(
   document: BrowserDocument,
 ): DownloadLink[] {
   // Find all anchor tags with Box.com download links...
+
   const anchorElements = document.querySelectorAll(
     'a[href*="us-fcc.box.com/v/"]',
   );
@@ -22,6 +21,7 @@ export function extractDownloadLinks(
     const href = element.getAttribute('href');
     if (href) {
       // Extract state from href or assume text content through DOM...
+
       const text =
         (element as unknown as { textContent?: string }).textContent?.trim() ||
         '';

@@ -29,3 +29,9 @@ export {
   StateScore,
   States,
 };
+
+export interface SignalConfig {
+  name: string;
+  signal: Signal;
+  getter: () => Promise<Record<string, number>>;
+}

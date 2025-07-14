@@ -8,11 +8,10 @@ jest.mock('../../util/logger', () => ({
   },
 }));
 
-// Mock setTimeout to avoid delays in tests
 const originalSetTimeout = setTimeout;
 const mockSetTimeout = jest.fn((callback) => {
   callback();
-  return 1; // Return a fake timer ID
+  return 1;
 });
 
 const mockBrowser = {
@@ -55,7 +54,6 @@ describe('scrapeBroadbandData', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Mock setTimeout to avoid delays
     global.setTimeout = mockSetTimeout as unknown as typeof setTimeout;
 
     mockBrowser.newPage.mockResolvedValue(mockPage);
@@ -72,7 +70,6 @@ describe('scrapeBroadbandData', () => {
   });
 
   afterEach(() => {
-    // Restore original setTimeout
     global.setTimeout = originalSetTimeout;
   });
 

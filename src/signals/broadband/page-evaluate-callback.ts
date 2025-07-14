@@ -9,7 +9,6 @@ export function createPageEvaluateCallback(
     const document = (globalThis as unknown as { document: BrowserDocument })
       .document;
 
-    // Use the extracted function for better testability
     return extractDownloadLinksFn(document);
   };
 }

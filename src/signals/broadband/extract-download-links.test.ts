@@ -151,7 +151,6 @@ describe('extractDownloadLinks', () => {
     const mockDocument = createMockDocument(mockElements);
     const result = extractDownloadLinks(mockDocument);
 
-    // Note: TX: doesn't match because regex expects space after state code, not colon
     expect(result).toEqual([
       { state: 'CA', url: 'https://us-fcc.box.com/v/CA-download' },
       { state: 'NY', url: 'https://us-fcc.box.com/v/NY-download' },
@@ -170,7 +169,6 @@ describe('extractDownloadLinks', () => {
     const mockDocument = createMockDocument(mockElements);
     const result = extractDownloadLinks(mockDocument);
 
-    // Should not match lowercase since regex expects uppercase
     expect(result).toEqual([]);
   });
 
@@ -189,7 +187,6 @@ describe('extractDownloadLinks', () => {
     const mockDocument = createMockDocument(mockElements);
     const result = extractDownloadLinks(mockDocument);
 
-    // Should not match since regex expects state code at the beginning
     expect(result).toEqual([]);
   });
 
@@ -213,7 +210,6 @@ describe('extractDownloadLinks', () => {
     const mockDocument = createMockDocument(mockElements);
     const result = extractDownloadLinks(mockDocument);
 
-    // Function processes all elements with href and state pattern, regardless of URL validity
     expect(result).toEqual([
       { state: 'CA', url: 'invalid-url' },
       { state: 'TX', url: 'https://other-site.com/download' },
@@ -224,8 +220,8 @@ describe('extractDownloadLinks', () => {
   it('should handle mixed valid and invalid elements', () => {
     const mockElements = [
       createMockElement('https://us-fcc.box.com/v/CA-download', 'CA Broadband'),
-      createMockElement(null, 'TX Download'), // No href
-      createMockElement('https://us-fcc.box.com/v/NY-download', null), // No textContent
+      createMockElement(null, 'TX Download'),
+      createMockElement('https://us-fcc.box.com/v/NY-download', null),
       createMockElement(
         'https://us-fcc.box.com/v/FL-download',
         'Invalid Pattern',
@@ -253,7 +249,6 @@ describe('extractDownloadLinks', () => {
     const mockDocument = createMockDocument(mockElements);
     const result = extractDownloadLinks(mockDocument);
 
-    // Should only match the first state code at the beginning
     expect(result).toEqual([
       { state: 'CA', url: 'https://us-fcc.box.com/v/CA-download' },
     ]);

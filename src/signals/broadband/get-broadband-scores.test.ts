@@ -1,8 +1,6 @@
-// Mocks for class methods (declare early)
 const mockSave = jest.fn();
 const mockGet = jest.fn();
 
-// Mock DynamoDBBroadbandSignalRepository before importing getBroadbandScores
 jest.mock('../../repositories/broadband-signal-repository', () => {
   return {
     DynamoDBBroadbandSignalRepository: jest.fn().mockImplementation(() => ({
@@ -12,7 +10,6 @@ jest.mock('../../repositories/broadband-signal-repository', () => {
   };
 });
 
-// Mock other dependencies
 jest.mock('../../util/logger', () => ({
   logger: {
     info: jest.fn(),
@@ -38,12 +35,10 @@ jest.mock('path', () => ({
   join: jest.fn(),
 }));
 
-// Mock loadExistingBroadbandData explicitly
 jest.mock('./load-existing-broadband-data', () => ({
   loadExistingBroadbandData: jest.fn(),
 }));
 
-// Now import after mocks are set up
 import { getBroadbandScores } from './get-broadband-scores';
 import { BroadbandService } from '../../services/broadband-service';
 import { scrapeBroadbandData } from './scrape-broadband-data';
@@ -61,13 +56,11 @@ const mockProcessCsv = jest.fn();
   processBroadbandCsv: mockProcessCsv,
 }));
 
-// Now cast the imported loadExistingBroadbandData as a Jest mock function
 const mockLoadExistingBroadbandData =
   loadExistingBroadbandData as jest.MockedFunction<
     typeof loadExistingBroadbandData
   >;
 
-// Override getCurrentFccDataVersion mock
 jest.mock('./get-broadband-scores.ts', () => {
   const actual = jest.requireActual('./get-broadband-scores.ts');
   return {
@@ -76,7 +69,6 @@ jest.mock('./get-broadband-scores.ts', () => {
   };
 });
 
-// Helper for filenames
 function createFileName(name: string): string {
   return name;
 }
@@ -181,11 +173,9 @@ describe('getBroadbandScores', () => {
     expect(mockSave).not.toHaveBeenCalled();
   });
 
-  // NEW tests covering the else branch with repository defined
   it('loads existing broadband data when no scraping is needed and repository is defined', async () => {
     process.env.FORCE_REFRESH = 'false';
 
-    // Spy on checkIfScrapingNeeded to return needsScraping: false
     jest
       .spyOn(
         await import('./check-if-scraping-needed'),
@@ -208,7 +198,6 @@ describe('getBroadbandScores', () => {
     expect(result).toEqual(mockExisting);
   });
 
-  // NEW test for no repository case in else branch
   it('skips loading existing broadband data when no repository is defined', async () => {
     delete process.env.BROADBAND_DYNAMODB_TABLE_NAME;
     process.env.FORCE_REFRESH = 'false';
