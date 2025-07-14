@@ -1,9 +1,9 @@
 import { logger } from '../../util/logger';
 import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband-signal-repository';
 import { BroadbandSignalRecord } from '../../types';
-import { BrowserDocument } from '../../types/browser';
 import { BroadbandService } from '../../services/broadband-service';
 import { scrapeBroadbandData } from './scrape-broadband-data';
+import { getCurrentFccDataVersion } from './get-current-fcc-data-version';
 import { States } from '../../types';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -15,44 +15,6 @@ const getStartOfDayTimestamp = (date: Date = new Date()): number => {
 };
 
 // Get the current FCC data version by scraping the FCC broadband page...
-
-async function getCurrentFccDataVersion(): Promise<string> {
-  const puppeteer = await import('puppeteer');
-  const browser = await puppeteer.default.launch({
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  });
-
-  try {
-    const page = await browser.newPage();
-    await page.goto(
-      'https://www.fcc.gov/general/broadband-deployment-data-fcc-form-477',
-      {
-        waitUntil: 'networkidle2',
-      },
-    );
-
-    const version = await page.evaluate(() => {
-      const firstLink = (
-        globalThis as unknown as { document: BrowserDocument }
-      ).document.querySelector('div.field-item.even a');
-      if (firstLink) {
-        const text = firstLink.querySelector('*')?.textContent?.trim();
-
-        // Extract version like "Dec 21v1" from "AK - Fixed - Dec 21v1".
-
-        const versionMatch = text?.match(/- ([\w\s\d]+)$/);
-        return versionMatch ? versionMatch[1].trim() : 'unknown';
-      }
-      return 'unknown';
-    });
-
-    return version;
-  } finally {
-    await browser.close();
-  }
-}
 
 // Check if we need to scrape new data by comparing FCC data version with our stored data...
 
