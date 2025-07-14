@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Browser } from 'puppeteer';
 import { logger } from '../../util';
 import { searchJobsInState } from './search-jobs-in-state';
+import { BrowserDocument } from '../../types/browser';
 
 declare global {
   var globalThis: {
@@ -40,8 +40,10 @@ describe('searchJobsInState', () => {
 
   it('successfully searches jobs in a state', async () => {
     mockPage.evaluate.mockImplementation((callback) => {
-      const originalDocument = (globalThis as any).document;
-      (globalThis as any).document = {
+      const originalDocument = (
+        globalThis as unknown as { document: BrowserDocument }
+      ).document;
+      (globalThis as unknown as { document: BrowserDocument }).document = {
         querySelector: jest.fn().mockReturnValue({
           querySelector: jest.fn().mockReturnValue({ textContent: '(150)' }),
         }),
@@ -50,7 +52,8 @@ describe('searchJobsInState', () => {
       try {
         return callback();
       } finally {
-        (globalThis as any).document = originalDocument;
+        (globalThis as unknown as { document: BrowserDocument }).document =
+          originalDocument;
       }
     });
 
@@ -60,15 +63,18 @@ describe('searchJobsInState', () => {
 
   it('handles missing job count elements', async () => {
     mockPage.evaluate.mockImplementation((callback) => {
-      const originalDocument = (globalThis as any).document;
-      (globalThis as any).document = {
+      const originalDocument = (
+        globalThis as unknown as { document: BrowserDocument }
+      ).document;
+      (globalThis as unknown as { document: BrowserDocument }).document = {
         querySelector: jest.fn().mockReturnValue(null),
         querySelectorAll: jest.fn().mockReturnValue([]),
       };
       try {
         return callback();
       } finally {
-        (globalThis as any).document = originalDocument;
+        (globalThis as unknown as { document: BrowserDocument }).document =
+          originalDocument;
       }
     });
     const result = await searchJobsInState(mockBrowser, 'CA', 'California');
@@ -77,8 +83,10 @@ describe('searchJobsInState', () => {
 
   it('handles 500+ job scenarios', async () => {
     mockPage.evaluate.mockImplementation((callback) => {
-      const originalDocument = (globalThis as any).document;
-      (globalThis as any).document = {
+      const originalDocument = (
+        globalThis as unknown as { document: BrowserDocument }
+      ).document;
+      (globalThis as unknown as { document: BrowserDocument }).document = {
         querySelector: jest.fn().mockReturnValue({
           querySelector: jest.fn().mockReturnValue({ textContent: '(500+)' }),
         }),
@@ -92,7 +100,8 @@ describe('searchJobsInState', () => {
       try {
         return callback();
       } finally {
-        (globalThis as any).document = originalDocument;
+        (globalThis as unknown as { document: BrowserDocument }).document =
+          originalDocument;
       }
     });
     const result = await searchJobsInState(mockBrowser, 'CA', 'California');
@@ -101,8 +110,10 @@ describe('searchJobsInState', () => {
 
   it('handles malformed job count text', async () => {
     mockPage.evaluate.mockImplementation((callback) => {
-      const originalDocument = (globalThis as any).document;
-      (globalThis as any).document = {
+      const originalDocument = (
+        globalThis as unknown as { document: BrowserDocument }
+      ).document;
+      (globalThis as unknown as { document: BrowserDocument }).document = {
         querySelector: jest.fn().mockReturnValue({
           querySelector: jest
             .fn()
@@ -113,7 +124,8 @@ describe('searchJobsInState', () => {
       try {
         return callback();
       } finally {
-        (globalThis as any).document = originalDocument;
+        (globalThis as unknown as { document: BrowserDocument }).document =
+          originalDocument;
       }
     });
     const result = await searchJobsInState(mockBrowser, 'CA', 'California');
@@ -122,8 +134,10 @@ describe('searchJobsInState', () => {
 
   it('handles empty textContent', async () => {
     mockPage.evaluate.mockImplementation((callback) => {
-      const originalDocument = (globalThis as any).document;
-      (globalThis as any).document = {
+      const originalDocument = (
+        globalThis as unknown as { document: BrowserDocument }
+      ).document;
+      (globalThis as unknown as { document: BrowserDocument }).document = {
         querySelector: jest.fn().mockReturnValue({
           querySelector: jest.fn().mockReturnValue({ textContent: '' }),
         }),
@@ -132,7 +146,8 @@ describe('searchJobsInState', () => {
       try {
         return callback();
       } finally {
-        (globalThis as any).document = originalDocument;
+        (globalThis as unknown as { document: BrowserDocument }).document =
+          originalDocument;
       }
     });
     const result = await searchJobsInState(mockBrowser, 'CA', 'California');
@@ -162,8 +177,10 @@ describe('searchJobsInState', () => {
 
   it('handles page.close failure', async () => {
     mockPage.evaluate.mockImplementation((callback) => {
-      const originalDocument = (globalThis as any).document;
-      (globalThis as any).document = {
+      const originalDocument = (
+        globalThis as unknown as { document: BrowserDocument }
+      ).document;
+      (globalThis as unknown as { document: BrowserDocument }).document = {
         querySelector: jest.fn().mockReturnValue({
           querySelector: jest.fn().mockReturnValue({ textContent: '(150)' }),
         }),
@@ -172,7 +189,8 @@ describe('searchJobsInState', () => {
       try {
         return callback();
       } finally {
-        (globalThis as any).document = originalDocument;
+        (globalThis as unknown as { document: BrowserDocument }).document =
+          originalDocument;
       }
     });
     mockPage.close.mockRejectedValueOnce(new Error('Close failed'));
@@ -187,8 +205,10 @@ describe('searchJobsInState', () => {
   it('handles waitForSelector timeout gracefully', async () => {
     mockPage.waitForSelector.mockRejectedValueOnce(new Error('Timeout'));
     mockPage.evaluate.mockImplementation((callback) => {
-      const originalDocument = (globalThis as any).document;
-      (globalThis as any).document = {
+      const originalDocument = (
+        globalThis as unknown as { document: BrowserDocument }
+      ).document;
+      (globalThis as unknown as { document: BrowserDocument }).document = {
         querySelector: jest.fn().mockReturnValue({
           querySelector: jest.fn().mockReturnValue({ textContent: '(150)' }),
         }),
@@ -197,7 +217,8 @@ describe('searchJobsInState', () => {
       try {
         return callback();
       } finally {
-        (globalThis as any).document = originalDocument;
+        (globalThis as unknown as { document: BrowserDocument }).document =
+          originalDocument;
       }
     });
     const result = await searchJobsInState(mockBrowser, 'CA', 'California');
@@ -218,8 +239,10 @@ describe('searchJobsInState', () => {
 
   it('handles error thrown in page.close (finally block)', async () => {
     mockPage.evaluate.mockImplementation((callback) => {
-      const originalDocument = (globalThis as any).document;
-      (globalThis as any).document = {
+      const originalDocument = (
+        globalThis as unknown as { document: BrowserDocument }
+      ).document;
+      (globalThis as unknown as { document: BrowserDocument }).document = {
         querySelector: jest.fn().mockReturnValue({
           querySelector: jest.fn().mockReturnValue({ textContent: '(150)' }),
         }),
@@ -228,7 +251,8 @@ describe('searchJobsInState', () => {
       try {
         return callback();
       } finally {
-        (globalThis as any).document = originalDocument;
+        (globalThis as unknown as { document: BrowserDocument }).document =
+          originalDocument;
       }
     });
     mockPage.close.mockRejectedValueOnce(new Error('Close error'));
@@ -258,8 +282,10 @@ describe('searchJobsInState', () => {
 
   it('handles empty pageButtons array (returns 500)', async () => {
     mockPage.evaluate.mockImplementation((callback) => {
-      const originalDocument = (globalThis as any).document;
-      (globalThis as any).document = {
+      const originalDocument = (
+        globalThis as unknown as { document: BrowserDocument }
+      ).document;
+      (globalThis as unknown as { document: BrowserDocument }).document = {
         querySelector: jest.fn().mockReturnValue({
           querySelector: jest.fn().mockReturnValue({ textContent: '(500+)' }),
         }),
@@ -268,7 +294,8 @@ describe('searchJobsInState', () => {
       try {
         return callback();
       } finally {
-        (globalThis as any).document = originalDocument;
+        (globalThis as unknown as { document: BrowserDocument }).document =
+          originalDocument;
       }
     });
     const result = await searchJobsInState(mockBrowser, 'CA', 'California');
@@ -277,8 +304,10 @@ describe('searchJobsInState', () => {
 
   it('handles missing jobCountElement (returns 0)', async () => {
     mockPage.evaluate.mockImplementation((callback) => {
-      const originalDocument = (globalThis as any).document;
-      (globalThis as any).document = {
+      const originalDocument = (
+        globalThis as unknown as { document: BrowserDocument }
+      ).document;
+      (globalThis as unknown as { document: BrowserDocument }).document = {
         querySelector: jest.fn().mockReturnValue({
           querySelector: jest.fn().mockReturnValue(null),
         }),
@@ -287,7 +316,8 @@ describe('searchJobsInState', () => {
       try {
         return callback();
       } finally {
-        (globalThis as any).document = originalDocument;
+        (globalThis as unknown as { document: BrowserDocument }).document =
+          originalDocument;
       }
     });
     const result = await searchJobsInState(mockBrowser, 'CA', 'California');
@@ -296,8 +326,10 @@ describe('searchJobsInState', () => {
 
   it('handles button with null data-label attribute (defaults to 1)', async () => {
     mockPage.evaluate.mockImplementation((callback) => {
-      const originalDocument = (globalThis as any).document;
-      (globalThis as any).document = {
+      const originalDocument = (
+        globalThis as unknown as { document: BrowserDocument }
+      ).document;
+      (globalThis as unknown as { document: BrowserDocument }).document = {
         querySelector: jest.fn().mockReturnValue({
           querySelector: jest.fn().mockReturnValue({ textContent: '(500+)' }),
         }),
@@ -308,7 +340,8 @@ describe('searchJobsInState', () => {
       try {
         return callback();
       } finally {
-        (globalThis as any).document = originalDocument;
+        (globalThis as unknown as { document: BrowserDocument }).document =
+          originalDocument;
       }
     });
     const result = await searchJobsInState(mockBrowser, 'CA', 'California');

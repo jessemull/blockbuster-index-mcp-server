@@ -1,4 +1,4 @@
-import { BrowserDocument } from '../../types/browser';
+import { getFirstLink } from './get-first-link';
 
 export async function getCurrentFccDataVersion(): Promise<string> {
   const puppeteer = await import('puppeteer');
@@ -17,17 +17,7 @@ export async function getCurrentFccDataVersion(): Promise<string> {
       },
     );
 
-    const version = await page.evaluate(() => {
-      const firstLink = (
-        globalThis as unknown as { document: BrowserDocument }
-      ).document.querySelector('div.field-item.even a');
-      if (firstLink) {
-        const text = firstLink.querySelector('*')?.textContent?.trim();
-        const versionMatch = text?.match(/- ([\w\s\d]+)$/);
-        return versionMatch ? versionMatch[1].trim() : 'unknown';
-      }
-      return 'unknown';
-    });
+    const version = await page.evaluate(getFirstLink);
 
     return version;
   } finally {
