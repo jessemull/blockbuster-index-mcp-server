@@ -22,8 +22,8 @@ export const main = async () => {
 
     const results = await Promise.allSettled([
       retryWithBackoff(() => getAmazonScores()),
-      getCensusScores(),
-      getBroadbandScores(),
+      retryWithBackoff(() => getCensusScores()),
+      retryWithBackoff(() => getBroadbandScores()),
     ]);
 
     // Extract results and handle failures gracefully...

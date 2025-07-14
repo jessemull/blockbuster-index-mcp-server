@@ -1,5 +1,7 @@
 import { logger } from '../../util/logger';
-import { BrowserDocument } from '../../types/browser';
+import { extractDownloadLinks } from './extract-download-links';
+import { createPageEvaluateCallback } from './page-evaluate-callback';
+import { createRequestInterceptionHandler } from './request-interception-handler';
 
 export async function scrapeBroadbandData(): Promise<void> {
   const puppeteer = await import('puppeteer');
@@ -23,35 +25,9 @@ export async function scrapeBroadbandData(): Promise<void> {
 
     // Extract download links from the page...
 
-    const downloadLinks = await page.evaluate(() => {
-      // Find all anchor tags with Box.com download links...
-
-      const anchorElements = (
-        globalThis as unknown as { document: BrowserDocument }
-      ).document.querySelectorAll('a[href*="us-fcc.box.com/v/"]');
-
-      const links: { state: string; url: string }[] = [];
-      for (const element of anchorElements) {
-        const href = element.getAttribute('href');
-        if (href) {
-          // Extract state from href or assume text content through DOM...
-
-          const text =
-            (
-              element as unknown as { textContent?: string }
-            ).textContent?.trim() || '';
-          const stateMatch = text.match(/^([A-Z]{2})\s/);
-          if (stateMatch) {
-            links.push({
-              state: stateMatch[1],
-              url: href,
-            });
-          }
-        }
-      }
-
-      return links;
-    });
+    const pageEvaluateCallback =
+      createPageEvaluateCallback(extractDownloadLinks);
+    const downloadLinks = await page.evaluate(pageEvaluateCallback);
 
     logger.info(`Found ${downloadLinks.length} download links`);
 
@@ -82,15 +58,8 @@ export async function scrapeBroadbandData(): Promise<void> {
 
         await page.setRequestInterception(true);
 
-        page.on('request', (request) => {
-          if (request.url().includes('.csv')) {
-            // Handle CSV download...
-
-            request.continue();
-          } else {
-            request.continue();
-          }
-        });
+        const requestHandler = createRequestInterceptionHandler();
+        page.on('request', requestHandler);
 
         // Click the download button...
 
