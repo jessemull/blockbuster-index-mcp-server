@@ -1,12 +1,12 @@
-import { logger } from '../../util/logger';
-import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband-signal-repository';
-import { BroadbandSignalRecord } from '../../types';
-import { BroadbandService } from '../../services/broadband-service';
-import { scrapeBroadbandData } from './scrape-broadband-data';
-import { getCurrentFccDataVersion } from './get-current-fcc-data-version';
-import { States } from '../../types';
 import * as fs from 'fs';
 import * as path from 'path';
+import { BroadbandService } from '../../services/broadband-service';
+import { BroadbandSignalRecord } from '../../types';
+import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband-signal-repository';
+import { States } from '../../types';
+import { checkIfScrapingNeeded } from './check-if-scraping-needed';
+import { logger } from '../../util/logger';
+import { scrapeBroadbandData } from './scrape-broadband-data';
 
 const getStartOfDayTimestamp = (date: Date = new Date()): number => {
   const startOfDay = new Date(date);
@@ -15,55 +15,6 @@ const getStartOfDayTimestamp = (date: Date = new Date()): number => {
 };
 
 // Get the current FCC data version by scraping the FCC broadband page...
-
-// Check if we need to scrape new data by comparing FCC data version with our stored data...
-
-async function checkIfScrapingNeeded(
-  repository: DynamoDBBroadbandSignalRepository | undefined,
-  timestamp: number,
-  forceRefresh: boolean,
-): Promise<{ needsScraping: boolean; currentDataVersion?: string }> {
-  if (forceRefresh) {
-    logger.info('Force refresh enabled, will scrape new data');
-    return { needsScraping: true };
-  }
-
-  if (!repository) {
-    logger.info('No repository available, will scrape new data');
-    return { needsScraping: true };
-  }
-
-  try {
-    // Get the current FCC data version from their website...
-
-    const currentFccVersion = await getCurrentFccDataVersion();
-    logger.info('Current FCC data version:', { version: currentFccVersion });
-
-    // Check our most recent data (use California as reference state)...
-
-    const existingRecord = await repository.get('CA', timestamp);
-
-    if (!existingRecord || !existingRecord.dataVersion) {
-      logger.info(
-        'No existing data found or no version info, will scrape new data',
-      );
-      return { needsScraping: true, currentDataVersion: currentFccVersion };
-    }
-
-    const needsScraping = existingRecord.dataVersion !== currentFccVersion;
-
-    logger.info('Data version comparison completed', {
-      storedVersion: existingRecord.dataVersion,
-      currentFccVersion,
-      needsScraping,
-    });
-
-    return { needsScraping, currentDataVersion: currentFccVersion };
-  } catch (error) {
-    logger.error('Failed to check data versions, defaulting to scrape', error);
-    return { needsScraping: true };
-  }
-}
 
 // Load existing broadband data from DynamoDB for today's timestamp...
 
@@ -74,7 +25,8 @@ async function loadExistingBroadbandData(
   const scores: Record<string, number> = {};
 
   for (const state of Object.values(States)) {
-    // Load data for each state.
+    // Load data for each state...
+
     try {
       const record = await repository.get(state, timestamp);
 
