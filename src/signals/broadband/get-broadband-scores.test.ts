@@ -38,6 +38,11 @@ jest.mock('path', () => ({
   join: jest.fn(),
 }));
 
+// Mock loadExistingBroadbandData explicitly
+jest.mock('./load-existing-broadband-data', () => ({
+  loadExistingBroadbandData: jest.fn(),
+}));
+
 // Now import after mocks are set up
 import { getBroadbandScores } from './get-broadband-scores';
 import { BroadbandService } from '../../services/broadband-service';
@@ -46,6 +51,8 @@ import { logger } from '../../util/logger';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { loadExistingBroadbandData } from './load-existing-broadband-data';
+
 const mockFs = fs as jest.Mocked<typeof fs>;
 const mockPath = path as jest.Mocked<typeof path>;
 
@@ -53,6 +60,12 @@ const mockProcessCsv = jest.fn();
 (BroadbandService as jest.Mock).mockImplementation(() => ({
   processBroadbandCsv: mockProcessCsv,
 }));
+
+// Now cast the imported loadExistingBroadbandData as a Jest mock function
+const mockLoadExistingBroadbandData =
+  loadExistingBroadbandData as jest.MockedFunction<
+    typeof loadExistingBroadbandData
+  >;
 
 // Override getCurrentFccDataVersion mock
 jest.mock('./get-broadband-scores.ts', () => {
@@ -166,5 +179,56 @@ describe('getBroadbandScores', () => {
     const result = await getBroadbandScores();
     expect(result['CA']).toBe(99);
     expect(mockSave).not.toHaveBeenCalled();
+  });
+
+  // NEW tests covering the else branch with repository defined
+  it('loads existing broadband data when no scraping is needed and repository is defined', async () => {
+    process.env.FORCE_REFRESH = 'false';
+
+    // Spy on checkIfScrapingNeeded to return needsScraping: false
+    jest
+      .spyOn(
+        await import('./check-if-scraping-needed'),
+        'checkIfScrapingNeeded',
+      )
+      .mockResolvedValueOnce({
+        needsScraping: false,
+        currentDataVersion: 'Dec 21v1',
+      });
+
+    const mockExisting = { CA: 99, TX: 50 };
+    mockLoadExistingBroadbandData.mockResolvedValueOnce(mockExisting);
+
+    const result = await getBroadbandScores();
+
+    expect(logger.info).toHaveBeenCalledWith(
+      'Using existing broadband data from database',
+    );
+    expect(mockLoadExistingBroadbandData).toHaveBeenCalled();
+    expect(result).toEqual(mockExisting);
+  });
+
+  // NEW test for no repository case in else branch
+  it('skips loading existing broadband data when no repository is defined', async () => {
+    delete process.env.BROADBAND_DYNAMODB_TABLE_NAME;
+    process.env.FORCE_REFRESH = 'false';
+
+    jest
+      .spyOn(
+        await import('./check-if-scraping-needed'),
+        'checkIfScrapingNeeded',
+      )
+      .mockResolvedValueOnce({
+        needsScraping: false,
+        currentDataVersion: 'Dec 21v1',
+      });
+
+    const result = await getBroadbandScores();
+
+    expect(logger.info).toHaveBeenCalledWith(
+      'Using existing broadband data from database',
+    );
+    expect(mockLoadExistingBroadbandData).not.toHaveBeenCalled();
+    expect(result).toEqual({});
   });
 });
