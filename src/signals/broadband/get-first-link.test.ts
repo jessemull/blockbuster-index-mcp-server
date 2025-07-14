@@ -1,5 +1,5 @@
+import { BrowserDocument } from '../../types/browser';
 import { getFirstLink } from './get-first-link';
-import { BrowserDocument } from 'types/browser';
 
 describe('getFirstLink', () => {
   const originalDocument = (

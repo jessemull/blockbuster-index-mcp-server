@@ -3,8 +3,8 @@ import * as path from 'path';
 import { BroadbandService } from '../../services/broadband-service';
 import { BroadbandSignalRecord } from '../../types';
 import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband-signal-repository';
-import { States } from '../../types';
 import { checkIfScrapingNeeded } from './check-if-scraping-needed';
+import { loadExistingBroadbandData } from './load-existing-broadband-data';
 import { logger } from '../../util/logger';
 import { scrapeBroadbandData } from './scrape-broadband-data';
 
@@ -15,39 +15,6 @@ const getStartOfDayTimestamp = (date: Date = new Date()): number => {
 };
 
 // Get the current FCC data version by scraping the FCC broadband page...
-
-// Load existing broadband data from DynamoDB for today's timestamp...
-
-async function loadExistingBroadbandData(
-  repository: DynamoDBBroadbandSignalRepository,
-  timestamp: number,
-): Promise<Record<string, number>> {
-  const scores: Record<string, number> = {};
-
-  for (const state of Object.values(States)) {
-    // Load data for each state...
-
-    try {
-      const record = await repository.get(state, timestamp);
-
-      if (record) {
-        scores[state] = record.broadbandScore;
-      } else {
-        scores[state] = 0;
-      }
-    } catch (error) {
-      logger.error(`Failed to load broadband data for ${state}`, error);
-      scores[state] = 0;
-    }
-  }
-
-  logger.info('Loaded existing broadband data', {
-    statesWithData: Object.values(scores).filter((score) => score > 0).length,
-    totalStates: Object.keys(States).length,
-  });
-
-  return scores;
-}
 
 export const getBroadbandScores = async (): Promise<Record<string, number>> => {
   const repository = process.env.BROADBAND_DYNAMODB_TABLE_NAME
