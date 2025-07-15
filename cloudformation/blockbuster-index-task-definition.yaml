@@ -79,6 +79,8 @@ Resources:
               Value: !Ref AWS::Region
             - Name: CACHE_CONTROL
               Value: 'max-age=300'
+            - Name: BROADBAND_DYNAMODB_TABLE_NAME
+              Value: !Sub 'blockbuster-index-broadband-signals-${Environment}'
             - Name: CENSUS_DYNAMODB_TABLE_NAME
               Value: !Sub 'blockbuster-index-census-signals-${Environment}'
             - Name: CW_LOG_GROUP
