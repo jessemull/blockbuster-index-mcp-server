@@ -1,7 +1,6 @@
 import { Browser } from 'puppeteer';
 import { logger } from '../../util';
 import type { BrowserDocument } from '../../types/browser';
-import { TIMEOUTS } from '../../constants';
 
 export async function searchJobsInState(
   browser: Browser,
@@ -21,7 +20,7 @@ export async function searchJobsInState(
 
     await page
       .waitForSelector('button[name="desktopFilter_job_type"]', {
-        timeout: TIMEOUTS.SELECTOR_WAIT,
+        timeout: 10000,
       })
       .catch(() => {
         return;

@@ -23,8 +23,9 @@ export const SPEED_THRESHOLDS = {
   GIGABIT: 1000, // Gigabit threshold.
 } as const;
 
-// DynamoDB table and index names for broadband data
+// DynamoDB table and index names for broadband data.
+
 export const BROADBAND_DYNAMODB = {
   TABLE_NAME: 'broadband-signals',
-  STATE_VERSION_INDEX: 'state-dataVersion-index', // GSI for querying by state and dataVersion
+  STATE_VERSION_INDEX: 'state-dataVersion-index', // GSI for querying by state and dataVersion.
 } as const;

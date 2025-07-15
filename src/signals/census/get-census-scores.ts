@@ -3,7 +3,6 @@ import { CensusSignalRecord } from '../../types/census';
 import { SignalRepository } from '../../types/amazon';
 import { fetchCensusData } from '../../services/census-service';
 import { logger } from '../../util';
-import { CENSUS_CALCULATION } from '../../constants';
 
 const DEFAULT_TABLE = 'blockbuster-index-census-signals-dev';
 
@@ -88,8 +87,7 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
 
     if (population > 0) {
       const establishmentsPer100k = Math.round(
-        (establishmentCount / population) *
-          CENSUS_CALCULATION.PER_100K_MULTIPLIER,
+        (establishmentCount / population) * 100000,
       );
       scores[state] = establishmentsPer100k;
 
