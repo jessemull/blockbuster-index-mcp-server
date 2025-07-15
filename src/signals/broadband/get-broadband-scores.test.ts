@@ -1,223 +1,67 @@
-const mockSave = jest.fn();
-const mockGet = jest.fn();
+import { getBroadbandScores } from './get-broadband-scores';
+import { BroadbandService } from '../../services/broadband-service';
+import { logger } from '../../util/logger';
 
-jest.mock('../../repositories/broadband-signal-repository', () => {
-  return {
-    DynamoDBBroadbandSignalRepository: jest.fn().mockImplementation(() => ({
-      save: mockSave,
-      get: mockGet,
-    })),
-  };
-});
+// Mock the BroadbandService
+jest.mock('../../services/broadband-service');
 
+// Mock the logger
 jest.mock('../../util/logger', () => ({
   logger: {
     info: jest.fn(),
-    error: jest.fn(),
     warn: jest.fn(),
+    error: jest.fn(),
   },
 }));
 
-jest.mock('../../services/broadband-service');
-jest.mock('./scrape-broadband-data');
-jest.mock('fs', () => ({
-  existsSync: jest.fn(),
-  readdirSync: jest.fn(),
-  promises: {
-    readFile: jest.fn(),
-    writeFile: jest.fn(),
-    readdir: jest.fn(),
-    stat: jest.fn(),
-  },
-}));
-jest.mock('path', () => ({
-  resolve: jest.fn(),
-  join: jest.fn(),
-}));
-
-jest.mock('./load-existing-broadband-data', () => ({
-  loadExistingBroadbandData: jest.fn(),
-}));
-
-import { getBroadbandScores } from './get-broadband-scores';
-import { BroadbandService } from '../../services/broadband-service';
-import { scrapeBroadbandData } from './scrape-broadband-data';
-import { logger } from '../../util/logger';
-import * as fs from 'fs';
-import * as path from 'path';
-
-import { loadExistingBroadbandData } from './load-existing-broadband-data';
-
-const mockFs = fs as jest.Mocked<typeof fs>;
-const mockPath = path as jest.Mocked<typeof path>;
-
-const mockProcessCsv = jest.fn();
-(BroadbandService as jest.Mock).mockImplementation(() => ({
-  processBroadbandCsv: mockProcessCsv,
-}));
-
-const mockLoadExistingBroadbandData =
-  loadExistingBroadbandData as jest.MockedFunction<
-    typeof loadExistingBroadbandData
-  >;
-
-jest.mock('./get-broadband-scores.ts', () => {
-  const actual = jest.requireActual('./get-broadband-scores.ts');
-  return {
-    ...actual,
-    getCurrentFccDataVersion: jest.fn().mockResolvedValue('Dec 21v1'),
-  };
-});
-
-function createFileName(name: string): string {
-  return name;
-}
-
-beforeEach(() => {
-  jest.clearAllMocks();
-  process.env.BROADBAND_DYNAMODB_TABLE_NAME = 'mock-table';
-});
+const mockBroadbandService = BroadbandService as jest.MockedClass<
+  typeof BroadbandService
+>;
+const mockLogger = logger as jest.Mocked<typeof logger>;
 
 describe('getBroadbandScores', () => {
-  it('scrapes and stores data when scraping is needed', async () => {
-    process.env.FORCE_REFRESH = 'true';
-    mockFs.existsSync.mockReturnValue(true);
-    (mockFs.readdirSync as jest.Mock).mockReturnValue([
-      createFileName('CA.csv'),
-    ]);
-    mockPath.resolve.mockReturnValue('/mocked/path');
-    mockPath.join.mockImplementation((...args: string[]) => args.join('/'));
-
-    mockProcessCsv.mockResolvedValue({
-      CA: { broadbandScore: 85, someMetric: 1 },
-    });
-
-    const result = await getBroadbandScores();
-
-    expect(scrapeBroadbandData).toHaveBeenCalled();
-    expect(mockSave).toHaveBeenCalledWith(
-      expect.objectContaining({ state: 'CA', broadbandScore: 85 }),
-    );
-    expect(result['CA']).toBe(85);
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env.BROADBAND_DYNAMODB_TABLE_NAME = 'mock-table';
   });
 
-  it('returns empty scores if data dir does not exist after scraping', async () => {
-    process.env.FORCE_REFRESH = 'true';
-    mockFs.existsSync.mockReturnValue(false);
+  it('should process broadband data and return scores', async () => {
+    // Mock the processBroadbandData method
+    const mockProcessBroadbandData = jest.fn().mockResolvedValue(undefined);
+    mockBroadbandService.prototype.processBroadbandData =
+      mockProcessBroadbandData;
 
     const result = await getBroadbandScores();
+
+    expect(mockProcessBroadbandData).toHaveBeenCalled();
     expect(result).toEqual({});
-    expect(logger.warn).toHaveBeenCalledWith(
-      'Scraper did not create data directory, using default scores',
-    );
   });
 
-  it('returns empty scores if no CSVs found', async () => {
-    process.env.FORCE_REFRESH = 'true';
-    mockFs.existsSync.mockReturnValue(true);
-    mockFs.readdirSync.mockReturnValue([]);
+  it('should handle errors gracefully', async () => {
+    // Mock the processBroadbandData method to throw an error
+    const mockProcessBroadbandData = jest
+      .fn()
+      .mockRejectedValue(new Error('S3 error'));
+    mockBroadbandService.prototype.processBroadbandData =
+      mockProcessBroadbandData;
 
-    const result = await getBroadbandScores();
-    expect(result).toEqual({});
-    expect(logger.warn).toHaveBeenCalledWith(
-      'No CSV files found after scraping, using default scores',
-    );
-  });
+    await expect(getBroadbandScores()).rejects.toThrow('S3 error');
 
-  it('logs and throws on fatal errors', async () => {
-    process.env.FORCE_REFRESH = 'true';
-    mockFs.existsSync.mockImplementation(() => {
-      throw new Error('Boom');
-    });
-
-    await expect(getBroadbandScores()).rejects.toThrow('Boom');
-    expect(logger.error).toHaveBeenCalledWith(
-      'Broadband scores calculation failed',
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Error getting broadband scores:',
       expect.any(Error),
     );
   });
 
-  it('logs and skips failed saves', async () => {
-    process.env.FORCE_REFRESH = 'true';
-    mockFs.existsSync.mockReturnValue(true);
-    (mockFs.readdirSync as jest.Mock).mockReturnValue([
-      createFileName('CA.csv'),
-    ]);
-    mockPath.resolve.mockReturnValue('/mocked/path');
-    mockPath.join.mockImplementation((...args: string[]) => args.join('/'));
-
-    mockProcessCsv.mockResolvedValue({ CA: { broadbandScore: 10 } });
-    mockSave.mockRejectedValueOnce(new Error('fail save'));
-
-    await getBroadbandScores();
-    expect(logger.error).toHaveBeenCalledWith(
-      'Failed to store broadband signal for CA',
-      expect.any(Error),
-    );
-  });
-
-  it('handles repository being undefined', async () => {
+  it('should work without repository when table name is not set', async () => {
     delete process.env.BROADBAND_DYNAMODB_TABLE_NAME;
-    process.env.FORCE_REFRESH = 'true';
-    mockFs.existsSync.mockReturnValue(true);
-    (mockFs.readdirSync as jest.Mock).mockReturnValue([
-      createFileName('CA.csv'),
-    ]);
-    mockPath.resolve.mockReturnValue('/mocked/path');
-    mockPath.join.mockImplementation((...args: string[]) => args.join('/'));
 
-    mockProcessCsv.mockResolvedValue({ CA: { broadbandScore: 99 } });
-
-    const result = await getBroadbandScores();
-    expect(result['CA']).toBe(99);
-    expect(mockSave).not.toHaveBeenCalled();
-  });
-
-  it('loads existing broadband data when no scraping is needed and repository is defined', async () => {
-    process.env.FORCE_REFRESH = 'false';
-
-    jest
-      .spyOn(
-        await import('./check-if-scraping-needed'),
-        'checkIfScrapingNeeded',
-      )
-      .mockResolvedValueOnce({
-        needsScraping: false,
-        currentDataVersion: 'Dec 21v1',
-      });
-
-    const mockExisting = { CA: 99, TX: 50 };
-    mockLoadExistingBroadbandData.mockResolvedValueOnce(mockExisting);
+    const mockProcessBroadbandData = jest.fn().mockResolvedValue(undefined);
+    mockBroadbandService.prototype.processBroadbandData =
+      mockProcessBroadbandData;
 
     const result = await getBroadbandScores();
 
-    expect(logger.info).toHaveBeenCalledWith(
-      'Using existing broadband data from database',
-    );
-    expect(mockLoadExistingBroadbandData).toHaveBeenCalled();
-    expect(result).toEqual(mockExisting);
-  });
-
-  it('skips loading existing broadband data when no repository is defined', async () => {
-    delete process.env.BROADBAND_DYNAMODB_TABLE_NAME;
-    process.env.FORCE_REFRESH = 'false';
-
-    jest
-      .spyOn(
-        await import('./check-if-scraping-needed'),
-        'checkIfScrapingNeeded',
-      )
-      .mockResolvedValueOnce({
-        needsScraping: false,
-        currentDataVersion: 'Dec 21v1',
-      });
-
-    const result = await getBroadbandScores();
-
-    expect(logger.info).toHaveBeenCalledWith(
-      'Using existing broadband data from database',
-    );
-    expect(mockLoadExistingBroadbandData).not.toHaveBeenCalled();
     expect(result).toEqual({});
   });
 });

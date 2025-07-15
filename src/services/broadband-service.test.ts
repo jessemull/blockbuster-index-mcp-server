@@ -1,5 +1,3 @@
-import * as fs from 'fs';
-import { parse } from 'csv-parse/sync';
 import { BroadbandService } from './broadband-service';
 import { BroadbandCsvRecord } from '../types/broadband';
 import { SPEED_THRESHOLDS } from '../constants/broadband';
@@ -17,16 +15,28 @@ jest.mock('csv-parse/sync', () => ({
   parse: jest.fn(),
 }));
 
-const mockFs = fs as jest.Mocked<typeof fs>;
-const mockParse = jest.mocked(parse) as unknown as jest.MockedFunction<
-  (input: string, options?: Record<string, unknown>) => BroadbandCsvRecord[]
->;
+// Mock the S3BroadbandLoader to avoid AWS SDK import issues
+jest.mock('../signals/broadband/s3-broadband-loader', () => ({
+  S3BroadbandLoader: jest.fn().mockImplementation(() => ({
+    loadData: jest.fn().mockResolvedValue({
+      dataVersion: 'test-version',
+      states: {},
+    }),
+  })),
+}));
+
+// Mock the DynamoDB repository
+jest.mock('../repositories/broadband-signal-repository', () => ({
+  DynamoDBBroadbandSignalRepository: jest.fn().mockImplementation(() => ({
+    save: jest.fn(),
+    getLatestVersionForState: jest.fn(),
+    saveStateVersionMetadata: jest.fn(),
+    getAllScores: jest.fn(),
+  })),
+}));
 
 // Interface for accessing private methods of BroadbandService
 interface BroadbandServicePrivate {
-  groupRecordsByState(
-    records: BroadbandCsvRecord[],
-  ): Record<string, BroadbandCsvRecord[]>;
   calculateBroadbandMetrics(
     records: BroadbandCsvRecord[],
   ): import('../types/broadband').BroadbandMetrics;
@@ -55,244 +65,6 @@ describe('BroadbandService', () => {
   beforeEach(() => {
     service = new BroadbandService();
     jest.clearAllMocks();
-  });
-
-  describe('processBroadbandCsv', () => {
-    const mockCsvPath = '/path/to/test.csv';
-    const mockCsvContent = 'mock csv content';
-
-    beforeEach(() => {
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockReturnValue(mockCsvContent);
-    });
-
-    it('should process CSV file successfully and return metrics for valid states', async () => {
-      const mockRecords: BroadbandCsvRecord[] = [
-        {
-          LogRecNo: '1',
-          Provider_Id: '1',
-          FRN: '1',
-          ProviderName: 'Test Provider',
-          DBAName: 'Test DBA',
-          HoldingCompanyName: 'Test Holding',
-          HocoNum: '1',
-          HocoFinal: '1',
-          StateAbbr: 'CA',
-          BlockCode: '060010001001000',
-          TechCode: '70',
-          Consumer: '1',
-          MaxAdDown: '100',
-          MaxAdUp: '10',
-          Business: '1',
-        },
-        {
-          LogRecNo: '2',
-          Provider_Id: '2',
-          FRN: '2',
-          ProviderName: 'Test Provider 2',
-          DBAName: 'Test DBA 2',
-          HoldingCompanyName: 'Test Holding 2',
-          HocoNum: '2',
-          HocoFinal: '2',
-          StateAbbr: 'TX',
-          BlockCode: '480010001001000',
-          TechCode: '60',
-          Consumer: '1',
-          MaxAdDown: '50',
-          MaxAdUp: '5',
-          Business: '1',
-        },
-      ];
-
-      mockParse.mockReturnValue(mockRecords);
-
-      const result = await service.processBroadbandCsv(mockCsvPath);
-
-      expect(mockFs.existsSync).toHaveBeenCalledWith(mockCsvPath);
-      expect(mockFs.readFileSync).toHaveBeenCalledWith(mockCsvPath, 'utf-8');
-      expect(mockParse).toHaveBeenCalledWith(mockCsvContent, {
-        columns: true,
-        skip_empty_lines: true,
-      });
-
-      expect(result).toHaveProperty('CA');
-      expect(result).toHaveProperty('TX');
-      expect(result.CA).toHaveProperty('totalCensusBlocks');
-      expect(result.CA).toHaveProperty('broadbandScore');
-      expect(result.TX).toHaveProperty('totalCensusBlocks');
-      expect(result.TX).toHaveProperty('broadbandScore');
-    });
-
-    it('should throw error when CSV file does not exist', async () => {
-      mockFs.existsSync.mockReturnValue(false);
-
-      await expect(service.processBroadbandCsv(mockCsvPath)).rejects.toThrow(
-        `Broadband CSV file not found: ${mockCsvPath}`,
-      );
-    });
-
-    it('should filter out invalid states', async () => {
-      const mockRecords: BroadbandCsvRecord[] = [
-        {
-          LogRecNo: '1',
-          Provider_Id: '1',
-          FRN: '1',
-          ProviderName: 'Test Provider',
-          DBAName: 'Test DBA',
-          HoldingCompanyName: 'Test Holding',
-          HocoNum: '1',
-          HocoFinal: '1',
-          StateAbbr: 'CA',
-          BlockCode: '060010001001000',
-          TechCode: '70',
-          Consumer: '1',
-          MaxAdDown: '100',
-          MaxAdUp: '10',
-          Business: '1',
-        },
-        {
-          LogRecNo: '2',
-          Provider_Id: '2',
-          FRN: '2',
-          ProviderName: 'Test Provider 2',
-          DBAName: 'Test DBA 2',
-          HoldingCompanyName: 'Test Holding 2',
-          HocoNum: '2',
-          HocoFinal: '2',
-          StateAbbr: 'INVALID',
-          BlockCode: '480010001001000',
-          TechCode: '60',
-          Consumer: '1',
-          MaxAdDown: '50',
-          MaxAdUp: '5',
-          Business: '1',
-        },
-      ];
-
-      mockParse.mockReturnValue(mockRecords);
-
-      const result = await service.processBroadbandCsv(mockCsvPath);
-
-      expect(result).toHaveProperty('CA');
-      expect(result).not.toHaveProperty('INVALID');
-    });
-
-    it('should handle empty CSV file', async () => {
-      mockParse.mockReturnValue([]);
-
-      const result = await service.processBroadbandCsv(mockCsvPath);
-
-      expect(result).toEqual({});
-    });
-  });
-
-  describe('groupRecordsByState', () => {
-    it('should group records by state correctly', () => {
-      const mockRecords: BroadbandCsvRecord[] = [
-        {
-          LogRecNo: '1',
-          Provider_Id: '1',
-          FRN: '1',
-          ProviderName: 'Test Provider',
-          DBAName: 'Test DBA',
-          HoldingCompanyName: 'Test Holding',
-          HocoNum: '1',
-          HocoFinal: '1',
-          StateAbbr: 'CA',
-          BlockCode: '060010001001000',
-          TechCode: '70',
-          Consumer: '1',
-          MaxAdDown: '100',
-          MaxAdUp: '10',
-          Business: '1',
-        },
-        {
-          LogRecNo: '2',
-          Provider_Id: '2',
-          FRN: '2',
-          ProviderName: 'Test Provider 2',
-          DBAName: 'Test DBA 2',
-          HoldingCompanyName: 'Test Holding 2',
-          HocoNum: '2',
-          HocoFinal: '2',
-          StateAbbr: 'TX',
-          BlockCode: '480010001001000',
-          TechCode: '60',
-          Consumer: '1',
-          MaxAdDown: '50',
-          MaxAdUp: '5',
-          Business: '1',
-        },
-      ];
-
-      const result = (
-        service as unknown as BroadbandServicePrivate
-      ).groupRecordsByState(mockRecords);
-
-      expect(result).toHaveProperty('CA');
-      expect(result).toHaveProperty('TX');
-      expect(result.CA).toHaveLength(1);
-      expect(result.TX).toHaveLength(1);
-      expect(result.CA[0].StateAbbr).toBe('CA');
-      expect(result.TX[0].StateAbbr).toBe('TX');
-    });
-
-    it('should handle records with missing state abbreviation', () => {
-      const mockRecords: BroadbandCsvRecord[] = [
-        {
-          LogRecNo: '1',
-          Provider_Id: '1',
-          FRN: '1',
-          ProviderName: 'Test Provider',
-          DBAName: 'Test DBA',
-          HoldingCompanyName: 'Test Holding',
-          HocoNum: '1',
-          HocoFinal: '1',
-          StateAbbr: '',
-          BlockCode: '060010001001000',
-          TechCode: '70',
-          Consumer: '1',
-          MaxAdDown: '100',
-          MaxAdUp: '10',
-          Business: '1',
-        },
-      ];
-
-      const result = (
-        service as unknown as BroadbandServicePrivate
-      ).groupRecordsByState(mockRecords);
-
-      expect(result).toEqual({});
-    });
-
-    it('should handle records with whitespace in state abbreviation', () => {
-      const mockRecords: BroadbandCsvRecord[] = [
-        {
-          LogRecNo: '1',
-          Provider_Id: '1',
-          FRN: '1',
-          ProviderName: 'Test Provider',
-          DBAName: 'Test DBA',
-          HoldingCompanyName: 'Test Holding',
-          HocoNum: '1',
-          HocoFinal: '1',
-          StateAbbr: ' CA ',
-          BlockCode: '060010001001000',
-          TechCode: '70',
-          Consumer: '1',
-          MaxAdDown: '100',
-          MaxAdUp: '10',
-          Business: '1',
-        },
-      ];
-
-      const result = (
-        service as unknown as BroadbandServicePrivate
-      ).groupRecordsByState(mockRecords);
-
-      expect(result).toHaveProperty('CA');
-      expect(result.CA).toHaveLength(1);
-    });
   });
 
   describe('calculateBroadbandMetrics', () => {

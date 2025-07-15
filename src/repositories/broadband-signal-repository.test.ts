@@ -133,6 +133,7 @@ describe('DynamoDBBroadbandSignalRepository', () => {
       const minimalRecord: BroadbandSignalRecord = {
         state: 'TX',
         timestamp: 1640995200000,
+        dataVersion: 'Dec2021-v1',
         totalCensusBlocks: 0,
         blocksWithBroadband: 0,
         broadbandAvailabilityPercent: 0,
@@ -160,7 +161,7 @@ describe('DynamoDBBroadbandSignalRepository', () => {
         Item: {
           state: 'TX',
           timestamp: 1640995200000,
-          dataVersion: undefined,
+          dataVersion: 'Dec2021-v1',
           totalCensusBlocks: 0,
           blocksWithBroadband: 0,
           broadbandAvailabilityPercent: 0,

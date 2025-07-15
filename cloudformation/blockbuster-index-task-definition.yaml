@@ -102,6 +102,8 @@ Resources:
               Value: '1000'
             - Name: S3_BUCKET_NAME
               Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]
+            - Name: BROADBAND_S3_BUCKET_NAME
+              Value: !Sub 'blockbuster-index-broadband-${Environment}'
 
   ScheduledTaskRule:
     Type: AWS::Events::Rule

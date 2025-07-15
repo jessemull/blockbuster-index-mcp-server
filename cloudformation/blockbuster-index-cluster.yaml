@@ -129,6 +129,30 @@ Resources:
                   - dynamodb:DescribeTable
                 Resource: !ImportValue
                   Fn::Sub: '${Environment}-BlockbusterCensusSignalsTableArn'
+        - PolicyName: 'DynamoDBBroadbandSignalsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterBroadbandSignalsTableArn'
+        - PolicyName: 'S3BroadbandAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::blockbuster-index-broadband-${Environment}'
+                  - !Sub 'arn:aws:s3:::blockbuster-index-broadband-${Environment}/*'
 
   EventBridgeInvokeRole:
     Type: AWS::IAM::Role

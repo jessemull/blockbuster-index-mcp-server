@@ -63,11 +63,22 @@ Resources:
           AttributeType: S
         - AttributeName: timestamp
           AttributeType: N
+        - AttributeName: dataVersion
+          AttributeType: S
       KeySchema:
         - AttributeName: state
           KeyType: HASH
         - AttributeName: timestamp
           KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: state-dataVersion-index
+          KeySchema:
+            - AttributeName: state
+              KeyType: HASH
+            - AttributeName: dataVersion
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
 
 Outputs:

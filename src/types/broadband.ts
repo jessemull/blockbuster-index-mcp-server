@@ -18,40 +18,70 @@ export interface BroadbandCsvRecord {
   Business: string;
 }
 
-// Technology categories for grouping FCC tech codes.
-
-export interface TechnologyCounts {
-  fiber: number; // Tech codes 70, 30
-  cable: number; // Tech codes 60, 20
-  dsl: number; // Tech codes 10, 11
-  wireless: number; // Tech codes 40, 41, 42
-  other: number; // Tech codes 12, 43, 50
+export interface S3BroadbandCsvRecord {
+  StateAbbr?: string;
+  BlockCode?: string;
+  ProviderName?: string;
+  TechCode?: string;
+  MaxAdDown?: string;
 }
 
-// Processed broadband metrics for a state.
+export interface BroadbandRecord {
+  state: string;
+  censusBlock: string;
+  provider: string;
+  technology: string;
+  speed: number;
+}
+
+export interface S3BroadbandData {
+  state: string;
+  records: BroadbandRecord[];
+  dataVersion: string;
+  lastUpdated: Date;
+}
 
 export interface BroadbandMetrics {
   totalCensusBlocks: number;
   blocksWithBroadband: number;
   broadbandAvailabilityPercent: number;
-
-  blocksWithHighSpeed: number; // 25+ Mbps.
+  blocksWithHighSpeed: number;
   highSpeedAvailabilityPercent: number;
-  blocksWithGigabit: number; // 1000+ Mbps.
+  blocksWithGigabit: number;
   gigabitAvailabilityPercent: number;
-
   technologyCounts: TechnologyCounts;
-
   averageDownloadSpeed: number;
   medianDownloadSpeed: number;
-
   broadbandScore: number;
 }
 
-// DynamoDB record structure.
+export interface TechnologyCounts {
+  fiber: number;
+  cable: number;
+  dsl: number;
+  wireless: number;
+  other: number;
+}
 
-export interface BroadbandSignalRecord extends BroadbandMetrics {
+export interface BroadbandSignalRecord {
   state: string;
   timestamp: number;
-  dataVersion?: string; // FCC data version (e.g., "Dec 21v1")
+  dataVersion: string;
+  totalCensusBlocks: number;
+  blocksWithBroadband: number;
+  broadbandAvailabilityPercent: number;
+  blocksWithHighSpeed: number;
+  highSpeedAvailabilityPercent: number;
+  blocksWithGigabit: number;
+  gigabitAvailabilityPercent: number;
+  technologyCounts: TechnologyCounts;
+  averageDownloadSpeed: number;
+  medianDownloadSpeed: number;
+  broadbandScore: number;
+}
+
+export interface StateVersionMetadata {
+  state: string;
+  dataVersion: string;
+  lastProcessed: number;
 }
