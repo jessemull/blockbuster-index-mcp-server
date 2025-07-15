@@ -1,4 +1,9 @@
-import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+  ScanCommand,
+} from '@aws-sdk/lib-dynamodb';
 import { logger } from '../util';
 import type {
   BroadbandSignalRecord,
@@ -205,45 +210,45 @@ export class DynamoDBBroadbandSignalRepository extends DynamoDBSignalRepository<
     try {
       const scores: Record<string, number> = {};
 
-      // Get the latest version for each state using the GSI
+      // Initialize all states with 0...
+
       const states = Object.values(States);
+      states.forEach((state) => {
+        scores[state] = 0;
+      });
 
-      for (const state of states) {
-        try {
-          const latestVersion = await this.getLatestVersionForState(state);
-          if (latestVersion) {
-            // Query the GSI to get the latest record for this state and version
-            const result = await this.client.send(
-              new QueryCommand({
-                TableName: this.tableName,
-                IndexName: 'state-dataVersion-index',
-                KeyConditionExpression:
-                  '#state = :state AND #dataVersion = :dataVersion',
-                ExpressionAttributeNames: {
-                  '#state': 'state',
-                  '#dataVersion': 'dataVersion',
-                },
-                ExpressionAttributeValues: {
-                  ':state': state,
-                  ':dataVersion': latestVersion,
-                },
-                ScanIndexForward: false,
-                Limit: 1,
-              }),
-            );
+      // Scan the table to get all records for our data version...
 
-            if (result.Items && result.Items.length > 0) {
-              const record = result.Items[0] as BroadbandSignalRecord;
-              scores[state] = record.broadbandScore;
+      const dataVersion = 'Dec2021-v1';
+      let lastEvaluatedKey: Record<string, unknown> | undefined;
+
+      do {
+        const result = await this.client.send(
+          new ScanCommand({
+            TableName: this.tableName,
+            FilterExpression: '#dataVersion = :dataVersion',
+            ExpressionAttributeNames: {
+              '#dataVersion': 'dataVersion',
+            },
+            ExpressionAttributeValues: {
+              ':dataVersion': dataVersion,
+            },
+            ExclusiveStartKey: lastEvaluatedKey,
+          }),
+        );
+
+        if (result.Items) {
+          for (const item of result.Items) {
+            const record = item as BroadbandSignalRecord;
+            // Only include records with broadband scores
+            if (record.state && record.broadbandScore !== undefined) {
+              scores[record.state] = record.broadbandScore;
             }
           }
-        } catch (error: unknown) {
-          logger.warn(`Failed to get latest score for state ${state}`, {
-            error: error instanceof Error ? error.message : String(error),
-            state,
-          });
         }
-      }
+
+        lastEvaluatedKey = result.LastEvaluatedKey;
+      } while (lastEvaluatedKey);
 
       logger.info(`Retrieved scores for ${Object.keys(scores).length} states`);
       return scores;

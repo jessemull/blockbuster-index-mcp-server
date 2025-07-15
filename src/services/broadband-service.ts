@@ -18,7 +18,8 @@ export class BroadbandService {
 
   constructor() {
     this.repository = new DynamoDBBroadbandSignalRepository(
-      process.env.BROADBAND_SIGNAL_TABLE_NAME || 'broadband-signals',
+      process.env.BROADBAND_DYNAMODB_TABLE_NAME ||
+        'blockbuster-index-broadband-signals-dev',
     );
     this.s3Loader = new S3BroadbandLoader(
       process.env.BROADBAND_S3_BUCKET || 'blockbuster-index-broadband-dev',
@@ -29,22 +30,12 @@ export class BroadbandService {
     logger.info('Starting broadband data processing from S3...');
 
     try {
-      // Load data from S3...
-
-      const processedData = await this.s3Loader.loadBroadbandData();
-
-      if (processedData.length === 0) {
-        logger.warn('No broadband data found to process from S3');
-        return;
-      }
-
-      logger.info(`Processing data for ${processedData.length} states from S3`);
-
-      // Process each state's data, checking version before processing...
-
-      for (const stateData of processedData) {
+      // Process states one at a time as they're downloaded
+      await this.s3Loader.processStatesOneByOne(async (stateData) => {
+        logger.info(`About to process state: ${stateData.state}`);
         await this.processStateData(stateData);
-      }
+        logger.info(`Finished processing state: ${stateData.state}`);
+      });
 
       logger.info('Broadband data processing completed');
     } catch (error) {
@@ -56,7 +47,9 @@ export class BroadbandService {
   private async processStateData(stateData: S3BroadbandData): Promise<void> {
     const { state, records, dataVersion } = stateData;
 
-    logger.info(`Checking version for ${state} (S3 version: ${dataVersion})`);
+    logger.info(
+      `Starting to process ${state} with ${records.length} records (S3 version: ${dataVersion})`,
+    );
 
     try {
       // Check if we need to process this state's data
@@ -73,7 +66,7 @@ export class BroadbandService {
       }
 
       logger.info(
-        `Processing ${records.length} records for ${state} (version: ${dataVersion})`,
+        `Will process ${records.length} records for ${state} (version: ${dataVersion})`,
       );
 
       // Convert BroadbandRecord[] to BroadbandCsvRecord[] for processing
@@ -126,16 +119,22 @@ export class BroadbandService {
       };
 
       // Save the aggregated record
+      logger.info(`About to save broadband record for ${state} to DynamoDB`);
       await this.repository.save(broadbandRecord);
+      logger.info(
+        `Successfully saved broadband record for ${state} to DynamoDB`,
+      );
 
-      // Save metadata about this state's version being processed
-      const metadata: StateVersionMetadata = {
+      // Save metadata record for version tracking
+      const metadataRecord: StateVersionMetadata = {
         state,
         dataVersion,
         lastProcessed: Date.now(),
       };
-
-      await this.repository.saveStateVersionMetadata(metadata);
+      await this.repository.saveStateVersionMetadata(metadataRecord);
+      logger.info(
+        `Successfully saved metadata record for ${state} to DynamoDB`,
+      );
 
       logger.info(
         `Successfully processed aggregated metrics for ${state} (version: ${dataVersion})`,
@@ -155,31 +154,27 @@ export class BroadbandService {
     s3DataVersion: string,
   ): Promise<boolean> {
     try {
-      // Get the latest version for this state from DynamoDB
-      const latestVersion =
-        await this.repository.getLatestVersionForState(state);
+      // Check if this specific state+version combination already exists
+      const existingRecord = await this.repository.getByStateAndVersion(
+        state,
+        s3DataVersion,
+      );
 
-      if (!latestVersion) {
+      logger.info(
+        `Version check for ${state}: S3 version=${s3DataVersion}, existing record=${existingRecord ? 'YES' : 'NO'}`,
+      );
+
+      if (existingRecord) {
         logger.info(
-          `No existing data found for ${state}, will process new data`,
+          `State ${state} version ${s3DataVersion} already exists in DynamoDB, skipping`,
         );
-        return true;
+        return false;
       }
 
-      // Compare versions
-      const needsProcessing = this.isVersionNewer(s3DataVersion, latestVersion);
-
-      if (needsProcessing) {
-        logger.info(
-          `Version ${s3DataVersion} is newer than ${latestVersion} for ${state}, will process`,
-        );
-      } else {
-        logger.info(
-          `Version ${s3DataVersion} is not newer than ${latestVersion} for ${state}, skipping`,
-        );
-      }
-
-      return needsProcessing;
+      logger.info(
+        `State ${state} version ${s3DataVersion} not found in DynamoDB, will process`,
+      );
+      return true;
     } catch (error) {
       logger.error(`Error checking version for ${state}:`, error);
       // If we can't determine the version, process the data to be safe

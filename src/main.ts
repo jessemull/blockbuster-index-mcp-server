@@ -139,6 +139,8 @@ export const main = async () => {
       fs.writeFileSync(filePath, JSON.stringify(response, null, 2));
       logger.info('File written', { filePath });
     } else {
+      // Upload the main blockbuster index...
+
       await retryWithBackoff(async () => {
         await uploadToS3({
           bucket: CONFIG.S3_BUCKET_NAME!,
@@ -155,6 +157,32 @@ export const main = async () => {
         bucket: CONFIG.S3_BUCKET_NAME!,
         key: 'data/data.json',
       });
+
+      // Upload individual signal data for verification and debugging...
+
+      for (const [signalName, signalData] of Object.entries(signalResults)) {
+        if (Object.keys(signalData).length > 0) {
+          await retryWithBackoff(async () => {
+            await uploadToS3({
+              bucket: CONFIG.S3_BUCKET_NAME!,
+              key: `data/signals/${signalName.toLowerCase()}-scores.json`,
+              body: JSON.stringify(signalData, null, 2),
+              metadata: {
+                version: CONFIG.VERSION,
+                calculatedAt: response.metadata.calculatedAt,
+                signal: signalName,
+              },
+            });
+          });
+
+          logger.info('Signal data uploaded', {
+            bucket: CONFIG.S3_BUCKET_NAME!,
+            key: `data/signals/${signalName.toLowerCase()}-scores.json`,
+            signal: signalName,
+            stateCount: Object.keys(signalData).length,
+          });
+        }
+      }
     }
 
     logger.info('Calculation completed!');
