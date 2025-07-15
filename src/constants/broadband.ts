@@ -29,3 +29,9 @@ export const BROADBAND_DYNAMODB = {
   TABLE_NAME: 'broadband-signals',
   STATE_VERSION_INDEX: 'state-dataVersion-index', // GSI for querying by state and dataVersion.
 } as const;
+
+// Precision for score calculations.
+
+export const PRECISION = {
+  SCORE_ROUNDING: 10000, // Used for rounding broadband scores to 4 decimal places
+} as const;
