@@ -6,7 +6,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { parse } from 'csv-parse';
 import { TECHNOLOGY_CODES } from '../../constants/broadband';
-import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband-signal-repository';
+import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband';
 import type {
   S3BroadbandCsvRecord,
   BroadbandRecord,

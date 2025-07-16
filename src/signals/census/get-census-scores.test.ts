@@ -1,12 +1,12 @@
 import { CONFIG } from '../../config';
-import { fetchCensusData } from '../../services/census-service';
+import { fetchCensusData } from '../../services';
 import { logger } from '../../util';
 import { getCensusScores } from './get-census-scores';
-import { DynamoDBCensusSignalRepository } from '../../repositories';
+import { DynamoDBCensusSignalRepository } from '../../repositories/census';
 import { CensusData } from '../../types';
 
 jest.mock('../../config');
-jest.mock('../../services/census-service');
+jest.mock('../../services');
 jest.mock('../../util', () => ({
   logger: {
     error: jest.fn(),
@@ -15,19 +15,16 @@ jest.mock('../../util', () => ({
   },
 }));
 
-jest.mock('../../repositories', () => ({
-  DynamoDBCensusSignalRepository: jest.fn(),
-}));
-
 const mockFetchCensusData = fetchCensusData as jest.MockedFunction<
   typeof fetchCensusData
 >;
 
 const mockLogger = logger as jest.Mocked<typeof logger>;
 const mockCONFIG = CONFIG as jest.Mocked<typeof CONFIG>;
-const mockDynamoDBCensusSignalRepository = jest.mocked(
-  DynamoDBCensusSignalRepository,
-);
+const mockDynamoDBCensusSignalRepository = jest.fn();
+jest.mock('../../repositories/census', () => ({
+  DynamoDBCensusSignalRepository: mockDynamoDBCensusSignalRepository,
+}));
 
 describe('getCensusScores', () => {
   const mockCensusData = {

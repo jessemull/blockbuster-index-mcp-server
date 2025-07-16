@@ -1,9 +1,9 @@
 import { BroadbandService } from './broadband-service';
-import { BroadbandCsvRecord } from '../types/broadband';
-import { SPEED_THRESHOLDS } from '../constants/broadband';
+import { BroadbandCsvRecord } from '../../types/broadband';
+import { SPEED_THRESHOLDS } from '../../constants/broadband';
 
 jest.mock('fs');
-jest.mock('../util', () => ({
+jest.mock('../../util', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
@@ -16,17 +16,17 @@ jest.mock('csv-parse/sync', () => ({
 }));
 
 // Mock the S3BroadbandLoader to avoid AWS SDK import issues
-jest.mock('../signals/broadband/s3-broadband-loader', () => ({
+jest.mock('../../signals/broadband/s3-broadband-loader', () => ({
   S3BroadbandLoader: jest.fn().mockImplementation(() => ({
     loadData: jest.fn().mockResolvedValue({
       dataVersion: 'test-version',
-      states: {},
+      records: [],
     }),
   })),
 }));
 
 // Mock the DynamoDB repository
-jest.mock('../repositories/broadband-signal-repository', () => ({
+jest.mock('../../repositories/broadband', () => ({
   DynamoDBBroadbandSignalRepository: jest.fn().mockImplementation(() => ({
     save: jest.fn(),
     getLatestVersionForState: jest.fn(),
@@ -39,7 +39,7 @@ jest.mock('../repositories/broadband-signal-repository', () => ({
 interface BroadbandServicePrivate {
   calculateBroadbandMetrics(
     records: BroadbandCsvRecord[],
-  ): import('../types/broadband').BroadbandMetrics;
+  ): import('../../types/broadband').BroadbandMetrics;
   countBlocksWithBroadband(records: BroadbandCsvRecord[]): number;
   countBlocksWithSpeed(
     records: BroadbandCsvRecord[],
@@ -47,7 +47,7 @@ interface BroadbandServicePrivate {
   ): number;
   calculateTechnologyCounts(
     records: BroadbandCsvRecord[],
-  ): import('../types/broadband').TechnologyCounts;
+  ): import('../../types/broadband').TechnologyCounts;
   extractSpeeds(records: BroadbandCsvRecord[]): number[];
   calculateAverage(numbers: number[]): number;
   calculateMedian(numbers: number[]): number;
@@ -55,7 +55,7 @@ interface BroadbandServicePrivate {
     broadbandAvailabilityPercent: number;
     highSpeedAvailabilityPercent: number;
     gigabitAvailabilityPercent: number;
-    technologyCounts: import('../types/broadband').TechnologyCounts;
+    technologyCounts: import('../../types/broadband').TechnologyCounts;
   }): number;
 }
 

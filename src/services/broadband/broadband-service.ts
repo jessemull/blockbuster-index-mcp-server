@@ -1,16 +1,16 @@
-import { logger } from '../util';
-import { BroadbandCsvRecord } from '../types/broadband';
-import { SPEED_THRESHOLDS, TECHNOLOGY_CODES } from '../constants/broadband';
-import { PRECISION } from '../constants';
-import { S3BroadbandLoader } from '../signals/broadband/s3-broadband-loader';
-import { DynamoDBBroadbandSignalRepository } from '../repositories/broadband-signal-repository';
+import { logger } from '../../util';
+import { BroadbandCsvRecord } from '../../types/broadband';
+import { SPEED_THRESHOLDS, TECHNOLOGY_CODES } from '../../constants/broadband';
+import { PRECISION } from '../../constants';
+import { S3BroadbandLoader } from '../../signals/broadband/s3-broadband-loader';
+import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband';
 import type {
   BroadbandMetrics,
   TechnologyCounts,
   BroadbandSignalRecord,
   StateVersionMetadata,
   S3BroadbandData,
-} from '../types/broadband';
+} from '../../types/broadband';
 
 export class BroadbandService {
   private repository: DynamoDBBroadbandSignalRepository;

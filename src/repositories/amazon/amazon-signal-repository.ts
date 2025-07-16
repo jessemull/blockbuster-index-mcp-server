@@ -1,7 +1,7 @@
 import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
-import { logger } from '../util';
-import type { JobSignalRecord } from '../types/amazon';
-import { DynamoDBSignalRepository } from './base-signal-repository';
+import { logger } from '../../util';
+import type { JobSignalRecord } from '../../types/amazon';
+import { DynamoDBSignalRepository } from '../base-signal-repository';
 
 export class DynamoDBAmazonSignalRepository extends DynamoDBSignalRepository<JobSignalRecord> {
   async save(record: JobSignalRecord): Promise<void> {

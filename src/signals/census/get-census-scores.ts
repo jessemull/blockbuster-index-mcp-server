@@ -1,7 +1,7 @@
 import { CONFIG } from '../../config';
 import { CensusSignalRecord } from '../../types/census';
 import { SignalRepository } from '../../types/amazon';
-import { fetchCensusData } from '../../services/census-service';
+import { fetchCensusData } from '../../services';
 import { logger } from '../../util';
 
 const DEFAULT_TABLE = 'blockbuster-index-census-signals-dev';

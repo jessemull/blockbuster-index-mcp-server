@@ -9,7 +9,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { mockClient } from 'aws-sdk-client-mock';
 import { parse, Parser } from 'csv-parse';
-import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband-signal-repository';
+import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband';
 import type { S3BroadbandCsvRecord } from '../../types/broadband';
 import type { Readable } from 'stream';
 import { TECHNOLOGY_CODES } from '../../constants';
@@ -26,7 +26,7 @@ jest.mock('csv-parse', () => ({
   parse: jest.fn(),
 }));
 
-jest.mock('../../repositories/broadband-signal-repository');
+jest.mock('../../repositories/broadband');
 
 const s3Mock = mockClient(S3Client);
 
@@ -117,10 +117,7 @@ describe('S3BroadbandLoader', () => {
 
     beforeEach(() => {
       const parser: Partial<Parser> = {
-        on: jest.fn((event: string, cb: (...args: any[]) => void) => {
-          if (event === 'readable') onReadable = cb;
-          if (event === 'end') onEnd = cb;
-          if (event === 'error') onError = cb;
+        on: jest.fn(() => {
           return parser;
         }) as any,
         read: jest.fn(),

@@ -1,11 +1,9 @@
 import { getBroadbandScores } from './get-broadband-scores';
-import { BroadbandService } from '../../services/broadband-service';
+import { BroadbandService } from '../../services';
 import { logger } from '../../util/logger';
 
-// Mock the BroadbandService
-jest.mock('../../services/broadband-service');
+jest.mock('../../services');
 
-// Mock the logger
 jest.mock('../../util/logger', () => ({
   logger: {
     info: jest.fn(),
@@ -26,7 +24,6 @@ describe('getBroadbandScores', () => {
   });
 
   it('should process broadband data and return scores', async () => {
-    // Mock the processBroadbandData method
     const mockProcessBroadbandData = jest.fn().mockResolvedValue(undefined);
     mockBroadbandService.prototype.processBroadbandData =
       mockProcessBroadbandData;
@@ -38,7 +35,6 @@ describe('getBroadbandScores', () => {
   });
 
   it('should handle errors gracefully', async () => {
-    // Mock the processBroadbandData method to throw an error
     const mockProcessBroadbandData = jest
       .fn()
       .mockRejectedValue(new Error('S3 error'));

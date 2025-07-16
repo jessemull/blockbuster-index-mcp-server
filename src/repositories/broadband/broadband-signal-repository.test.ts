@@ -1,5 +1,5 @@
 import { DynamoDBBroadbandSignalRepository } from './broadband-signal-repository';
-import { BroadbandSignalRecord } from '../types/broadband';
+import { BroadbandSignalRecord } from '../../types/broadband';
 
 jest.mock('@aws-sdk/lib-dynamodb', () => ({
   DynamoDBDocumentClient: {
@@ -15,7 +15,7 @@ jest.mock('@aws-sdk/client-dynamodb', () => ({
   DynamoDBClient: jest.fn(),
 }));
 
-jest.mock('../util', () => ({
+jest.mock('../../util', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),

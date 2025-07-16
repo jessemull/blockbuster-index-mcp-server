@@ -1,5 +1,5 @@
 import { logger } from '../../util/logger';
-import { BroadbandService } from '../../services/broadband-service';
+import { BroadbandService } from '../../services';
 
 export const getBroadbandScores = async (): Promise<Record<string, number>> => {
   logger.info('Getting broadband scores from S3...');
