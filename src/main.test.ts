@@ -17,6 +17,12 @@ jest.mock('@aws-sdk/lib-dynamodb', () => ({
   PutCommand: jest.fn(),
 }));
 
+jest.mock('@aws-sdk/client-s3', () => ({
+  S3Client: jest.fn(),
+  GetObjectCommand: jest.fn(),
+  ListObjectsV2Command: jest.fn(),
+}));
+
 import * as signals from './signals';
 import fs from 'fs';
 import path from 'path';

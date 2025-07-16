@@ -23,6 +23,26 @@ module.exports = [
       'no-console': 'off',
       ...typescriptEslint.configs.recommended.rules,
       ...eslintConfigPrettier.rules,
+      '@typescript-eslint/no-explicit-any': 'error',
+    },
+  },
+  {
+    files: ['**/*.test.ts', '**/*.spec.ts', '**/test/**/*.ts'],
+    languageOptions: {
+      parser: typescriptEslintParser,
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+    },
+    plugins: {
+      prettier: eslintPluginPrettier,
+      '@typescript-eslint': typescriptEslint,
+    },
+    rules: {
+      'prettier/prettier': 'error',
+      'no-console': 'off',
+      ...typescriptEslint.configs.recommended.rules,
+      ...eslintConfigPrettier.rules,
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
 ];

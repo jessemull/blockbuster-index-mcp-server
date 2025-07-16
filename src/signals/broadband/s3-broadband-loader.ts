@@ -13,7 +13,7 @@ import type {
   S3BroadbandData,
 } from '../../types/broadband';
 
-function mapTechCodeToTechnology(techCode: string): string {
+export function mapTechCodeToTechnology(techCode: string): string {
   const code = parseInt(techCode);
 
   if (TECHNOLOGY_CODES.FIBER.includes(code)) return 'Fiber';
