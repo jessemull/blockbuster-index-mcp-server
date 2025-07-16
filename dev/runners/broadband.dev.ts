@@ -10,11 +10,13 @@ async function runBroadbandTest() {
   try {
     logger.info('Starting broadband signal test...');
 
-    // Process broadband data and write to DynamoDB
+    // Process broadband data and write to DynamoDB...
+
     const broadbandService = new BroadbandService();
     await broadbandService.processBroadbandData();
 
     // Get FCC broadband data while scraping...
+
     const scores = await getBroadbandScores();
 
     logger.info('Broadband signal results:', {
@@ -33,13 +35,15 @@ async function runBroadbandTest() {
           : 0,
     });
 
-    // Write scores to dev/scores/broadband-scores.json
+    // Write scores to dev/scores/broadband-scores.json...
+
     const scoresDir = path.resolve(__dirname, '../scores');
     const filePath = path.join(scoresDir, 'broadband-scores.json');
+
     fs.mkdirSync(scoresDir, { recursive: true });
     fs.writeFileSync(filePath, JSON.stringify(scores, null, 2));
-    logger.info('Broadband scores written to file', { filePath });
 
+    logger.info('Broadband scores written to file', { filePath });
     logger.info('Broadband signal test completed successfully!');
   } catch (error) {
     logger.error('Broadband signal test failed:', error);
