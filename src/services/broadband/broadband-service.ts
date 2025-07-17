@@ -30,7 +30,8 @@ export class BroadbandService {
     logger.info('Starting broadband data processing from S3...');
 
     try {
-      // Process states one at a time as they're downloaded
+      // Process states one at a time as they're downloaded...
+
       await this.s3Loader.processStatesOneByOne(
         this.processStateCallback.bind(this),
       );
@@ -58,7 +59,8 @@ export class BroadbandService {
     );
 
     try {
-      // Check if we need to process this state's data
+      // Check if we need to process this state's data...
+
       const shouldProcess = await this.shouldProcessStateData(
         state,
         dataVersion,
@@ -75,7 +77,8 @@ export class BroadbandService {
         `Will process ${records.length} records for ${state} (version: ${dataVersion})`,
       );
 
-      // Convert BroadbandRecord[] to BroadbandCsvRecord[] for processing
+      // Convert BroadbandRecord[] to BroadbandCsvRecord[] for processing...
+
       const csvRecords: BroadbandCsvRecord[] = records.map((record) => ({
         LogRecNo: '0',
         Provider_Id: '0',
@@ -103,10 +106,12 @@ export class BroadbandService {
         Business: '1',
       }));
 
-      // Calculate aggregated metrics for this state
+      // Calculate aggregated metrics for this state...
+
       const metrics = this.calculateBroadbandMetrics(csvRecords);
 
-      // Create a single aggregated record for this state
+      // Create a single aggregated record for this state...
+
       const broadbandRecord: BroadbandSignalRecord = {
         state,
         timestamp: Date.now(),
@@ -124,14 +129,16 @@ export class BroadbandService {
         broadbandScore: metrics.broadbandScore,
       };
 
-      // Save the aggregated record
+      // Save the aggregated record...
+
       logger.info(`About to save broadband record for ${state} to DynamoDB`);
       await this.repository.save(broadbandRecord);
       logger.info(
         `Successfully saved broadband record for ${state} to DynamoDB`,
       );
 
-      // Save metadata record for version tracking
+      // Save metadata record for version tracking...
+
       const metadataRecord: StateVersionMetadata = {
         state,
         dataVersion,
@@ -160,7 +167,8 @@ export class BroadbandService {
     s3DataVersion: string,
   ): Promise<boolean> {
     try {
-      // Check if this specific state+version combination already exists
+      // Check if this specific state+version combination already exists...
+
       const existingRecord = await this.repository.getByStateAndVersion(
         state,
         s3DataVersion,
@@ -183,7 +191,9 @@ export class BroadbandService {
       return true;
     } catch (error) {
       logger.error(`Error checking version for ${state}:`, error);
-      // If we can't determine the version, process the data to be safe
+
+      // If we can't determine the version, process the data to be safe...
+
       return true;
     }
   }
@@ -201,7 +211,8 @@ export class BroadbandService {
     }
   }
 
-  // Calculate broadband metrics for a single state
+  // Calculate broadband metrics for a single state...
+
   private calculateBroadbandMetrics(
     records: BroadbandCsvRecord[],
   ): BroadbandMetrics {
@@ -209,7 +220,8 @@ export class BroadbandService {
     const uniqueBlocks = new Set(records.map((r) => r.BlockCode));
     const totalCensusBlocks = uniqueBlocks.size;
 
-    // Calculate coverage metrics
+    // Calculate coverage metrics...
+
     const blocksWithBroadband = this.countBlocksWithBroadband(records);
     const blocksWithHighSpeed = this.countBlocksWithSpeed(
       records,
@@ -220,7 +232,8 @@ export class BroadbandService {
       SPEED_THRESHOLDS.GIGABIT,
     );
 
-    // Calculate percentages
+    // Calculate percentages...
+
     const broadbandAvailabilityPercent =
       totalCensusBlocks > 0
         ? (blocksWithBroadband / totalCensusBlocks) * 100
@@ -232,15 +245,18 @@ export class BroadbandService {
     const gigabitAvailabilityPercent =
       totalCensusBlocks > 0 ? (blocksWithGigabit / totalCensusBlocks) * 100 : 0;
 
-    // Calculate technology counts
+    // Calculate technology counts...
+
     const technologyCounts = this.calculateTechnologyCounts(records);
 
-    // Calculate speed statistics
+    // Calculate speed statistics...
+
     const speeds = this.extractSpeeds(records);
     const averageDownloadSpeed = this.calculateAverage(speeds);
     const medianDownloadSpeed = this.calculateMedian(speeds);
 
-    // Calculate overall broadband score
+    // Calculate overall broadband score...
+
     const broadbandScore = this.calculateBroadbandScore({
       broadbandAvailabilityPercent,
       highSpeedAvailabilityPercent,
@@ -268,7 +284,8 @@ export class BroadbandService {
     };
   }
 
-  // Count census blocks with any broadband service
+  // Count census blocks with any broadband service...
+
   private countBlocksWithBroadband(records: BroadbandCsvRecord[]): number {
     const blocksWithService = new Set<string>();
 
@@ -282,7 +299,8 @@ export class BroadbandService {
     return blocksWithService.size;
   }
 
-  // Count census blocks with service meeting speed threshold
+  // Count census blocks with service meeting speed threshold...
+
   private countBlocksWithSpeed(
     records: BroadbandCsvRecord[],
     speedThreshold: number,
@@ -299,7 +317,8 @@ export class BroadbandService {
     return blocksWithSpeed.size;
   }
 
-  // Calculate technology distribution
+  // Calculate technology distribution...
+
   private calculateTechnologyCounts(
     records: BroadbandCsvRecord[],
   ): TechnologyCounts {
@@ -330,20 +349,23 @@ export class BroadbandService {
     return counts;
   }
 
-  // Extract download speeds from records
+  // Extract download speeds from records...
+
   private extractSpeeds(records: BroadbandCsvRecord[]): number[] {
     return records
       .map((r) => parseFloat(r.MaxAdDown))
       .filter((speed) => speed > 0);
   }
 
-  // Calculate average of number array
+  // Calculate average of number array...
+
   private calculateAverage(numbers: number[]): number {
     if (numbers.length === 0) return 0;
     return numbers.reduce((sum, num) => sum + num, 0) / numbers.length;
   }
 
-  // Calculate median of number array
+  // Calculate median of number array...
+
   private calculateMedian(numbers: number[]): number {
     if (numbers.length === 0) return 0;
 
@@ -357,14 +379,16 @@ export class BroadbandService {
     }
   }
 
-  // Calculate overall broadband score (0-1 range)
+  // Calculate overall broadband score (0-1 range)...
+
   private calculateBroadbandScore(metrics: {
     broadbandAvailabilityPercent: number;
     highSpeedAvailabilityPercent: number;
     gigabitAvailabilityPercent: number;
     technologyCounts: TechnologyCounts;
   }): number {
-    // Technology diversity score (0-1)
+    // Technology diversity score (0-1)...
+
     const totalTech = Object.values(metrics.technologyCounts).reduce(
       (sum, count) => sum + count,
       0,
@@ -375,13 +399,14 @@ export class BroadbandService {
             .length / 5
         : 0;
 
-    // Weighted score calculation
-    const score =
-      (metrics.broadbandAvailabilityPercent / 100) * 0.3 + // Basic availability
-      (metrics.highSpeedAvailabilityPercent / 100) * 0.4 + // Quality (25+ Mbps)
-      (metrics.gigabitAvailabilityPercent / 100) * 0.2 + // Future-ready infrastructure
-      diversityScore * 0.1; // Infrastructure resilience
+    // Weighted score calculation...
 
-    return Math.min(1, Math.max(0, score)); // Clamp to 0-1 range
+    const score =
+      (metrics.broadbandAvailabilityPercent / 100) * 0.3 + // Basic availability.
+      (metrics.highSpeedAvailabilityPercent / 100) * 0.4 + // Quality (25+ Mbps).
+      (metrics.gigabitAvailabilityPercent / 100) * 0.2 + // Future-ready infrastructure.
+      diversityScore * 0.1; // Infrastructure resilience.
+
+    return Math.min(1, Math.max(0, score)); // Clamp to 0-1 range.
   }
 }

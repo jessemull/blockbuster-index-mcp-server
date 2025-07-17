@@ -554,7 +554,8 @@ describe('DynamoDBBroadbandSignalRepository', () => {
 
       const result = await repository.getAllScores();
 
-      // Check that all states are initialized with 0
+      // Check that all states are initialized with 0...
+
       expect(result.AK).toBe(0);
       expect(result.AL).toBe(0);
       expect(result.AZ).toBe(0);
@@ -638,7 +639,7 @@ describe('DynamoDBBroadbandSignalRepository', () => {
 
       expect(result.CA).toBe(0.8765);
       expect(result.TX).toBe(0.7234);
-      expect(result.AK).toBe(0); // Verify other states are initialized
+      expect(result.AK).toBe(0);
     });
 
     it('should filter records by dataVersion', async () => {
@@ -697,7 +698,7 @@ describe('DynamoDBBroadbandSignalRepository', () => {
 
       expect(result.CA).toBe(0);
       expect(result.TX).toBe(0.7234);
-      expect(result.AK).toBe(0); // Verify other states are initialized
+      expect(result.AK).toBe(0);
     });
 
     it('should handle DynamoDB errors gracefully', async () => {

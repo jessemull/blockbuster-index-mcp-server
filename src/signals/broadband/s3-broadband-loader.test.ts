@@ -33,9 +33,9 @@ const s3Mock = mockClient(S3Client);
 
 describe('mapTechCodeToTechnology', () => {
   it('should map tech codes to technology names', () => {
-    expect(mapTechCodeToTechnology('70')).toBe('Fiber'); // already tested
-    expect(mapTechCodeToTechnology('50')).toBe('Other'); // already tested
-    expect(mapTechCodeToTechnology('999')).toBe('Unknown'); // already tested
+    expect(mapTechCodeToTechnology('70')).toBe('Fiber');
+    expect(mapTechCodeToTechnology('50')).toBe('Other');
+    expect(mapTechCodeToTechnology('999')).toBe('Unknown');
   });
 
   it('should return Cable for matching cable tech code', () => {

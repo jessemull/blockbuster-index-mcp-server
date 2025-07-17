@@ -33,5 +33,5 @@ export const BROADBAND_DYNAMODB = {
 // Precision for score calculations.
 
 export const PRECISION = {
-  SCORE_ROUNDING: 10000, // Used for rounding broadband scores to 4 decimal places
+  SCORE_ROUNDING: 10000,
 } as const;

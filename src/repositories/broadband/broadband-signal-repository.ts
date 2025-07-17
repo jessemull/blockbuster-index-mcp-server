@@ -240,7 +240,9 @@ export class DynamoDBBroadbandSignalRepository extends DynamoDBSignalRepository<
         if (result.Items) {
           for (const item of result.Items) {
             const record = item as BroadbandSignalRecord;
-            // Only include records with broadband scores
+
+            // Only include records with broadband scores...
+
             if (record.state && record.broadbandScore !== undefined) {
               scores[record.state] = record.broadbandScore;
             }
