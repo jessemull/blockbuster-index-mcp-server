@@ -221,5 +221,57 @@ describe('AmazonSlidingWindowService', () => {
         expect.any(Object),
       );
     });
+
+    it('logs stringified non-Error objects in updateSlidingWindow', async () => {
+      const nonError = { reason: 'timeout', status: 500 };
+      mockGetAggregate.mockRejectedValueOnce(nonError);
+
+      const service = new AmazonSlidingWindowService();
+      await expect(
+        service.updateSlidingWindow('CA', 99, 1234567890000),
+      ).rejects.toBe(nonError);
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to update sliding window',
+        {
+          error: String(nonError),
+          state: 'CA',
+          newJobCount: 99,
+          newTimestamp: 1234567890000,
+        },
+      );
+    });
+
+    it('logs stringified non-Error primitives in getSlidingWindowScores', async () => {
+      mockGetAggregate.mockRejectedValueOnce('non-error string');
+
+      const service = new AmazonSlidingWindowService();
+      await expect(service.getSlidingWindowScores()).rejects.toBe(
+        'non-error string',
+      );
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to get sliding window scores',
+        {
+          error: 'non-error string',
+        },
+      );
+    });
+  });
+
+  it('logs stringified non-Error values in initializeSlidingWindowFromHistoricalData', async () => {
+    mockQuery.mockRejectedValueOnce(null);
+
+    const service = new AmazonSlidingWindowService();
+    await expect(
+      service.initializeSlidingWindowFromHistoricalData(),
+    ).rejects.toBe(null);
+
+    expect(logger.error).toHaveBeenCalledWith(
+      'Failed to initialize sliding window',
+      {
+        error: 'null',
+      },
+    );
   });
 });

@@ -215,4 +215,49 @@ describe('DynamoDBAmazonSlidingWindowRepository', () => {
       expect(result).toBe(false);
     });
   });
+
+  describe('error logging fallback for non-Error types', () => {
+    it('logs stringified unknown error in getAggregate', async () => {
+      const unknownError = 'unexpected string error';
+      mockSend.mockRejectedValue(unknownError);
+
+      await expect(repository.getAggregate('TX')).rejects.toBe(unknownError);
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        'Failed to get sliding window aggregate',
+        expect.objectContaining({ error: String(unknownError), state: 'TX' }),
+      );
+    });
+
+    it('logs stringified unknown error in saveAggregate', async () => {
+      const unknownError = 12345; // number instead of Error
+      mockSend.mockRejectedValue(unknownError);
+
+      await expect(repository.saveAggregate(aggregate)).rejects.toBe(
+        unknownError,
+      );
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        'Failed to save sliding window aggregate',
+        expect.objectContaining({ error: String(12345), state: 'CA' }),
+      );
+    });
+
+    it('logs stringified unknown error in updateAggregate', async () => {
+      jest.spyOn(repository, 'getAggregate').mockResolvedValueOnce(aggregate);
+      const unknownError = { some: 'weird object' };
+      mockSend.mockRejectedValue(unknownError);
+
+      await expect(repository.updateAggregate('CA', 5, 2000)).rejects.toBe(
+        unknownError,
+      );
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        'Failed to update sliding window aggregate',
+        expect.objectContaining({
+          error: String(unknownError),
+          state: 'CA',
+          newDayJobCount: 5,
+          newDayTimestamp: 2000,
+        }),
+      );
+    });
+  });
 });
