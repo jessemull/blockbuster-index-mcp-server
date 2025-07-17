@@ -110,6 +110,26 @@ export class S3BroadbandLoader {
     };
   }
 
+  private async checkIfStateExists(
+    state: string,
+    dataVersion: string,
+  ): Promise<boolean> {
+    try {
+      const tempRepo = new DynamoDBBroadbandSignalRepository(
+        process.env.BROADBAND_DYNAMODB_TABLE_NAME ||
+          'blockbuster-index-broadband-signals-dev',
+      );
+      const existingRecord = await tempRepo.getByStateAndVersion(
+        state,
+        dataVersion,
+      );
+      return !!existingRecord;
+    } catch (error) {
+      logger.error(`Error checking if state ${state} exists:`, error);
+      return false;
+    }
+  }
+
   async downloadAndParseCSV(s3Key: string): Promise<{
     state: string;
     metrics: BroadbandMetrics;
@@ -307,6 +327,24 @@ export class S3BroadbandLoader {
     }> = [];
 
     for (const s3Key of statesToProcess) {
+      // Extract state from filename (e.g., "Dec2021-v1/CA-Fixed-Dec2021-v1.csv" -> "CA")
+      const stateMatch = s3Key.match(/\/([A-Z]{2})-Fixed-/);
+      if (!stateMatch) {
+        logger.warn(`Could not extract state from S3 key: ${s3Key}`);
+        continue;
+      }
+      const state = stateMatch[1];
+      // Check if already processed
+      const alreadyProcessed = await this.checkIfStateExists(
+        state,
+        dataVersion,
+      );
+      if (alreadyProcessed) {
+        logger.info(
+          `Skipping ${state} - data version ${dataVersion} already processed`,
+        );
+        continue;
+      }
       try {
         logger.info(`Downloading and processing ${s3Key}`);
         const result = await this.downloadAndParseCSV(s3Key);
@@ -350,6 +388,27 @@ export class S3BroadbandLoader {
     }
 
     for (const s3Key of stateFiles) {
+      // Extract state from filename (e.g., "Dec2021-v1/CA-Fixed-Dec2021-v1.csv" -> "CA")...
+
+      const stateMatch = s3Key.match(/\/([A-Z]{2})-Fixed-/);
+      if (!stateMatch) {
+        logger.warn(`Could not extract state from S3 key: ${s3Key}`);
+        continue;
+      }
+      const state = stateMatch[1];
+
+      // Check if already processed...
+
+      const alreadyProcessed = await this.checkIfStateExists(
+        state,
+        dataVersion,
+      );
+      if (alreadyProcessed) {
+        logger.info(
+          `Skipping ${state} - data version ${dataVersion} already processed`,
+        );
+        continue;
+      }
       try {
         const result = await this.downloadAndParseCSV(s3Key);
         await callback({
@@ -361,30 +420,6 @@ export class S3BroadbandLoader {
       } catch (error) {
         logger.error(`Error processing S3 file ${s3Key}:`, error);
       }
-    }
-  }
-
-  private async checkIfStateExists(
-    state: string,
-    dataVersion: string,
-  ): Promise<boolean> {
-    try {
-      // Create a temporary repository to check if state exists...
-
-      const tempRepo = new DynamoDBBroadbandSignalRepository(
-        process.env.BROADBAND_DYNAMODB_TABLE_NAME ||
-          'blockbuster-index-broadband-signals-dev',
-      );
-
-      const existingRecord = await tempRepo.getByStateAndVersion(
-        state,
-        dataVersion,
-      );
-
-      return !!existingRecord;
-    } catch (error) {
-      logger.error(`Error checking if state ${state} exists:`, error);
-      return false;
     }
   }
 }
