@@ -410,14 +410,12 @@ export class BroadbandService {
     return Math.min(1, Math.max(0, score)); // Clamp to 0-1 range.
   }
 
-  // Add this static method for use in the loader
   public static calculateBroadbandScoreStatic(metrics: {
     broadbandAvailabilityPercent: number;
     highSpeedAvailabilityPercent: number;
     gigabitAvailabilityPercent: number;
     technologyCounts: TechnologyCounts;
   }): number {
-    // Use a dummy instance to call the private method
     const instance = new BroadbandService();
     return instance.calculateBroadbandScore(metrics);
   }

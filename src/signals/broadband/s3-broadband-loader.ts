@@ -130,6 +130,7 @@ export class S3BroadbandLoader {
       }
 
       // Extract state from filename (e.g., "Dec2021-v1/CA-Fixed-Dec2021-v1.csv" -> "CA")...
+
       const stateMatch = s3Key.match(/\/([A-Z]{2})-Fixed-/);
       if (!stateMatch) {
         throw new Error(`Could not extract state from S3 key: ${s3Key}`);
@@ -138,6 +139,7 @@ export class S3BroadbandLoader {
       logger.info(`Processing ${state} data from S3 key: ${s3Key}`);
 
       // Stream parse CSV content and aggregate metrics on the fly...
+
       const metrics = this.initializeMetrics();
       const uniqueBlocks = new Set<string>();
       const speeds: number[] = [];
@@ -160,7 +162,8 @@ export class S3BroadbandLoader {
           parser.on('readable', () => {
             let record: S3BroadbandCsvRecord;
             while ((record = parser.read() as S3BroadbandCsvRecord)) {
-              // Streaming aggregation logic
+              // Streaming aggregation logic...
+
               const blockCode = record.BlockCode || '';
               uniqueBlocks.add(blockCode);
               const speed = parseFloat(record.MaxAdDown || '0');
@@ -177,7 +180,9 @@ export class S3BroadbandLoader {
               } else {
                 technologyCounts.other += 1;
               }
-              // Count blocks with broadband, high speed, gigabit
+
+              // Count blocks with broadband, high speed, gigabit...
+
               if (speed >= SPEED_THRESHOLDS.BROADBAND_MIN)
                 metrics.blocksWithBroadband.add(blockCode);
               if (speed >= SPEED_THRESHOLDS.BROADBAND_MIN)
@@ -188,7 +193,8 @@ export class S3BroadbandLoader {
           });
 
           parser.on('end', () => {
-            // Final aggregation
+            // Final aggregation...
+
             const totalCensusBlocks = uniqueBlocks.size;
             const blocksWithBroadband = metrics.blocksWithBroadband.size;
             const blocksWithHighSpeed = metrics.blocksWithHighSpeed.size;
@@ -213,7 +219,9 @@ export class S3BroadbandLoader {
               speeds.length > 0
                 ? speeds.sort((a, b) => a - b)[Math.floor(speeds.length / 2)]
                 : 0;
-            // Calculate broadbandScore (reuse your existing logic if possible)
+
+            // Calculate broadbandScore (reuse your existing logic if possible)...
+
             const broadbandScore =
               BroadbandService.calculateBroadbandScoreStatic({
                 broadbandAvailabilityPercent,
@@ -287,7 +295,7 @@ export class S3BroadbandLoader {
         const result = await this.downloadAndParseCSV(s3Key);
         processedData.push({
           state: result.state,
-          records: [], // No longer storing all records, just the aggregate
+          records: [],
           dataVersion: result.dataVersion,
           lastUpdated: result.lastUpdated,
         });
@@ -299,6 +307,7 @@ export class S3BroadbandLoader {
     logger.info(
       `Processed ${processedData.length} state files out of ${statesToProcess.length} total files`,
     );
+
     return processedData;
   }
 
@@ -324,7 +333,7 @@ export class S3BroadbandLoader {
         const result = await this.downloadAndParseCSV(s3Key);
         await callback({
           state: result.state,
-          records: [], // No longer storing all records, just the aggregate
+          records: [],
           dataVersion: result.dataVersion,
           lastUpdated: result.lastUpdated,
         });
