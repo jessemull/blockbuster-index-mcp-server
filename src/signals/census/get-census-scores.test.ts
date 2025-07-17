@@ -330,6 +330,29 @@ describe('getCensusScores', () => {
 
       await expect(getCensusScores()).rejects.toThrow('Exists check failed');
     });
+
+    it('uses the default table name when env var is not set', async () => {
+      mockCONFIG.IS_DEVELOPMENT = false;
+      delete process.env.CENSUS_DYNAMODB_TABLE_NAME;
+      const mockRepository = {
+        save: jest.fn(),
+        exists: jest.fn().mockResolvedValue(false),
+      };
+      mockDynamoDBCensusSignalRepository.mockReturnValue(
+        mockRepository as unknown as DynamoDBCensusSignalRepository,
+      );
+      mockFetchCensusData.mockResolvedValue({
+        establishments: { AL: 100 },
+        population: { AL: 1000 },
+        year: 2023,
+      });
+
+      await getCensusScores();
+
+      expect(mockDynamoDBCensusSignalRepository).toHaveBeenCalledWith(
+        'blockbuster-index-census-signals-dev',
+      );
+    });
   });
 
   describe('timestamp calculation', () => {

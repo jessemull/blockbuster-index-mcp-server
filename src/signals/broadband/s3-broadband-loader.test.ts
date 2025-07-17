@@ -13,6 +13,7 @@ import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband'
 import type { S3BroadbandCsvRecord } from '../../types/broadband';
 import type { Readable } from 'stream';
 import { TECHNOLOGY_CODES } from '../../constants';
+import { logger } from '../../util/logger';
 
 jest.mock('../../util/logger', () => ({
   logger: {
@@ -220,10 +221,23 @@ describe('S3BroadbandLoader', () => {
   });
 
   describe('loadBroadbandData', () => {
-    it('returns empty if no version or files', async () => {
+    it('returns empty if no version', async () => {
       jest.spyOn(loader, 'getLatestDataVersion').mockResolvedValue(null);
       const result = await loader.loadBroadbandData();
       expect(result).toEqual([]);
+      expect(logger.warn).toHaveBeenCalledWith('No data version found in S3');
+    });
+
+    it('returns empty if no state files for version', async () => {
+      jest
+        .spyOn(loader, 'getLatestDataVersion')
+        .mockResolvedValue('Dec2023-v1');
+      jest.spyOn(loader, 'listStateFiles').mockResolvedValue([]);
+      const result = await loader.loadBroadbandData();
+      expect(result).toEqual([]);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'No state files found for version Dec2023-v1',
+      );
     });
 
     it('skips files with download errors but continues', async () => {
@@ -252,6 +266,27 @@ describe('S3BroadbandLoader', () => {
   });
 
   describe('processStatesOneByOne', () => {
+    it('returns early and warns if no data version', async () => {
+      jest.spyOn(loader, 'getLatestDataVersion').mockResolvedValue(null);
+      const callback = jest.fn();
+      await loader.processStatesOneByOne(callback);
+      expect(logger.warn).toHaveBeenCalledWith('No data version found in S3');
+      expect(callback).not.toHaveBeenCalled();
+    });
+
+    it('returns early and warns if no state files', async () => {
+      jest
+        .spyOn(loader, 'getLatestDataVersion')
+        .mockResolvedValue('Dec2023-v1');
+      jest.spyOn(loader, 'listStateFiles').mockResolvedValue([]);
+      const callback = jest.fn();
+      await loader.processStatesOneByOne(callback);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'No state files found for version Dec2023-v1',
+      );
+      expect(callback).not.toHaveBeenCalled();
+    });
+
     it('skips file with bad state parse', async () => {
       jest
         .spyOn(loader, 'getLatestDataVersion')
@@ -268,11 +303,52 @@ describe('S3BroadbandLoader', () => {
         .mockResolvedValue('Dec2023-v1');
       jest
         .spyOn(loader, 'listStateFiles')
-        .mockResolvedValue(['Dec2023-v1/CA-Fixed.csv']);
+        .mockResolvedValue(['Dec2023-v1/CA-Fixed-Dec2023-v1.csv']);
       jest.spyOn(loader as any, 'checkIfStateExists').mockResolvedValue(true);
       const callback = jest.fn();
       await loader.processStatesOneByOne(callback);
+      expect(logger.info).toHaveBeenCalledWith(
+        'State CA version Dec2023-v1 already exists in DynamoDB, skipping download',
+      );
       expect(callback).not.toHaveBeenCalled();
+    });
+
+    it('uses Unknown as state if regex does not match', async () => {
+      jest
+        .spyOn(loader, 'getLatestDataVersion')
+        .mockResolvedValue('Dec2023-v1');
+      jest
+        .spyOn(loader, 'listStateFiles')
+        .mockResolvedValue(['Dec2023-v1/invalidfile.csv']);
+      jest.spyOn(loader, 'downloadAndParseCSV').mockResolvedValue([]);
+      const result = await loader.loadBroadbandData();
+      expect(result[0].state).toBe('Unknown');
+    });
+
+    it('maps all defaults when CSV fields are missing', async () => {
+      const s3Key = 'Dec2023-v1/CA-Fixed-Dec2023-v1.csv';
+      const mockStream = { pipe: jest.fn() } as any;
+      const parser: any = {
+        on: jest.fn((event: string, cb: () => void) => {
+          if (event === 'readable') setTimeout(cb, 10);
+          if (event === 'end') setTimeout(cb, 20);
+          return parser;
+        }),
+        read: jest
+          .fn()
+          .mockReturnValueOnce({}) // All fields missing
+          .mockReturnValueOnce(null),
+      };
+      (parse as any).mockReturnValueOnce(parser);
+      s3Mock.on(GetObjectCommand).resolves({ Body: mockStream } as any);
+      const records = await loader.downloadAndParseCSV(s3Key);
+      expect(records[0]).toEqual({
+        state: 'CA',
+        censusBlock: '',
+        provider: '',
+        technology: 'Unknown',
+        speed: 0,
+      });
     });
 
     it('calls callback with downloaded data', async () => {
