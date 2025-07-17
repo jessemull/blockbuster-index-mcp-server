@@ -128,18 +128,56 @@ To clone the repository, install dependencies, and run the project locally follo
    npm run dev
    ```
 
+## New Modular Architecture (2024 Refactor)
+
+The Blockbuster Index MCP Server now runs each signal as a separate ECS task, with a dedicated entrypoint for each signal and for the index combiner. This enables independent deployment, scaling, and testing of each signal and the index calculation.
+
+### Directory Structure
+
+- `src/signals/amazon/entrypoint.ts` – Amazon signal ECS task entrypoint
+- `src/signals/census/entrypoint.ts` – Census signal ECS task entrypoint
+- `src/signals/broadband/entrypoint.ts` – Broadband signal ECS task entrypoint
+- `src/calculate-index/entrypoint.ts` – Blockbuster index combiner ECS task entrypoint
+- Shared code remains in `src/util/`, `src/types/`, and `src/constants/`
+
+### Running Signals and Index Combiner
+
+To run each signal or the index combiner locally:
+
+```bash
+npm run signal:amazon      # Run Amazon signal
+npm run signal:census      # Run Census signal
+npm run signal:broadband   # Run Broadband signal
+npm run calculate-index      # Run the index combiner (after all signals have run)
+```
+
+Each signal writes its results to S3 (or to `dev/scores/` in development). The index combiner reads all signal outputs and produces the final Blockbuster Index.
+
+### CI/CD and ECS
+
+Each signal and the index combiner can be deployed and scheduled independently as ECS tasks. See the `.github/workflows/` directory and CloudFormation templates for details.
+
 ## Running Individual Signals
 
-To test individual signals:
+To test individual signals (legacy):
 
 ```bash
 npm run signal
 ```
 
-To test all signals:
+To test all signals (legacy):
 
 ```bash
 npm run signal:all
+```
+
+To use the new modular scripts (recommended):
+
+```bash
+npm run signal:amazon
+npm run signal:census
+npm run signal:broadband
+npm run calculate-index
 ```
 
 ## Commits & Commitizen

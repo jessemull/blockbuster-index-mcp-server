@@ -11,6 +11,16 @@ on:
         options:
           - dev
           - prod
+      component:
+        description: 'Which signal or combiner to run'
+        required: true
+        default: 'amazon'
+        type: choice
+        options:
+          - amazon
+          - census
+          - broadband
+          - combiner
 
 jobs:
   run-task:
@@ -28,10 +38,10 @@ jobs:
         run: |
           if [[ "${{ github.event.inputs.environment }}" == "prod" ]]; then
             CLUSTER="blockbuster-index-prod"
-            TASK_DEF="blockbuster-index-task-prod"
+            TASK_DEF="blockbuster-index-${{ github.event.inputs.component }}-task-prod"
           else
             CLUSTER="blockbuster-index-dev"
-            TASK_DEF="blockbuster-index-task-dev"
+            TASK_DEF="blockbuster-index-${{ github.event.inputs.component }}-task-dev"
           fi
           TASK_ARN=$(aws ecs run-task \
             --cluster $CLUSTER \

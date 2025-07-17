@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'ECS Task Definition and Scheduled Rule.'
+Description: 'ECS Task Definitions and Scheduled Rules for Blockbuster Index Signals and Combiner.'
 
 Mappings:
   EnvConfig:
@@ -45,11 +45,12 @@ Parameters:
     Default: 'cron(0 10 * * ? *)'
     Description: 'EventBridge schedule expression (cron or rate) - default is daily at 2AM PST (10AM UTC)'
 
+# --- ECS Task Definitions for Each Signal and the Combiner ---
 Resources:
-  ECSTaskDefinition:
+  AmazonECSTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
-      Family: !Sub 'blockbuster-index-task-${Environment}'
+      Family: !Sub 'blockbuster-index-amazon-task-${Environment}'
       Cpu: '512'
       Memory: '2048'
       NetworkMode: awsvpc
@@ -60,79 +61,315 @@ Resources:
       TaskRoleArn: !ImportValue
         Fn::Sub: '${Environment}-BlockbusterTaskRoleArn'
       ContainerDefinitions:
-        - Name: blockbuster-index-container
+        - Name: blockbuster-index-amazon-container
           Image: !Ref ContainerImage
           Cpu: 512
           Memory: 1024
           Essential: true
+          Command: ["npm", "run", "signal:amazon"]
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-group: !ImportValue
                 Fn::Sub: '${Environment}-BlockbusterLogGroupName'
               awslogs-region: !Ref AWS::Region
-              awslogs-stream-prefix: 'blockbuster-index'
+              awslogs-stream-prefix: 'blockbuster-index-amazon'
           Environment:
+            - Name: NODE_ENV
+              Value: !If [IsDev, 'development', 'production']
+            - Name: LOG_LEVEL
+              Value: !FindInMap [EnvConfig, !Ref Environment, LogLevel]
+            - Name: S3_BUCKET_NAME
+              Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]
             - Name: AMAZON_DYNAMODB_TABLE_NAME
               Value: !Sub 'blockbuster-index-amazon-jobs-${Environment}'
             - Name: AWS_REGION
               Value: !Ref AWS::Region
             - Name: CACHE_CONTROL
               Value: 'max-age=300'
-            - Name: BROADBAND_DYNAMODB_TABLE_NAME
-              Value: !Sub 'blockbuster-index-broadband-signals-${Environment}'
-            - Name: CENSUS_DYNAMODB_TABLE_NAME
-              Value: !Sub 'blockbuster-index-census-signals-${Environment}'
-            - Name: CW_LOG_GROUP
-              Value: !ImportValue
-                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
-            - Name: CW_LOG_STREAM
-              Value: !Sub 'blockbuster-index-mcp-${Environment}-${AWS::StackName}'
-            - Name: LOG_LEVEL
-              Value: !FindInMap [EnvConfig, !Ref Environment, LogLevel]
             - Name: MAX_RETRIES
               Value: '3'
-            - Name: NODE_ENV
-              Value: !If [IsDev, 'development', 'production']
             - Name: npm_package_version
               Value: '1.0.0'
             - Name: OPENAI_API_KEY
               Value: !Sub '{{resolve:secretsmanager:blockbuster-index-openai-${Environment}:SecretString:apiKey}}'
             - Name: RETRY_DELAY
               Value: '1000'
+            - Name: CW_LOG_GROUP
+              Value: !ImportValue
+                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
+            - Name: CW_LOG_STREAM
+              Value: !Sub 'blockbuster-index-mcp-amazon-${Environment}-${AWS::StackName}'
+
+  CensusECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub 'blockbuster-index-census-task-${Environment}'
+      Cpu: '512'
+      Memory: '2048'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !ImportValue
+        Fn::Sub: '${Environment}-BlockbusterExecutionRoleArn'
+      TaskRoleArn: !ImportValue
+        Fn::Sub: '${Environment}-BlockbusterTaskRoleArn'
+      ContainerDefinitions:
+        - Name: blockbuster-index-census-container
+          Image: !Ref ContainerImage
+          Cpu: 512
+          Memory: 1024
+          Essential: true
+          Command: ["npm", "run", "signal:census"]
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !ImportValue
+                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: 'blockbuster-index-census'
+          Environment:
+            - Name: NODE_ENV
+              Value: !If [IsDev, 'development', 'production']
+            - Name: LOG_LEVEL
+              Value: !FindInMap [EnvConfig, !Ref Environment, LogLevel]
             - Name: S3_BUCKET_NAME
               Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]
+            - Name: CENSUS_DYNAMODB_TABLE_NAME
+              Value: !Sub 'blockbuster-index-census-signals-${Environment}'
+            - Name: AWS_REGION
+              Value: !Ref AWS::Region
+            - Name: CACHE_CONTROL
+              Value: 'max-age=300'
+            - Name: MAX_RETRIES
+              Value: '3'
+            - Name: npm_package_version
+              Value: '1.0.0'
+            - Name: OPENAI_API_KEY
+              Value: !Sub '{{resolve:secretsmanager:blockbuster-index-openai-${Environment}:SecretString:apiKey}}'
+            - Name: RETRY_DELAY
+              Value: '1000'
+            - Name: CW_LOG_GROUP
+              Value: !ImportValue
+                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
+            - Name: CW_LOG_STREAM
+              Value: !Sub 'blockbuster-index-mcp-census-${Environment}-${AWS::StackName}'
+
+  BroadbandECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub 'blockbuster-index-broadband-task-${Environment}'
+      Cpu: '512'
+      Memory: '2048'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !ImportValue
+        Fn::Sub: '${Environment}-BlockbusterExecutionRoleArn'
+      TaskRoleArn: !ImportValue
+        Fn::Sub: '${Environment}-BlockbusterTaskRoleArn'
+      ContainerDefinitions:
+        - Name: blockbuster-index-broadband-container
+          Image: !Ref ContainerImage
+          Cpu: 512
+          Memory: 1024
+          Essential: true
+          Command: ["npm", "run", "signal:broadband"]
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !ImportValue
+                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: 'blockbuster-index-broadband'
+          Environment:
+            - Name: NODE_ENV
+              Value: !If [IsDev, 'development', 'production']
+            - Name: LOG_LEVEL
+              Value: !FindInMap [EnvConfig, !Ref Environment, LogLevel]
+            - Name: S3_BUCKET_NAME
+              Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]
+            - Name: BROADBAND_DYNAMODB_TABLE_NAME
+              Value: !Sub 'blockbuster-index-broadband-signals-${Environment}'
             - Name: BROADBAND_S3_BUCKET_NAME
               Value: !Sub 'blockbuster-index-broadband-${Environment}'
+            - Name: AWS_REGION
+              Value: !Ref AWS::Region
+            - Name: CACHE_CONTROL
+              Value: 'max-age=300'
+            - Name: MAX_RETRIES
+              Value: '3'
+            - Name: npm_package_version
+              Value: '1.0.0'
+            - Name: OPENAI_API_KEY
+              Value: !Sub '{{resolve:secretsmanager:blockbuster-index-openai-${Environment}:SecretString:apiKey}}'
+            - Name: RETRY_DELAY
+              Value: '1000'
+            - Name: CW_LOG_GROUP
+              Value: !ImportValue
+                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
+            - Name: CW_LOG_STREAM
+              Value: !Sub 'blockbuster-index-mcp-broadband-${Environment}-${AWS::StackName}'
 
-  ScheduledTaskRule:
+  CombinerECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub 'blockbuster-index-combiner-task-${Environment}'
+      Cpu: '512'
+      Memory: '2048'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !ImportValue
+        Fn::Sub: '${Environment}-BlockbusterExecutionRoleArn'
+      TaskRoleArn: !ImportValue
+        Fn::Sub: '${Environment}-BlockbusterTaskRoleArn'
+      ContainerDefinitions:
+        - Name: blockbuster-index-combiner-container
+          Image: !Ref ContainerImage
+          Cpu: 512
+          Memory: 1024
+          Essential: true
+          Command: ["npm", "run", "combine-index"]
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !ImportValue
+                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: 'blockbuster-index-combiner'
+          Environment:
+            - Name: NODE_ENV
+              Value: !If [IsDev, 'development', 'production']
+            - Name: LOG_LEVEL
+              Value: !FindInMap [EnvConfig, !Ref Environment, LogLevel]
+            - Name: S3_BUCKET_NAME
+              Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]
+            - Name: AWS_REGION
+              Value: !Ref AWS::Region
+            - Name: CACHE_CONTROL
+              Value: 'max-age=300'
+            - Name: MAX_RETRIES
+              Value: '3'
+            - Name: npm_package_version
+              Value: '1.0.0'
+            - Name: OPENAI_API_KEY
+              Value: !Sub '{{resolve:secretsmanager:blockbuster-index-openai-${Environment}:SecretString:apiKey}}'
+            - Name: RETRY_DELAY
+              Value: '1000'
+            - Name: CW_LOG_GROUP
+              Value: !ImportValue
+                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
+            - Name: CW_LOG_STREAM
+              Value: !Sub 'blockbuster-index-mcp-combiner-${Environment}-${AWS::StackName}'
+
+# --- Scheduled EventBridge Rules for Each Task ---
+  AmazonScheduledTaskRule:
     Type: AWS::Events::Rule
     Condition: IsProd
     Properties:
-      Name: !Sub 'blockbuster-index-scheduled-task-rule-${Environment}'
-      ScheduleExpression: !Ref ScheduleExpression
+      Name: !Sub 'blockbuster-index-amazon-scheduled-task-rule-${Environment}'
+      ScheduleExpression: 'cron(0 10 * * ? *)' # 10AM UTC
       State: ENABLED
       Targets:
         - Arn: !ImportValue
             Fn::Sub: '${Environment}-BlockbusterECSClusterArn'
-          Id: 'BlockbusterIndexECSTask'
+          Id: 'BlockbusterIndexAmazonECSTask'
           RoleArn: !ImportValue
             Fn::Sub: '${Environment}-BlockbusterEventBridgeInvokeRoleArn'
           EcsParameters:
-            TaskDefinitionArn: !Ref ECSTaskDefinition
+            TaskDefinitionArn: !Ref AmazonECSTaskDefinition
             TaskCount: 1
             LaunchType: FARGATE
             NetworkConfiguration:
               AwsVpcConfiguration:
                 AssignPublicIp: ENABLED
-                SecurityGroups:
-                  !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
+                SecurityGroups: !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
                 Subnets: !FindInMap [EnvConfig, !Ref Environment, Subnets]
 
+  CensusScheduledTaskRule:
+    Type: AWS::Events::Rule
+    Condition: IsProd
+    Properties:
+      Name: !Sub 'blockbuster-index-census-scheduled-task-rule-${Environment}'
+      ScheduleExpression: 'cron(0 10 * * ? *)' # 10AM UTC
+      State: ENABLED
+      Targets:
+        - Arn: !ImportValue
+            Fn::Sub: '${Environment}-BlockbusterECSClusterArn'
+          Id: 'BlockbusterIndexCensusECSTask'
+          RoleArn: !ImportValue
+            Fn::Sub: '${Environment}-BlockbusterEventBridgeInvokeRoleArn'
+          EcsParameters:
+            TaskDefinitionArn: !Ref CensusECSTaskDefinition
+            TaskCount: 1
+            LaunchType: FARGATE
+            NetworkConfiguration:
+              AwsVpcConfiguration:
+                AssignPublicIp: ENABLED
+                SecurityGroups: !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
+                Subnets: !FindInMap [EnvConfig, !Ref Environment, Subnets]
+
+  BroadbandScheduledTaskRule:
+    Type: AWS::Events::Rule
+    Condition: IsProd
+    Properties:
+      Name: !Sub 'blockbuster-index-broadband-scheduled-task-rule-${Environment}'
+      ScheduleExpression: 'cron(0 10 * * ? *)' # 10AM UTC
+      State: ENABLED
+      Targets:
+        - Arn: !ImportValue
+            Fn::Sub: '${Environment}-BlockbusterECSClusterArn'
+          Id: 'BlockbusterIndexBroadbandECSTask'
+          RoleArn: !ImportValue
+            Fn::Sub: '${Environment}-BlockbusterEventBridgeInvokeRoleArn'
+          EcsParameters:
+            TaskDefinitionArn: !Ref BroadbandECSTaskDefinition
+            TaskCount: 1
+            LaunchType: FARGATE
+            NetworkConfiguration:
+              AwsVpcConfiguration:
+                AssignPublicIp: ENABLED
+                SecurityGroups: !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
+                Subnets: !FindInMap [EnvConfig, !Ref Environment, Subnets]
+
+  CombinerScheduledTaskRule:
+    Type: AWS::Events::Rule
+    Condition: IsProd
+    Properties:
+      Name: !Sub 'blockbuster-index-combiner-scheduled-task-rule-${Environment}'
+      ScheduleExpression: 'cron(0 22 * * ? *)' # 10PM UTC (12 hours after signals)
+      State: ENABLED
+      Targets:
+        - Arn: !ImportValue
+            Fn::Sub: '${Environment}-BlockbusterECSClusterArn'
+          Id: 'BlockbusterIndexCombinerECSTask'
+          RoleArn: !ImportValue
+            Fn::Sub: '${Environment}-BlockbusterEventBridgeInvokeRoleArn'
+          EcsParameters:
+            TaskDefinitionArn: !Ref CombinerECSTaskDefinition
+            TaskCount: 1
+            LaunchType: FARGATE
+            NetworkConfiguration:
+              AwsVpcConfiguration:
+                AssignPublicIp: ENABLED
+                SecurityGroups: !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
+                Subnets: !FindInMap [EnvConfig, !Ref Environment, Subnets]
+
+# --- Outputs ---
 Outputs:
-  ECSTaskDefinitionArn:
-    Description: 'ECS Task Definition ARN'
-    Value: !Ref ECSTaskDefinition
+  AmazonECSTaskDefinitionArn:
+    Description: 'Amazon ECS Task Definition ARN'
+    Value: !Ref AmazonECSTaskDefinition
+  CensusECSTaskDefinitionArn:
+    Description: 'Census ECS Task Definition ARN'
+    Value: !Ref CensusECSTaskDefinition
+  BroadbandECSTaskDefinitionArn:
+    Description: 'Broadband ECS Task Definition ARN'
+    Value: !Ref BroadbandECSTaskDefinition
+  CombinerECSTaskDefinitionArn:
+    Description: 'Combiner ECS Task Definition ARN'
+    Value: !Ref CombinerECSTaskDefinition
   S3BucketName:
     Description: 'S3 Bucket Name for data storage'
     Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]

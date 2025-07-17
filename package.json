@@ -84,7 +84,11 @@
     "signal:all": "node scripts/run-all-signals.js",
     "run-all": "NODE_ENV=development ts-node src/index.ts",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "signal:amazon": "ts-node src/signals/amazon/entrypoint.ts",
+    "signal:census": "ts-node src/signals/census/entrypoint.ts",
+    "signal:broadband": "ts-node src/signals/broadband/entrypoint.ts",
+    "calculate-index": "ts-node src/calculate-index/entrypoint.ts"
   },
   "version": "1.0.0"
 }
