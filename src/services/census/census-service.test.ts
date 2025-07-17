@@ -69,6 +69,18 @@ describe('CensusService', () => {
         'Failed to fetch Census establishment data for year 2022: network error (code: UNKNOWN)',
       );
     });
+
+    it('handles non-Error objects with String() fallback', async () => {
+      const nonErrorObject = { message: 'custom error', code: 'CUSTOM' };
+      mockedAxios.get.mockRejectedValueOnce(nonErrorObject);
+
+      await expect(fetchCensusEstablishmentData(2022)).rejects.toThrow(
+        'Failed to fetch Census establishment data for year 2022',
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to fetch Census establishment data for year 2022: [object Object] (code: CUSTOM)',
+      );
+    });
   });
 
   describe('fetchCensusPopulationData', () => {
@@ -105,6 +117,18 @@ describe('CensusService', () => {
       );
       expect(logger.error).toHaveBeenCalledWith(
         'Failed to fetch Census population data for year 2022: population API fail (code: UNKNOWN)',
+      );
+    });
+
+    it('handles non-Error objects with String() fallback', async () => {
+      const nonErrorObject = { message: 'pop error', code: 'CUSTOMPOP' };
+      mockedAxios.get.mockRejectedValueOnce(nonErrorObject);
+
+      await expect(fetchCensusPopulationData(2022)).rejects.toThrow(
+        'Failed to fetch Census population data for year 2022',
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to fetch Census population data for year 2022: [object Object] (code: CUSTOMPOP)',
       );
     });
   });
