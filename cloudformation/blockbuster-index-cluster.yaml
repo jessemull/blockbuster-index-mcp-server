@@ -142,7 +142,7 @@ Resources:
                   - dynamodb:DescribeTable
                 Resource: !ImportValue
                   Fn::Sub: '${Environment}-BlockbusterBroadbandSignalsTableArn'
-        - PolicyName: 'S3BroadbandAccess'
+        - PolicyName: S3BroadbandAccess
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
