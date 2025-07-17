@@ -12,14 +12,11 @@ import type {
 } from '../../types/broadband';
 
 export class BroadbandService {
-  private repository: DynamoDBBroadbandSignalRepository;
+  private repository: DynamoDBBroadbandSignalRepository | undefined;
   private s3Loader: S3BroadbandLoader;
 
-  constructor() {
-    this.repository = new DynamoDBBroadbandSignalRepository(
-      process.env.BROADBAND_DYNAMODB_TABLE_NAME ||
-        'blockbuster-index-broadband-signals-dev',
-    );
+  constructor(repository?: DynamoDBBroadbandSignalRepository) {
+    this.repository = repository;
     this.s3Loader = new S3BroadbandLoader(
       process.env.BROADBAND_S3_BUCKET || 'blockbuster-index-broadband-dev',
     );
@@ -105,23 +102,29 @@ export class BroadbandService {
 
       // Save the aggregated record...
 
-      logger.info(`About to save broadband record for ${state} to DynamoDB`);
-      await this.repository.save(broadbandRecord);
-      logger.info(
-        `Successfully saved broadband record for ${state} to DynamoDB`,
-      );
+      if (this.repository) {
+        logger.info(`About to save broadband record for ${state} to DynamoDB`);
+        await this.repository.save(broadbandRecord);
+        logger.info(
+          `Successfully saved broadband record for ${state} to DynamoDB`,
+        );
 
-      // Save metadata record for version tracking...
+        // Save metadata record for version tracking...
 
-      const metadataRecord: StateVersionMetadata = {
-        state,
-        dataVersion,
-        lastProcessed: Date.now(),
-      };
-      await this.repository.saveStateVersionMetadata(metadataRecord);
-      logger.info(
-        `Successfully saved metadata record for ${state} to DynamoDB`,
-      );
+        const metadataRecord: StateVersionMetadata = {
+          state,
+          dataVersion,
+          lastProcessed: Date.now(),
+        };
+        await this.repository.saveStateVersionMetadata(metadataRecord);
+        logger.info(
+          `Successfully saved metadata record for ${state} to DynamoDB`,
+        );
+      } else {
+        logger.info(
+          `No repository available, skipping DynamoDB save for ${state}`,
+        );
+      }
 
       logger.info(
         `Successfully processed aggregated metrics for ${state} (version: ${dataVersion})`,
@@ -140,6 +143,11 @@ export class BroadbandService {
     state: string,
     s3DataVersion: string,
   ): Promise<boolean> {
+    if (!this.repository) {
+      logger.info(`No repository available for ${state}, will process`);
+      return true;
+    }
+
     try {
       // Check if this specific state+version combination already exists...
 
@@ -177,6 +185,11 @@ export class BroadbandService {
   }
 
   async getAllScores(): Promise<Record<string, number>> {
+    if (!this.repository) {
+      logger.info('No repository available, returning empty scores');
+      return {};
+    }
+
     try {
       return await this.repository.getAllScores();
     } catch (error) {

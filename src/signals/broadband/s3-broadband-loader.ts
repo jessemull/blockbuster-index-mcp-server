@@ -14,6 +14,8 @@ import type {
 } from '../../types/broadband';
 import { BroadbandService } from '../../services/broadband/broadband-service';
 
+const DEFAULT_TABLE = 'blockbuster-index-broadband-signals-dev';
+
 export function mapTechCodeToTechnology(techCode: string): string {
   const code = parseInt(techCode);
 
@@ -116,8 +118,7 @@ export class S3BroadbandLoader {
   ): Promise<boolean> {
     try {
       const tempRepo = new DynamoDBBroadbandSignalRepository(
-        process.env.BROADBAND_DYNAMODB_TABLE_NAME ||
-          'blockbuster-index-broadband-signals-dev',
+        process.env.BROADBAND_DYNAMODB_TABLE_NAME || DEFAULT_TABLE,
       );
       const existingRecord = await tempRepo.getByStateAndVersion(
         state,
