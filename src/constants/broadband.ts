@@ -8,14 +8,6 @@ export const TECHNOLOGY_CODES = {
   OTHER: [12, 43, 50] as number[],
 } as const;
 
-export const TECHNOLOGY_NAME_TO_CODE = {
-  Fiber: '70',
-  Cable: '60',
-  DSL: '10',
-  Wireless: '40',
-  Other: '12',
-} as const;
-
 // Broadband speed thresholds (Mbps).
 
 export const SPEED_THRESHOLDS = {

@@ -9,7 +9,6 @@ import { TECHNOLOGY_CODES, SPEED_THRESHOLDS } from '../../constants/broadband';
 import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband';
 import type {
   S3BroadbandCsvRecord,
-  S3BroadbandData,
   BroadbandMetrics,
   TechnologyCounts,
 } from '../../types/broadband';
@@ -217,7 +216,19 @@ export class S3BroadbandLoader {
                 : 0;
             const medianDownloadSpeed =
               speeds.length > 0
-                ? speeds.sort((a, b) => a - b)[Math.floor(speeds.length / 2)]
+                ? speeds.length % 2 === 0
+                  ? (() => {
+                      const sorted = speeds.slice().sort((a, b) => a - b);
+                      return (
+                        (sorted[sorted.length / 2 - 1] +
+                          sorted[sorted.length / 2]) /
+                        2
+                      );
+                    })()
+                  : (() => {
+                      const sorted = speeds.slice().sort((a, b) => a - b);
+                      return sorted[Math.floor(sorted.length / 2)];
+                    })()
                 : 0;
 
             // Calculate broadbandScore (reuse your existing logic if possible)...
@@ -267,7 +278,9 @@ export class S3BroadbandLoader {
     }
   }
 
-  async loadBroadbandData(): Promise<S3BroadbandData[]> {
+  async loadBroadbandData(): Promise<
+    Array<{ state: string; dataVersion: string; lastUpdated: Date }>
+  > {
     const dataVersion = await this.getLatestDataVersion();
 
     if (!dataVersion) {
@@ -287,7 +300,11 @@ export class S3BroadbandLoader {
     const statesToProcess = stateFiles;
     logger.info(`Processing all ${statesToProcess.length} states`);
 
-    const processedData: S3BroadbandData[] = [];
+    const processedData: Array<{
+      state: string;
+      dataVersion: string;
+      lastUpdated: Date;
+    }> = [];
 
     for (const s3Key of statesToProcess) {
       try {
@@ -363,6 +380,7 @@ export class S3BroadbandLoader {
         state,
         dataVersion,
       );
+
       return !!existingRecord;
     } catch (error) {
       logger.error(`Error checking if state ${state} exists:`, error);
