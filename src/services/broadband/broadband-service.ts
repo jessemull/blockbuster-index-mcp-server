@@ -9,7 +9,6 @@ import type {
   TechnologyCounts,
   BroadbandSignalRecord,
   StateVersionMetadata,
-  S3BroadbandData,
 } from '../../types/broadband';
 
 export class BroadbandService {
@@ -43,19 +42,27 @@ export class BroadbandService {
     }
   }
 
-  private async processStateCallback(
-    stateData: S3BroadbandData,
-  ): Promise<void> {
+  private async processStateCallback(stateData: {
+    state: string;
+    metrics: BroadbandMetrics;
+    dataVersion: string;
+    lastUpdated: Date;
+  }): Promise<void> {
     logger.info(`About to process state: ${stateData.state}`);
     await this.processStateData(stateData);
     logger.info(`Finished processing state: ${stateData.state}`);
   }
 
-  private async processStateData(stateData: S3BroadbandData): Promise<void> {
-    const { state, records, dataVersion } = stateData;
+  private async processStateData(stateData: {
+    state: string;
+    metrics: BroadbandMetrics;
+    dataVersion: string;
+    lastUpdated: Date;
+  }): Promise<void> {
+    const { state, metrics, dataVersion } = stateData;
 
     logger.info(
-      `Starting to process ${state} with ${records.length} records (S3 version: ${dataVersion})`,
+      `Starting to process ${state} with pre-calculated metrics (S3 version: ${dataVersion})`,
     );
 
     try {
@@ -74,43 +81,10 @@ export class BroadbandService {
       }
 
       logger.info(
-        `Will process ${records.length} records for ${state} (version: ${dataVersion})`,
+        `Will process ${state} with ${metrics.totalCensusBlocks} total blocks (version: ${dataVersion})`,
       );
 
-      // Convert BroadbandRecord[] to BroadbandCsvRecord[] for processing...
-
-      const csvRecords: BroadbandCsvRecord[] = records.map((record) => ({
-        LogRecNo: '0',
-        Provider_Id: '0',
-        FRN: '0',
-        ProviderName: record.provider,
-        DBAName: '',
-        HoldingCompanyName: '',
-        HocoNum: '0',
-        HocoFinal: '0',
-        StateAbbr: record.state,
-        BlockCode: record.censusBlock,
-        TechCode:
-          record.technology === 'Fiber'
-            ? '70'
-            : record.technology === 'Cable'
-              ? '60'
-              : record.technology === 'DSL'
-                ? '10'
-                : record.technology === 'Wireless'
-                  ? '40'
-                  : '12',
-        Consumer: '1',
-        MaxAdDown: record.speed.toString(),
-        MaxAdUp: '0',
-        Business: '1',
-      }));
-
-      // Calculate aggregated metrics for this state...
-
-      const metrics = this.calculateBroadbandMetrics(csvRecords);
-
-      // Create a single aggregated record for this state...
+      // Create a single aggregated record for this state using pre-calculated metrics...
 
       const broadbandRecord: BroadbandSignalRecord = {
         state,

@@ -295,7 +295,6 @@ export class S3BroadbandLoader {
         const result = await this.downloadAndParseCSV(s3Key);
         processedData.push({
           state: result.state,
-          records: [],
           dataVersion: result.dataVersion,
           lastUpdated: result.lastUpdated,
         });
@@ -312,7 +311,12 @@ export class S3BroadbandLoader {
   }
 
   async processStatesOneByOne(
-    callback: (stateData: S3BroadbandData) => Promise<void>,
+    callback: (stateData: {
+      state: string;
+      metrics: BroadbandMetrics;
+      dataVersion: string;
+      lastUpdated: Date;
+    }) => Promise<void>,
   ): Promise<void> {
     const dataVersion = await this.getLatestDataVersion();
 
@@ -333,7 +337,7 @@ export class S3BroadbandLoader {
         const result = await this.downloadAndParseCSV(s3Key);
         await callback({
           state: result.state,
-          records: [],
+          metrics: result.metrics,
           dataVersion: result.dataVersion,
           lastUpdated: result.lastUpdated,
         });

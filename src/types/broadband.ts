@@ -36,7 +36,6 @@ export interface BroadbandRecord {
 
 export interface S3BroadbandData {
   state: string;
-  records: BroadbandRecord[];
   dataVersion: string;
   lastUpdated: Date;
 }
