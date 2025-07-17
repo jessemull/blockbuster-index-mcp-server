@@ -2,15 +2,7 @@
 
 const { spawn } = require('child_process');
 
-const signals = [
-  'amazon',
-  'analog',
-  'broadband',
-  'ecommerce',
-  'physical',
-  'streaming',
-  'walmart',
-];
+const signals = ['amazon', 'broadband', 'census'];
 
 console.log(`Running all signals in parallel:\n${signals.join(', ')}\n`);
 
