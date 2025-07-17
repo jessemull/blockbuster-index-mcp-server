@@ -739,23 +739,27 @@ describe('BroadbandService', () => {
 
       mockStateData = {
         state: 'CA',
-        records: [
-          {
-            provider: 'Test Provider',
-            state: 'CA',
-            censusBlock: '060010001001000',
-            technology: 'Fiber',
-            speed: 100,
+        metrics: {
+          totalCensusBlocks: 2,
+          blocksWithBroadband: 2,
+          broadbandAvailabilityPercent: 100,
+          blocksWithHighSpeed: 2,
+          highSpeedAvailabilityPercent: 100,
+          blocksWithGigabit: 1,
+          gigabitAvailabilityPercent: 50,
+          technologyCounts: {
+            fiber: 1,
+            cable: 1,
+            dsl: 0,
+            wireless: 0,
+            other: 0,
           },
-          {
-            provider: 'Test Provider 2',
-            state: 'CA',
-            censusBlock: '060010001001001',
-            technology: 'Cable',
-            speed: 1500,
-          },
-        ],
+          averageDownloadSpeed: 800,
+          medianDownloadSpeed: 800,
+          broadbandScore: 0.85,
+        },
         dataVersion: 'test-version-1.0',
+        lastUpdated: new Date(),
       };
     });
 
@@ -822,44 +826,27 @@ describe('BroadbandService', () => {
     it('should convert technology codes correctly', async () => {
       const stateDataWithDifferentTechnologies = {
         state: 'TX',
-        records: [
-          {
-            provider: 'Fiber Co',
-            state: 'TX',
-            censusBlock: '480010001001000',
-            technology: 'Fiber',
-            speed: 1000,
+        metrics: {
+          totalCensusBlocks: 5,
+          blocksWithBroadband: 5,
+          broadbandAvailabilityPercent: 100,
+          blocksWithHighSpeed: 5,
+          highSpeedAvailabilityPercent: 100,
+          blocksWithGigabit: 1,
+          gigabitAvailabilityPercent: 20,
+          technologyCounts: {
+            fiber: 1,
+            cable: 1,
+            dsl: 1,
+            wireless: 1,
+            other: 1,
           },
-          {
-            provider: 'Cable Co',
-            state: 'TX',
-            censusBlock: '480010001001001',
-            technology: 'Cable',
-            speed: 500,
-          },
-          {
-            provider: 'DSL Co',
-            state: 'TX',
-            censusBlock: '480010001001002',
-            technology: 'DSL',
-            speed: 50,
-          },
-          {
-            provider: 'Wireless Co',
-            state: 'TX',
-            censusBlock: '480010001001003',
-            technology: 'Wireless',
-            speed: 100,
-          },
-          {
-            provider: 'Other Co',
-            state: 'TX',
-            censusBlock: '480010001001004',
-            technology: 'Satellite',
-            speed: 25,
-          },
-        ],
+          averageDownloadSpeed: 335,
+          medianDownloadSpeed: 100,
+          broadbandScore: 0.9,
+        },
         dataVersion: 'test-version-2.0',
+        lastUpdated: new Date(),
       };
 
       jest
@@ -888,8 +875,27 @@ describe('BroadbandService', () => {
     it('should handle empty records array', async () => {
       const emptyStateData = {
         state: 'NV',
-        records: [],
+        metrics: {
+          totalCensusBlocks: 0,
+          blocksWithBroadband: 0,
+          broadbandAvailabilityPercent: 0,
+          blocksWithHighSpeed: 0,
+          highSpeedAvailabilityPercent: 0,
+          blocksWithGigabit: 0,
+          gigabitAvailabilityPercent: 0,
+          technologyCounts: {
+            fiber: 0,
+            cable: 0,
+            dsl: 0,
+            wireless: 0,
+            other: 0,
+          },
+          averageDownloadSpeed: 0,
+          medianDownloadSpeed: 0,
+          broadbandScore: 0,
+        },
         dataVersion: 'test-version-3.0',
+        lastUpdated: new Date(),
       };
 
       jest
@@ -917,10 +923,10 @@ describe('BroadbandService', () => {
       await (service as any).processStateData(mockStateData);
 
       expect(logger.info).toHaveBeenCalledWith(
-        'Starting to process CA with 2 records (S3 version: test-version-1.0)',
+        'Starting to process CA with pre-calculated metrics (S3 version: test-version-1.0)',
       );
       expect(logger.info).toHaveBeenCalledWith(
-        'Will process 2 records for CA (version: test-version-1.0)',
+        'Will process CA with 2 total blocks (version: test-version-1.0)',
       );
       expect(logger.info).toHaveBeenCalledWith(
         'About to save broadband record for CA to DynamoDB',
@@ -1006,16 +1012,27 @@ describe('BroadbandService', () => {
     it('should handle technology mapping edge cases', async () => {
       const edgeCaseStateData = {
         state: 'AK',
-        records: [
-          {
-            provider: 'Unknown Co',
-            state: 'AK',
-            censusBlock: '020010001001000',
-            technology: 'Unknown',
-            speed: 10,
+        metrics: {
+          totalCensusBlocks: 1,
+          blocksWithBroadband: 1,
+          broadbandAvailabilityPercent: 100,
+          blocksWithHighSpeed: 1,
+          highSpeedAvailabilityPercent: 100,
+          blocksWithGigabit: 1,
+          gigabitAvailabilityPercent: 100,
+          technologyCounts: {
+            fiber: 1,
+            cable: 0,
+            dsl: 0,
+            wireless: 0,
+            other: 1,
           },
-        ],
+          averageDownloadSpeed: 10,
+          medianDownloadSpeed: 10,
+          broadbandScore: 1,
+        },
         dataVersion: 'test-version-edge',
+        lastUpdated: new Date(),
       };
 
       jest
