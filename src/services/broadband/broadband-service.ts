@@ -31,17 +31,23 @@ export class BroadbandService {
 
     try {
       // Process states one at a time as they're downloaded
-      await this.s3Loader.processStatesOneByOne(async (stateData) => {
-        logger.info(`About to process state: ${stateData.state}`);
-        await this.processStateData(stateData);
-        logger.info(`Finished processing state: ${stateData.state}`);
-      });
+      await this.s3Loader.processStatesOneByOne(
+        this.processStateCallback.bind(this),
+      );
 
       logger.info('Broadband data processing completed');
     } catch (error) {
       logger.error('Error in broadband data processing:', error);
       throw error;
     }
+  }
+
+  private async processStateCallback(
+    stateData: S3BroadbandData,
+  ): Promise<void> {
+    logger.info(`About to process state: ${stateData.state}`);
+    await this.processStateData(stateData);
+    logger.info(`Finished processing state: ${stateData.state}`);
   }
 
   private async processStateData(stateData: S3BroadbandData): Promise<void> {

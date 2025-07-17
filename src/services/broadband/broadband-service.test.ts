@@ -33,6 +33,7 @@ jest.mock('../../repositories/broadband', () => ({
     getLatestVersionForState: jest.fn(),
     saveStateVersionMetadata: jest.fn(),
     getAllScores: jest.fn(),
+    getByStateAndVersion: jest.fn(),
   })),
 }));
 
@@ -1025,6 +1026,260 @@ describe('BroadbandService', () => {
 
       const savedRecord = mockRepository.save.mock.calls[0][0];
       expect(savedRecord.technologyCounts.other).toBe(1);
+    });
+  });
+
+  describe('processStateCallback', () => {
+    let mockStateData: any;
+    beforeEach(() => {
+      mockStateData = { state: 'CA', records: [], dataVersion: 'v1' };
+      jest.clearAllMocks();
+    });
+
+    it('should log and call processStateData for a state', async () => {
+      const processStateDataSpy = jest
+        .spyOn(service as any, 'processStateData')
+        .mockResolvedValue(undefined);
+
+      await (service as any).processStateCallback(mockStateData);
+
+      expect(logger.info).toHaveBeenCalledWith('About to process state: CA');
+      expect(processStateDataSpy).toHaveBeenCalledWith(mockStateData);
+      expect(logger.info).toHaveBeenCalledWith('Finished processing state: CA');
+    });
+
+    it('should propagate errors from processStateData', async () => {
+      const error = new Error('processStateData failed');
+      jest.spyOn(service as any, 'processStateData').mockRejectedValue(error);
+
+      await expect(
+        (service as any).processStateCallback(mockStateData),
+      ).rejects.toThrow('processStateData failed');
+    });
+  });
+
+  describe('isVersionNewer', () => {
+    it('should return true when new version is greater than existing version', () => {
+      const result = (service as any).isVersionNewer('v2.0', 'v1.0');
+      expect(result).toBe(true);
+    });
+
+    it('should return false when new version is less than existing version', () => {
+      const result = (service as any).isVersionNewer('v1.0', 'v2.0');
+      expect(result).toBe(false);
+    });
+
+    it('should return false when versions are equal', () => {
+      const result = (service as any).isVersionNewer('v1.0', 'v1.0');
+      expect(result).toBe(false);
+    });
+
+    it('should handle semantic versioning correctly', () => {
+      expect((service as any).isVersionNewer('2.1.0', '2.0.0')).toBe(true);
+      expect((service as any).isVersionNewer('2.0.1', '2.0.0')).toBe(true);
+      expect((service as any).isVersionNewer('2.0.0', '2.0.1')).toBe(false);
+    });
+
+    it('should handle string comparison for non-semantic versions', () => {
+      expect((service as any).isVersionNewer('Dec2021-v2', 'Dec2021-v1')).toBe(
+        true,
+      );
+      expect((service as any).isVersionNewer('Dec2021-v1', 'Dec2021-v2')).toBe(
+        false,
+      );
+    });
+  });
+
+  describe('getAllScores', () => {
+    let mockRepository: any;
+
+    beforeEach(() => {
+      mockRepository = {
+        getAllScores: jest.fn(),
+      };
+      (service as any).repository = mockRepository;
+    });
+
+    it('should return scores from repository successfully', async () => {
+      const mockScores = {
+        CA: 0.8765,
+        TX: 0.7234,
+        NY: 0.9123,
+      };
+      mockRepository.getAllScores.mockResolvedValue(mockScores);
+
+      const result = await service.getAllScores();
+
+      expect(result).toEqual(mockScores);
+      expect(mockRepository.getAllScores).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle repository errors gracefully', async () => {
+      const mockError = new Error('Repository error');
+      mockRepository.getAllScores.mockRejectedValue(mockError);
+
+      const result = await service.getAllScores();
+
+      expect(result).toEqual({});
+      expect(logger.error).toHaveBeenCalledWith(
+        'Error getting broadband scores:',
+        mockError,
+      );
+    });
+
+    it('should handle unknown error types', async () => {
+      const mockError = 'String error';
+      mockRepository.getAllScores.mockRejectedValue(mockError);
+
+      const result = await service.getAllScores();
+
+      expect(result).toEqual({});
+      expect(logger.error).toHaveBeenCalledWith(
+        'Error getting broadband scores:',
+        mockError,
+      );
+    });
+
+    it('should return empty object when repository returns empty scores', async () => {
+      mockRepository.getAllScores.mockResolvedValue({});
+
+      const result = await service.getAllScores();
+
+      expect(result).toEqual({});
+    });
+  });
+
+  describe('shouldProcessStateData', () => {
+    let mockRepository: any;
+
+    beforeEach(() => {
+      mockRepository = {
+        getByStateAndVersion: jest.fn(),
+      };
+      (service as any).repository = mockRepository;
+    });
+
+    it('should return false when existing record is found', async () => {
+      const existingRecord = {
+        state: 'CA',
+        dataVersion: 'Dec2021-v1',
+        broadbandScore: 0.8765,
+      };
+      mockRepository.getByStateAndVersion.mockResolvedValue(existingRecord);
+
+      const result = await (service as any).shouldProcessStateData(
+        'CA',
+        'Dec2021-v1',
+      );
+      expect(result).toBe(false);
+      expect(mockRepository.getByStateAndVersion).toHaveBeenCalledWith(
+        'CA',
+        'Dec2021-v1',
+      );
+      expect(logger.info).toHaveBeenCalledWith(
+        'Version check for CA: S3 version=Dec2021-v1, existing record=YES',
+      );
+      expect(logger.info).toHaveBeenCalledWith(
+        'State CA version Dec2021-v1 already exists in DynamoDB, skipping',
+      );
+    });
+
+    it('should return true when no existing record is found', async () => {
+      mockRepository.getByStateAndVersion.mockResolvedValue(null);
+
+      const result = await (service as any).shouldProcessStateData(
+        'TX',
+        'Dec2021-v2',
+      );
+      expect(result).toBe(true);
+      expect(mockRepository.getByStateAndVersion).toHaveBeenCalledWith(
+        'TX',
+        'Dec2021-v2',
+      );
+      expect(logger.info).toHaveBeenCalledWith(
+        'Version check for TX: S3 version=Dec2021-v2, existing record=NO',
+      );
+      expect(logger.info).toHaveBeenCalledWith(
+        'State TX version Dec2021-v2 not found in DynamoDB, will process',
+      );
+    });
+
+    it('should return true when repository returns undefined', async () => {
+      mockRepository.getByStateAndVersion.mockResolvedValue(undefined);
+
+      const result = await (service as any).shouldProcessStateData(
+        'NY',
+        'Dec2021-v3',
+      );
+      expect(result).toBe(true);
+      expect(mockRepository.getByStateAndVersion).toHaveBeenCalledWith(
+        'NY',
+        'Dec2021-v3',
+      );
+      expect(logger.info).toHaveBeenCalledWith(
+        'Version check for NY: S3 version=Dec2021-v3, existing record=NO',
+      );
+      expect(logger.info).toHaveBeenCalledWith(
+        'State NY version Dec2021-v3 not found in DynamoDB, will process',
+      );
+    });
+
+    it('should handle repository errors gracefully and return true', async () => {
+      const mockError = new Error('DynamoDB query failed');
+      mockRepository.getByStateAndVersion.mockRejectedValue(mockError);
+
+      const result = await (service as any).shouldProcessStateData(
+        'FL',
+        'Dec2021-v1',
+      );
+      expect(result).toBe(true);
+      expect(mockRepository.getByStateAndVersion).toHaveBeenCalledWith(
+        'FL',
+        'Dec2021-v1',
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        'Error checking version for FL:',
+        mockError,
+      );
+    });
+
+    it('should handle unknown error types and return true', async () => {
+      const mockError = 'String error';
+      mockRepository.getByStateAndVersion.mockRejectedValue(mockError);
+
+      const result = await (service as any).shouldProcessStateData(
+        'WA',
+        'Dec2021-v1',
+      );
+      expect(result).toBe(true);
+      expect(mockRepository.getByStateAndVersion).toHaveBeenCalledWith(
+        'WA',
+        'Dec2021-v1',
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        'Error checking version for WA:',
+        mockError,
+      );
+    });
+
+    it('should handle repository timeout errors and return true', async () => {
+      const timeoutError = new Error('Request timeout');
+      timeoutError.name = 'TimeoutError';
+      mockRepository.getByStateAndVersion.mockRejectedValue(timeoutError);
+
+      const result = await (service as any).shouldProcessStateData(
+        'OR',
+        'Dec2021-v1',
+      );
+      expect(result).toBe(true);
+      expect(mockRepository.getByStateAndVersion).toHaveBeenCalledWith(
+        'OR',
+        'Dec2021-v1',
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        'Error checking version for OR:',
+        timeoutError,
+      );
     });
   });
 });
