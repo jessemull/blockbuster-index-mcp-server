@@ -80,6 +80,31 @@ Resources:
           Projection:
             ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
+  AmazonSlidingWindowTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub blockbuster-index-amazon-sliding-window-${Environment}'
+      AttributeDefinitions:
+        - AttributeName: state
+          AttributeType: S
+        - AttributeName: windowStart
+          AttributeType: N
+      KeySchema:
+        - AttributeName: state
+          KeyType: HASH
+        - AttributeName: windowStart
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: false
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
 
 Outputs:
   AmazonJobsTableArn:
@@ -96,4 +121,9 @@ Outputs:
     Description: 'ARN of the Broadband Signals table'
     Value: !GetAtt BroadbandSignalsTable.Arn
     Export:
-      Name: !Sub '${Environment}-BlockbusterBroadbandSignalsTableArn' 
+      Name: !Sub '${Environment}-BlockbusterBroadbandSignalsTableArn'
+  AmazonSlidingWindowTableArn:
+    Description: 'ARN of the Amazon Sliding Window table'
+    Value: !GetAtt AmazonSlidingWindowTable.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterAmazonSlidingWindowTableArn' 
