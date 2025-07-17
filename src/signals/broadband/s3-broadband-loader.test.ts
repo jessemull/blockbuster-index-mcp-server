@@ -163,12 +163,11 @@ describe('S3BroadbandLoader', () => {
       const result = await loader.downloadAndParseCSV(
         'Dec2023-v1/CA-Fixed-Dec2023-v1.csv',
       );
-      expect(result[0]).toMatchObject({
+      expect(result).toMatchObject({
         state: 'CA',
-        censusBlock: '123',
-        provider: 'X',
-        speed: 500,
-        technology: 'Fiber',
+        metrics: expect.any(Object),
+        dataVersion: expect.any(String),
+        lastUpdated: expect.any(Date),
       });
     });
 
@@ -246,22 +245,109 @@ describe('S3BroadbandLoader', () => {
         .mockResolvedValue('Dec2023-v1');
       jest
         .spyOn(loader, 'listStateFiles')
-        .mockResolvedValue(['bad.csv', 'good.csv']);
+        .mockResolvedValue([
+          'Dec2023-v1/CA-Fixed-Dec2023-v1.csv',
+          'Dec2023-v1/TX-Fixed-Dec2023-v1.csv',
+        ]);
+      jest.spyOn(loader as any, 'checkIfStateExists').mockResolvedValue(false);
       jest
         .spyOn(loader, 'downloadAndParseCSV')
         .mockRejectedValueOnce(new Error('fail'))
-        .mockResolvedValueOnce([
-          {
-            state: 'CA',
-            censusBlock: '',
-            provider: '',
-            technology: '',
-            speed: 0,
+        .mockResolvedValueOnce({
+          state: 'TX',
+          metrics: {
+            totalCensusBlocks: 0,
+            blocksWithBroadband: 0,
+            broadbandAvailabilityPercent: 0,
+            blocksWithHighSpeed: 0,
+            highSpeedAvailabilityPercent: 0,
+            blocksWithGigabit: 0,
+            gigabitAvailabilityPercent: 0,
+            technologyCounts: {
+              fiber: 0,
+              cable: 0,
+              dsl: 0,
+              wireless: 0,
+              other: 0,
+            },
+            averageDownloadSpeed: 0,
+            medianDownloadSpeed: 0,
+            broadbandScore: 0,
           },
-        ]);
+          dataVersion: 'Dec2023-v1',
+          lastUpdated: new Date(),
+        });
 
       const result = await loader.loadBroadbandData();
       expect(result.length).toBe(1);
+      expect(result[0]).toMatchObject({
+        state: 'TX',
+        dataVersion: 'Dec2023-v1',
+        lastUpdated: expect.any(Date),
+      });
+    });
+
+    it('skips states that already exist in DynamoDB', async () => {
+      jest
+        .spyOn(loader, 'getLatestDataVersion')
+        .mockResolvedValue('Dec2023-v1');
+      jest
+        .spyOn(loader, 'listStateFiles')
+        .mockResolvedValue([
+          'Dec2023-v1/CA-Fixed-Dec2023-v1.csv',
+          'Dec2023-v1/TX-Fixed-Dec2023-v1.csv',
+        ]);
+      jest
+        .spyOn(loader as any, 'checkIfStateExists')
+        .mockResolvedValueOnce(true) // CA already exists
+        .mockResolvedValueOnce(false); // TX doesn't exist
+      jest.spyOn(loader, 'downloadAndParseCSV').mockResolvedValue({
+        state: 'TX',
+        metrics: {
+          totalCensusBlocks: 0,
+          blocksWithBroadband: 0,
+          broadbandAvailabilityPercent: 0,
+          blocksWithHighSpeed: 0,
+          highSpeedAvailabilityPercent: 0,
+          blocksWithGigabit: 0,
+          gigabitAvailabilityPercent: 0,
+          technologyCounts: {
+            fiber: 0,
+            cable: 0,
+            dsl: 0,
+            wireless: 0,
+            other: 0,
+          },
+          averageDownloadSpeed: 0,
+          medianDownloadSpeed: 0,
+          broadbandScore: 0,
+        },
+        dataVersion: 'Dec2023-v1',
+        lastUpdated: new Date(),
+      });
+
+      const result = await loader.loadBroadbandData();
+      expect(result.length).toBe(1);
+      expect(result[0].state).toBe('TX');
+      expect(logger.info).toHaveBeenCalledWith(
+        'Skipping CA - data version Dec2023-v1 already processed',
+      );
+    });
+
+    it('skips files with invalid state names', async () => {
+      jest
+        .spyOn(loader, 'getLatestDataVersion')
+        .mockResolvedValue('Dec2023-v1');
+      jest
+        .spyOn(loader, 'listStateFiles')
+        .mockResolvedValue(['Dec2023-v1/invalid.csv']);
+      jest.spyOn(loader as any, 'checkIfStateExists').mockResolvedValue(false);
+
+      const result = await loader.loadBroadbandData();
+      expect(result.length).toBe(0);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Could not extract state from S3 key: Dec2023-v1/invalid.csv',
+      );
     });
   });
 
@@ -291,10 +377,15 @@ describe('S3BroadbandLoader', () => {
       jest
         .spyOn(loader, 'getLatestDataVersion')
         .mockResolvedValue('Dec2023-v1');
-      jest.spyOn(loader, 'listStateFiles').mockResolvedValue(['invalid.csv']);
+      jest
+        .spyOn(loader, 'listStateFiles')
+        .mockResolvedValue(['Dec2023-v1/invalid.csv']);
       const callback = jest.fn();
       await loader.processStatesOneByOne(callback);
       expect(callback).not.toHaveBeenCalled();
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Could not extract state from S3 key: Dec2023-v1/invalid.csv',
+      );
     });
 
     it('skips if state exists in DynamoDB', async () => {
@@ -307,51 +398,13 @@ describe('S3BroadbandLoader', () => {
       jest.spyOn(loader as any, 'checkIfStateExists').mockResolvedValue(true);
       const callback = jest.fn();
       await loader.processStatesOneByOne(callback);
-      expect(logger.info).toHaveBeenCalledWith(
-        'State CA version Dec2023-v1 already exists in DynamoDB, skipping download',
-      );
       expect(callback).not.toHaveBeenCalled();
+      expect(logger.info).toHaveBeenCalledWith(
+        'Skipping CA - data version Dec2023-v1 already processed',
+      );
     });
 
-    it('uses Unknown as state if regex does not match', async () => {
-      jest
-        .spyOn(loader, 'getLatestDataVersion')
-        .mockResolvedValue('Dec2023-v1');
-      jest
-        .spyOn(loader, 'listStateFiles')
-        .mockResolvedValue(['Dec2023-v1/invalidfile.csv']);
-      jest.spyOn(loader, 'downloadAndParseCSV').mockResolvedValue([]);
-      const result = await loader.loadBroadbandData();
-      expect(result[0].state).toBe('Unknown');
-    });
-
-    it('maps all defaults when CSV fields are missing', async () => {
-      const s3Key = 'Dec2023-v1/CA-Fixed-Dec2023-v1.csv';
-      const mockStream = { pipe: jest.fn() } as any;
-      const parser: any = {
-        on: jest.fn((event: string, cb: () => void) => {
-          if (event === 'readable') setTimeout(cb, 10);
-          if (event === 'end') setTimeout(cb, 20);
-          return parser;
-        }),
-        read: jest
-          .fn()
-          .mockReturnValueOnce({}) // All fields missing
-          .mockReturnValueOnce(null),
-      };
-      (parse as any).mockReturnValueOnce(parser);
-      s3Mock.on(GetObjectCommand).resolves({ Body: mockStream } as any);
-      const records = await loader.downloadAndParseCSV(s3Key);
-      expect(records[0]).toEqual({
-        state: 'CA',
-        censusBlock: '',
-        provider: '',
-        technology: 'Unknown',
-        speed: 0,
-      });
-    });
-
-    it('calls callback with downloaded data', async () => {
+    it('calls callback with downloaded data when state does not exist', async () => {
       jest
         .spyOn(loader, 'getLatestDataVersion')
         .mockResolvedValue('Dec2023-v1');
@@ -359,15 +412,30 @@ describe('S3BroadbandLoader', () => {
         .spyOn(loader, 'listStateFiles')
         .mockResolvedValue(['Dec2023-v1/CA-Fixed-Dec2023-v1.csv']);
       jest.spyOn(loader as any, 'checkIfStateExists').mockResolvedValue(false);
-      jest.spyOn(loader, 'downloadAndParseCSV').mockResolvedValue([
-        {
-          state: 'CA',
-          censusBlock: '',
-          provider: '',
-          technology: '',
-          speed: 0,
+      jest.spyOn(loader, 'downloadAndParseCSV').mockResolvedValue({
+        state: 'CA',
+        metrics: {
+          totalCensusBlocks: 0,
+          blocksWithBroadband: 0,
+          broadbandAvailabilityPercent: 0,
+          blocksWithHighSpeed: 0,
+          highSpeedAvailabilityPercent: 0,
+          blocksWithGigabit: 0,
+          gigabitAvailabilityPercent: 0,
+          technologyCounts: {
+            fiber: 0,
+            cable: 0,
+            dsl: 0,
+            wireless: 0,
+            other: 0,
+          },
+          averageDownloadSpeed: 0,
+          medianDownloadSpeed: 0,
+          broadbandScore: 0,
         },
-      ]);
+        dataVersion: 'Dec2023-v1',
+        lastUpdated: new Date(),
+      });
 
       const callback = jest.fn();
       await loader.processStatesOneByOne(callback);
@@ -381,5 +449,157 @@ describe('S3BroadbandLoader', () => {
     });
     const version = await loader.getLatestDataVersion();
     expect(version).toBeNull();
+  });
+});
+
+describe('Coverage for gigabit, median, and zero branches', () => {
+  let loader: S3BroadbandLoader;
+  const bucket = 'test-bucket';
+  beforeEach(() => {
+    loader = new S3BroadbandLoader(bucket);
+  });
+
+  it('counts gigabit blocks correctly', async () => {
+    const s3Key = 'Dec2023-v1/CA-Fixed-Dec2023-v1.csv';
+    const mockStream = { pipe: jest.fn() } as any;
+    const parser: any = {
+      on: jest.fn((event: string, cb: () => void) => {
+        if (event === 'readable') setTimeout(cb, 10);
+        if (event === 'end') setTimeout(cb, 20);
+        return parser;
+      }),
+      read: jest
+        .fn()
+        .mockReturnValueOnce({
+          StateAbbr: 'CA',
+          BlockCode: '1',
+          ProviderName: 'A',
+          TechCode: '70',
+          MaxAdDown: '1200',
+        })
+        .mockReturnValueOnce(null),
+    };
+    (parse as any).mockReturnValueOnce(parser);
+    s3Mock.on(GetObjectCommand).resolves({ Body: mockStream } as any);
+    const result = await loader.downloadAndParseCSV(s3Key);
+    expect(result.metrics.blocksWithGigabit).toBe(1);
+  });
+
+  it('calculates median for odd and even number of speeds', async () => {
+    // Odd
+    let parser: any = {
+      on: jest.fn((event: string, cb: () => void) => {
+        if (event === 'readable') setTimeout(cb, 10);
+        if (event === 'end') setTimeout(cb, 20);
+        return parser;
+      }),
+      read: jest
+        .fn()
+        .mockReturnValueOnce({
+          StateAbbr: 'CA',
+          BlockCode: '1',
+          ProviderName: 'A',
+          TechCode: '70',
+          MaxAdDown: '10',
+        })
+        .mockReturnValueOnce({
+          StateAbbr: 'CA',
+          BlockCode: '2',
+          ProviderName: 'B',
+          TechCode: '70',
+          MaxAdDown: '20',
+        })
+        .mockReturnValueOnce({
+          StateAbbr: 'CA',
+          BlockCode: '3',
+          ProviderName: 'C',
+          TechCode: '70',
+          MaxAdDown: '30',
+        })
+        .mockReturnValueOnce(null),
+    };
+    (parse as any).mockReturnValueOnce(parser);
+    s3Mock
+      .on(GetObjectCommand)
+      .resolves({ Body: { pipe: jest.fn() } as any } as any);
+    let result = await loader.downloadAndParseCSV(
+      'Dec2023-v1/CA-Fixed-Dec2023-v1.csv',
+    );
+    expect(result.metrics.medianDownloadSpeed).toBe(20);
+    // Even
+    parser = {
+      on: jest.fn((event: string, cb: () => void) => {
+        if (event === 'readable') setTimeout(cb, 10);
+        if (event === 'end') setTimeout(cb, 20);
+        return parser;
+      }),
+      read: jest
+        .fn()
+        .mockReturnValueOnce({
+          StateAbbr: 'CA',
+          BlockCode: '1',
+          ProviderName: 'A',
+          TechCode: '70',
+          MaxAdDown: '10',
+        })
+        .mockReturnValueOnce({
+          StateAbbr: 'CA',
+          BlockCode: '2',
+          ProviderName: 'B',
+          TechCode: '70',
+          MaxAdDown: '20',
+        })
+        .mockReturnValueOnce({
+          StateAbbr: 'CA',
+          BlockCode: '3',
+          ProviderName: 'C',
+          TechCode: '70',
+          MaxAdDown: '30',
+        })
+        .mockReturnValueOnce({
+          StateAbbr: 'CA',
+          BlockCode: '4',
+          ProviderName: 'D',
+          TechCode: '70',
+          MaxAdDown: '40',
+        })
+        .mockReturnValueOnce(null),
+    };
+    (parse as any).mockReturnValueOnce(parser);
+    s3Mock
+      .on(GetObjectCommand)
+      .resolves({ Body: { pipe: jest.fn() } as any } as any);
+    result = await loader.downloadAndParseCSV(
+      'Dec2023-v1/CA-Fixed-Dec2023-v1.csv',
+    );
+    expect(result.metrics.medianDownloadSpeed).toBe(25);
+  });
+
+  it('defaults to zero for all metrics if no records', async () => {
+    const s3Key = 'Dec2023-v1/CA-Fixed-Dec2023-v1.csv';
+    const mockStream = { pipe: jest.fn() } as any;
+    const parser: any = {
+      on: jest.fn((event: string, cb: () => void) => {
+        if (event === 'end') setTimeout(cb, 10);
+        return parser;
+      }),
+      read: jest.fn().mockReturnValue(null),
+    };
+    (parse as any).mockReturnValueOnce(parser);
+    s3Mock.on(GetObjectCommand).resolves({ Body: mockStream } as any);
+    const result = await loader.downloadAndParseCSV(s3Key);
+    expect(result.metrics.broadbandAvailabilityPercent).toBe(0);
+    expect(result.metrics.highSpeedAvailabilityPercent).toBe(0);
+    expect(result.metrics.gigabitAvailabilityPercent).toBe(0);
+    expect(result.metrics.averageDownloadSpeed).toBe(0);
+    expect(result.metrics.medianDownloadSpeed).toBe(0);
+  });
+
+  it('rejects if S3 client send throws (catch block)', async () => {
+    const s3Key = 'Dec2023-v1/CA-Fixed-Dec2023-v1.csv';
+    s3Mock.on(GetObjectCommand).rejects(new Error('S3 send error'));
+    await expect(loader.downloadAndParseCSV(s3Key)).rejects.toThrow(
+      'S3 send error',
+    );
   });
 });
