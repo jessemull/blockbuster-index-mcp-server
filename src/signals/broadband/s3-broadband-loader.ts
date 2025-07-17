@@ -327,14 +327,17 @@ export class S3BroadbandLoader {
     }> = [];
 
     for (const s3Key of statesToProcess) {
-      // Extract state from filename (e.g., "Dec2021-v1/CA-Fixed-Dec2021-v1.csv" -> "CA")
+      // Extract state from filename (e.g., "Dec2021-v1/CA-Fixed-Dec2021-v1.csv" -> "CA")...
+
       const stateMatch = s3Key.match(/\/([A-Z]{2})-Fixed-/);
       if (!stateMatch) {
         logger.warn(`Could not extract state from S3 key: ${s3Key}`);
         continue;
       }
       const state = stateMatch[1];
-      // Check if already processed
+
+      // Check if already processed...
+
       const alreadyProcessed = await this.checkIfStateExists(
         state,
         dataVersion,
