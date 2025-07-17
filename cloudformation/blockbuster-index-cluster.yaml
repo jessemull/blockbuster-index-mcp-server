@@ -140,8 +140,11 @@ Resources:
                   - dynamodb:Query
                   - dynamodb:GetItem
                   - dynamodb:DescribeTable
-                Resource: !ImportValue
-                  Fn::Sub: '${Environment}-BlockbusterBroadbandSignalsTableArn'
+                  - dynamodb:Scan
+                Resource:
+                  - !ImportValue
+                      Fn::Sub: '${Environment}-BlockbusterBroadbandSignalsTableArn'
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/blockbuster-index-broadband-signals-${Environment}/index/*'
         - PolicyName: S3BroadbandAccess
           PolicyDocument:
             Version: '2012-10-17'
