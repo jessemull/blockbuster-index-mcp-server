@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { States } from '../types';
+import { States } from '../../types';
 import {
   CensusData,
   CensusEstablishmentData,
   CensusPopulationData,
-} from '../types';
-import { logger } from '../util';
+} from '../../types';
+import { logger } from '../../util';
 
 const STATE_CODE_TO_ABBR: Record<string, string> = {
   '01': 'AL',

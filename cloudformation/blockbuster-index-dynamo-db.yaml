@@ -37,6 +37,8 @@ Resources:
           Value: !Ref Environment
   CensusSignalsTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub blockbuster-index-census-signals-${Environment}
       AttributeDefinitions:
@@ -50,23 +52,48 @@ Resources:
         - AttributeName: timestamp
           KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
+  BroadbandSignalsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub blockbuster-index-broadband-signals-${Environment}
+      AttributeDefinitions:
+        - AttributeName: state
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+        - AttributeName: dataVersion
+          AttributeType: S
+      KeySchema:
+        - AttributeName: state
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: state-dataVersion-index
+          KeySchema:
+            - AttributeName: state
+              KeyType: HASH
+            - AttributeName: dataVersion
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      BillingMode: PAY_PER_REQUEST
 
 Outputs:
-  AmazonJobsTableName:
-    Description: 'DynamoDB Table Name for Amazon Job Scraping Data'
-    Value: !Ref AmazonJobsTable
-    Export:
-      Name: !Sub '${Environment}-BlockbusterAmazonJobsTableName'
   AmazonJobsTableArn:
-    Description: 'DynamoDB Table ARN for Amazon Job Scraping Data'
+    Description: 'ARN of the Amazon Jobs table'
     Value: !GetAtt AmazonJobsTable.Arn
     Export:
       Name: !Sub '${Environment}-BlockbusterAmazonJobsTableArn'
-  CensusSignalsTableName:
-    Description: 'Census Signals Table Name'
-    Value: !Ref CensusSignalsTable
   CensusSignalsTableArn:
-    Description: 'Census Signals Table ARN'
+    Description: 'ARN of the Census Signals table'
     Value: !GetAtt CensusSignalsTable.Arn
     Export:
-      Name: !Sub '${Environment}-BlockbusterCensusSignalsTableArn' 
+      Name: !Sub '${Environment}-BlockbusterCensusSignalsTableArn'
+  BroadbandSignalsTableArn:
+    Description: 'ARN of the Broadband Signals table'
+    Value: !GetAtt BroadbandSignalsTable.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterBroadbandSignalsTableArn' 

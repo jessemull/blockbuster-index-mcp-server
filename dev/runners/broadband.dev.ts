@@ -2,18 +2,24 @@
 
 import fs from 'fs';
 import path from 'path';
-import { getAmazonScores } from '../../src/signals';
+import { getBroadbandScores } from '../../src/signals';
+import { BroadbandService } from '../../src/services';
 import { logger } from '../../src/util';
 
-async function runAmazonTest() {
+async function runBroadbandTest() {
   try {
-    logger.info('Starting Amazon signal test...');
+    logger.info('Starting broadband signal test...');
 
-    // Get Amazon job counts and store data while scraping...
+    // Process broadband data and write to DynamoDB...
 
-    const scores = await getAmazonScores();
+    const broadbandService = new BroadbandService();
+    await broadbandService.processBroadbandData();
 
-    logger.info('Amazon signal results:', {
+    // Get FCC broadband data while scraping...
+
+    const scores = await getBroadbandScores();
+
+    logger.info('Broadband signal results:', {
       totalStates: Object.keys(scores).length,
       statesWithData: Object.values(scores).filter((score) => score > 0).length,
       sampleScores: Object.entries(scores)
@@ -29,20 +35,20 @@ async function runAmazonTest() {
           : 0,
     });
 
-    // Write scores to dev/scores/amazon-scores.json...
+    // Write scores to dev/scores/broadband-scores.json...
 
     const scoresDir = path.resolve(__dirname, '../scores');
-    const filePath = path.join(scoresDir, 'amazon-scores.json');
+    const filePath = path.join(scoresDir, 'broadband-scores.json');
 
     fs.mkdirSync(scoresDir, { recursive: true });
     fs.writeFileSync(filePath, JSON.stringify(scores, null, 2));
 
-    logger.info('Amazon scores written to file:', { filePath });
-    logger.info('Amazon signal test completed successfully!');
+    logger.info('Broadband scores written to file', { filePath });
+    logger.info('Broadband signal test completed successfully!');
   } catch (error) {
-    logger.error('Amazon signal test failed:', error);
+    logger.error('Broadband signal test failed:', error);
     process.exit(1);
   }
 }
 
-runAmazonTest();
+runBroadbandTest();

@@ -2,12 +2,40 @@ import fs from 'fs';
 import path from 'path';
 import { CONFIG, validateConfig } from './config';
 import { WEIGHTS } from './constants';
-import { getAmazonScores, getCensusScores } from './signals';
-import { BlockbusterIndexResponse, Signal, StateScore, States } from './types';
+import {
+  getAmazonScores,
+  getCensusScores,
+  getBroadbandScores,
+} from './signals';
+import {
+  BlockbusterIndexResponse,
+  Signal,
+  StateScore,
+  States,
+  SignalConfig,
+} from './types';
 import { logger, retryWithBackoff, uploadToS3 } from './util';
 
 export const main = async () => {
   const startTime = Date.now();
+
+  const SIGNAL_CONFIGS: SignalConfig[] = [
+    {
+      name: 'Amazon',
+      signal: Signal.AMAZON,
+      getter: getAmazonScores,
+    },
+    {
+      name: 'Census',
+      signal: Signal.CENSUS,
+      getter: getCensusScores,
+    },
+    {
+      name: 'Broadband',
+      signal: Signal.BROADBAND,
+      getter: getBroadbandScores,
+    },
+  ];
 
   try {
     if (!CONFIG.IS_DEVELOPMENT) {
@@ -16,28 +44,35 @@ export const main = async () => {
 
     logger.info('Starting blockbuster index calculation');
 
-    const results = await Promise.allSettled([
-      retryWithBackoff(() => getAmazonScores()),
-      getCensusScores(),
-    ]);
+    // Execute all signals with retry logic...
+
+    const signalPromises = SIGNAL_CONFIGS.map((config) =>
+      retryWithBackoff(config.getter),
+    );
+
+    const results = await Promise.allSettled(signalPromises);
 
     // Extract results and handle failures gracefully...
 
-    const amazon = results[0].status === 'fulfilled' ? results[0].value : {};
-    const census = results[1].status === 'fulfilled' ? results[1].value : {};
-
-    // Log any failures but continue with available data...
-
+    const signalResults: Record<Signal, Record<string, number>> = {} as Record<
+      Signal,
+      Record<string, number>
+    >;
     let failedSignals = 0;
+
     results.forEach((result, index) => {
-      if (result.status === 'rejected') {
-        const signalName = index === 0 ? 'Amazon' : 'Census';
+      const config = SIGNAL_CONFIGS[index];
+
+      if (result.status === 'fulfilled') {
+        signalResults[config.signal] = result.value;
+      } else {
         failedSignals++;
-        logger.error(`${signalName} signal failed:`, result.reason);
+        logger.error(`${config.name} signal failed:`, result.reason);
+        signalResults[config.signal] = {};
       }
     });
 
-    // If both signals failed, we can't proceed...
+    // If all signals failed, we can't proceed...
 
     if (failedSignals === results.length) {
       throw new Error('All signals failed - cannot generate index');
@@ -53,8 +88,9 @@ export const main = async () => {
 
     for (const state of Object.values(States)) {
       const components = {
-        [Signal.AMAZON]: amazon[state] ?? 0,
-        [Signal.CENSUS]: census[state] ?? 0,
+        [Signal.AMAZON]: signalResults[Signal.AMAZON]?.[state] ?? 0,
+        [Signal.CENSUS]: signalResults[Signal.CENSUS]?.[state] ?? 0,
+        [Signal.BROADBAND]: signalResults[Signal.BROADBAND]?.[state] ?? 0,
       };
 
       const score = Object.entries(components).reduce(
@@ -103,6 +139,8 @@ export const main = async () => {
       fs.writeFileSync(filePath, JSON.stringify(response, null, 2));
       logger.info('File written', { filePath });
     } else {
+      // Upload the main blockbuster index...
+
       await retryWithBackoff(async () => {
         await uploadToS3({
           bucket: CONFIG.S3_BUCKET_NAME!,
@@ -119,6 +157,32 @@ export const main = async () => {
         bucket: CONFIG.S3_BUCKET_NAME!,
         key: 'data/data.json',
       });
+
+      // Upload individual signal data for verification and debugging...
+
+      for (const [signalName, signalData] of Object.entries(signalResults)) {
+        if (Object.keys(signalData).length > 0) {
+          await retryWithBackoff(async () => {
+            await uploadToS3({
+              bucket: CONFIG.S3_BUCKET_NAME!,
+              key: `data/signals/${signalName.toLowerCase()}-scores.json`,
+              body: JSON.stringify(signalData, null, 2),
+              metadata: {
+                version: CONFIG.VERSION,
+                calculatedAt: response.metadata.calculatedAt,
+                signal: signalName,
+              },
+            });
+          });
+
+          logger.info('Signal data uploaded', {
+            bucket: CONFIG.S3_BUCKET_NAME!,
+            key: `data/signals/${signalName.toLowerCase()}-scores.json`,
+            signal: signalName,
+            stateCount: Object.keys(signalData).length,
+          });
+        }
+      }
     }
 
     logger.info('Calculation completed!');

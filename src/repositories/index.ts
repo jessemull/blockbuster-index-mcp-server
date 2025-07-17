@@ -1,3 +1,9 @@
-export { DynamoDBSignalRepository } from './base-signal-repository';
-export { DynamoDBAmazonSignalRepository } from './amazon-signal-repository';
-export { DynamoDBCensusSignalRepository } from './census-signal-repository';
+import { DynamoDBAmazonSignalRepository } from './amazon';
+import { DynamoDBCensusSignalRepository } from './census';
+import { DynamoDBBroadbandSignalRepository } from './broadband';
+
+export {
+  DynamoDBAmazonSignalRepository,
+  DynamoDBCensusSignalRepository,
+  DynamoDBBroadbandSignalRepository,
+};

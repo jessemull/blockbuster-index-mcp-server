@@ -1,12 +1,12 @@
 import { CONFIG } from '../../config';
-import { fetchCensusData } from '../../services/census-service';
+import { fetchCensusData } from '../../services';
 import { logger } from '../../util';
 import { getCensusScores } from './get-census-scores';
-import { DynamoDBCensusSignalRepository } from '../../repositories';
+import { DynamoDBCensusSignalRepository } from '../../repositories/census';
 import { CensusData } from '../../types';
 
 jest.mock('../../config');
-jest.mock('../../services/census-service');
+jest.mock('../../services');
 jest.mock('../../util', () => ({
   logger: {
     error: jest.fn(),
@@ -15,19 +15,16 @@ jest.mock('../../util', () => ({
   },
 }));
 
-jest.mock('../../repositories', () => ({
-  DynamoDBCensusSignalRepository: jest.fn(),
-}));
-
 const mockFetchCensusData = fetchCensusData as jest.MockedFunction<
   typeof fetchCensusData
 >;
 
 const mockLogger = logger as jest.Mocked<typeof logger>;
 const mockCONFIG = CONFIG as jest.Mocked<typeof CONFIG>;
-const mockDynamoDBCensusSignalRepository = jest.mocked(
-  DynamoDBCensusSignalRepository,
-);
+const mockDynamoDBCensusSignalRepository = jest.fn();
+jest.mock('../../repositories/census', () => ({
+  DynamoDBCensusSignalRepository: mockDynamoDBCensusSignalRepository,
+}));
 
 describe('getCensusScores', () => {
   const mockCensusData = {
@@ -332,6 +329,29 @@ describe('getCensusScores', () => {
       mockFetchCensusData.mockResolvedValue(mockCensusData);
 
       await expect(getCensusScores()).rejects.toThrow('Exists check failed');
+    });
+
+    it('uses the default table name when env var is not set', async () => {
+      mockCONFIG.IS_DEVELOPMENT = false;
+      delete process.env.CENSUS_DYNAMODB_TABLE_NAME;
+      const mockRepository = {
+        save: jest.fn(),
+        exists: jest.fn().mockResolvedValue(false),
+      };
+      mockDynamoDBCensusSignalRepository.mockReturnValue(
+        mockRepository as unknown as DynamoDBCensusSignalRepository,
+      );
+      mockFetchCensusData.mockResolvedValue({
+        establishments: { AL: 100 },
+        population: { AL: 1000 },
+        year: 2023,
+      });
+
+      await getCensusScores();
+
+      expect(mockDynamoDBCensusSignalRepository).toHaveBeenCalledWith(
+        'blockbuster-index-census-signals-dev',
+      );
     });
   });
 

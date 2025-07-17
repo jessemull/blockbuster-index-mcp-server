@@ -1,7 +1,7 @@
 import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
-import { logger } from '../util';
-import type { CensusSignalRecord } from '../types/census';
-import { DynamoDBSignalRepository } from './base-signal-repository';
+import { logger } from '../../util';
+import type { CensusSignalRecord } from '../../types/census';
+import { DynamoDBSignalRepository } from '../base-signal-repository';
 
 export class DynamoDBCensusSignalRepository extends DynamoDBSignalRepository<CensusSignalRecord> {
   async save(record: CensusSignalRecord): Promise<void> {

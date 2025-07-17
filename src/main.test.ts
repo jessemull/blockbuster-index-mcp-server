@@ -17,6 +17,12 @@ jest.mock('@aws-sdk/lib-dynamodb', () => ({
   PutCommand: jest.fn(),
 }));
 
+jest.mock('@aws-sdk/client-s3', () => ({
+  S3Client: jest.fn(),
+  GetObjectCommand: jest.fn(),
+  ListObjectsV2Command: jest.fn(),
+}));
+
 import * as signals from './signals';
 import fs from 'fs';
 import path from 'path';
@@ -40,8 +46,9 @@ jest.mock('./config', () => ({
 
 jest.mock('./constants', () => ({
   WEIGHTS: {
-    AMAZON: 0.5,
-    CENSUS: 0.5,
+    AMAZON: 0.33,
+    CENSUS: 0.33,
+    BROADBAND: 0.34,
   },
 }));
 
@@ -70,6 +77,7 @@ describe('main', () => {
     Object.assign(signals, {
       getAmazonScores: jest.fn().mockResolvedValue(mockScores),
       getCensusScores: jest.fn().mockResolvedValue(mockScores),
+      getBroadbandScores: jest.fn().mockResolvedValue(mockScores),
     });
 
     Object.assign(CONFIG, {
@@ -144,6 +152,7 @@ describe('main', () => {
 
     (signals.getAmazonScores as jest.Mock).mockRejectedValueOnce(error);
     (signals.getCensusScores as jest.Mock).mockRejectedValueOnce(error);
+    (signals.getBroadbandScores as jest.Mock).mockRejectedValueOnce(error);
 
     await expect(main()).rejects.toThrow('process.exit');
     expect(logger.error).toHaveBeenCalledWith(
@@ -170,6 +179,9 @@ describe('main', () => {
       'string error',
     );
     (signals.getCensusScores as jest.Mock).mockRejectedValueOnce(
+      'string error',
+    );
+    (signals.getBroadbandScores as jest.Mock).mockRejectedValueOnce(
       'string error',
     );
 
@@ -200,6 +212,7 @@ describe('main', () => {
       new Error('Amazon failed'),
     );
     (signals.getCensusScores as jest.Mock).mockResolvedValueOnce(mockScores);
+    (signals.getBroadbandScores as jest.Mock).mockResolvedValueOnce(mockScores);
 
     await main();
 
@@ -216,8 +229,8 @@ describe('main', () => {
     expect(logger.info).toHaveBeenCalledWith(
       'Signals fetched',
       expect.objectContaining({
-        totalSignals: 2,
-        successfulSignals: 1,
+        totalSignals: 3,
+        successfulSignals: 2,
         failedSignals: 1,
       }),
     );
@@ -234,6 +247,9 @@ describe('main', () => {
     (signals.getCensusScores as jest.Mock).mockRejectedValueOnce(
       new Error('Census failed'),
     );
+    (signals.getBroadbandScores as jest.Mock).mockRejectedValueOnce(
+      new Error('Broadband failed'),
+    );
 
     await expect(main()).rejects.toThrow('process.exit');
 
@@ -243,6 +259,10 @@ describe('main', () => {
     );
     expect(logger.error).toHaveBeenCalledWith(
       'Census signal failed:',
+      expect.any(Error),
+    );
+    expect(logger.error).toHaveBeenCalledWith(
+      'Broadband signal failed:',
       expect.any(Error),
     );
 

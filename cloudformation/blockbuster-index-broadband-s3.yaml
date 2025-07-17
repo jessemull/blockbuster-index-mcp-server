@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'S3 bucket for Blockbuster Index broadband CSV files.'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: 'dev'
+    AllowedValues:
+      - dev
+      - prod
+
+Resources:
+  BroadbandS3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub 'blockbuster-index-broadband-${Environment}'
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+            BucketKeyEnabled: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldVersions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30
+          - Id: DeleteIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Purpose
+          Value: 'Broadband CSV file storage'
+
+Outputs:
+  BroadbandS3BucketName:
+    Description: 'Name of the broadband S3 bucket'
+    Value: !Ref BroadbandS3Bucket
+    Export:
+      Name: !Sub '${Environment}-BlockbusterBroadbandS3BucketName'
+  BroadbandS3BucketArn:
+    Description: 'ARN of the broadband S3 bucket'
+    Value: !GetAtt BroadbandS3Bucket.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterBroadbandS3BucketArn'

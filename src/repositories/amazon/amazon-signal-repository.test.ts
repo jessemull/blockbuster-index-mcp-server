@@ -9,8 +9,7 @@ import {
   QueryCommandInput,
 } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBAmazonSignalRepository } from './amazon-signal-repository';
-import { DynamoDBCensusSignalRepository } from './census-signal-repository';
-import { logger } from '../util';
+import { logger } from '../../util';
 
 jest.mock('@aws-sdk/client-dynamodb');
 jest.mock('@aws-sdk/lib-dynamodb');
@@ -48,7 +47,7 @@ const mockDynamoDBDocumentClient: jest.Mocked<DynamoDBDocumentClient> = {
   mockDynamoDBDocumentClient,
 );
 
-jest.mock('../util', () => ({
+jest.mock('../../util', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
@@ -295,190 +294,6 @@ describe('DynamoDBAmazonSignalRepository', () => {
           state: 'CA',
           start: undefined,
           end: undefined,
-        },
-      );
-    });
-  });
-});
-
-describe('DynamoDBCensusSignalRepository', () => {
-  let repository: DynamoDBCensusSignalRepository;
-  const mockTableName = 'test-census-table';
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    repository = new DynamoDBCensusSignalRepository(mockTableName, 'us-east-1');
-  });
-
-  describe('save', () => {
-    const mockRecord = {
-      state: 'TX',
-      timestamp: 1234567890,
-      retailStores: 100,
-    };
-
-    it('successfully saves a census record', async () => {
-      mockSend.mockResolvedValue({});
-
-      await repository.save(mockRecord);
-
-      expect(mockSend).toHaveBeenCalledTimes(1);
-      const call = mockSend.mock.calls[0][0];
-      expect(call).toBeInstanceOf(PutCommand);
-      expect(call.TableName).toBe(mockTableName);
-      expect(call.Item).toEqual(mockRecord);
-      expect(mockedLogger.info).toHaveBeenCalledWith(
-        'Successfully saved census signal record',
-        {
-          state: 'TX',
-          timestamp: 1234567890,
-        },
-      );
-    });
-
-    it('handles conditional check failed exception gracefully', async () => {
-      const error = new Error('ConditionalCheckFailedException');
-      error.name = 'ConditionalCheckFailedException';
-      mockSend.mockRejectedValue(error);
-
-      await repository.save(mockRecord);
-
-      expect(mockedLogger.info).toHaveBeenCalledWith(
-        'Record already exists, skipping duplicate',
-        {
-          state: 'TX',
-          timestamp: 1234567890,
-        },
-      );
-    });
-
-    it('throws error for other exceptions', async () => {
-      const error = new Error('DynamoDB error');
-      mockSend.mockRejectedValue(error);
-
-      await expect(repository.save(mockRecord)).rejects.toThrow(
-        'DynamoDB error',
-      );
-      expect(mockedLogger.error).toHaveBeenCalledWith(
-        'Failed to save census signal record',
-        {
-          error: 'DynamoDB error',
-          state: 'TX',
-          timestamp: 1234567890,
-        },
-      );
-    });
-
-    it('handles non-Error exceptions', async () => {
-      const error = 'String error';
-      mockSend.mockRejectedValue(error);
-
-      await expect(repository.save(mockRecord)).rejects.toBe('String error');
-      expect(mockedLogger.error).toHaveBeenCalledWith(
-        'Failed to save census signal record',
-        {
-          error: 'String error',
-          state: 'TX',
-          timestamp: 1234567890,
-        },
-      );
-    });
-
-    it('handles non-Error exceptions in exists check', async () => {
-      const error = 'String error';
-      mockSend.mockRejectedValue(error);
-
-      await expect(repository.exists('TX', 1234567890)).rejects.toBe(
-        'String error',
-      );
-      expect(mockedLogger.error).toHaveBeenCalledWith(
-        'Failed to check if census record exists',
-        {
-          error: 'String error',
-          state: 'TX',
-          timestamp: 1234567890,
-        },
-      );
-    });
-
-    it('handles non-Error exceptions in save', async () => {
-      const error = 'String error';
-      mockSend.mockRejectedValue(error);
-
-      const mockRecord = {
-        state: 'TX',
-        timestamp: 1234567890,
-        retailStores: 100,
-      };
-
-      await expect(repository.save(mockRecord)).rejects.toBe('String error');
-      expect(mockedLogger.error).toHaveBeenCalledWith(
-        'Failed to save census signal record',
-        {
-          error: 'String error',
-          state: 'TX',
-          timestamp: 1234567890,
-        },
-      );
-    });
-  });
-
-  describe('exists', () => {
-    it('returns true when census record exists', async () => {
-      mockSend.mockResolvedValue({
-        Item: { state: 'TX', timestamp: 1234567890 },
-      });
-
-      const result = await repository.exists('TX', 1234567890);
-      expect(result).toBe(true);
-    });
-
-    it('returns false when census record does not exist', async () => {
-      mockSend.mockResolvedValue({ Item: null });
-
-      const result = await repository.exists('TX', 1234567890);
-      expect(result).toBe(false);
-    });
-
-    it('uses current timestamp when timestamp is not provided', async () => {
-      mockSend.mockResolvedValue({
-        Item: { state: 'TX', timestamp: 1751089342 },
-      });
-
-      await repository.exists('TX');
-      expect(mockSend).toHaveBeenCalledTimes(1);
-    });
-
-    it('throws error on exists check failure', async () => {
-      const error = new Error('Get failed');
-      mockSend.mockRejectedValue(error);
-
-      await expect(repository.exists('TX', 1234567890)).rejects.toThrow(
-        'Get failed',
-      );
-      expect(mockedLogger.error).toHaveBeenCalledWith(
-        'Failed to check if census record exists',
-        {
-          error: 'Get failed',
-          state: 'TX',
-          timestamp: 1234567890,
-        },
-      );
-    });
-
-    it('handles non-Error exceptions in exists check', async () => {
-      const error = 'String error';
-      mockSend.mockRejectedValue(error);
-
-      await expect(repository.exists('TX', 1234567890)).rejects.toBe(
-        'String error',
-      );
-      expect(mockedLogger.error).toHaveBeenCalledWith(
-        'Failed to check if census record exists',
-        {
-          error: 'String error',
-          state: 'TX',
-          timestamp: 1234567890,
         },
       );
     });

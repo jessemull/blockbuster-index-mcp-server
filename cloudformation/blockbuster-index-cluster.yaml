@@ -15,6 +15,8 @@ Parameters:
 Resources:
   ECRRepository:
     Type: AWS::ECR::Repository
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       RepositoryName: !Sub 'blockbuster-index-${Environment}'
       ImageScanningConfiguration:
@@ -45,6 +47,8 @@ Resources:
 
   ECSLogGroup:
     Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       LogGroupName: !Sub '/ecs/blockbuster-index-${Environment}'
       RetentionInDays: 14
@@ -125,6 +129,30 @@ Resources:
                   - dynamodb:DescribeTable
                 Resource: !ImportValue
                   Fn::Sub: '${Environment}-BlockbusterCensusSignalsTableArn'
+        - PolicyName: 'DynamoDBBroadbandSignalsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterBroadbandSignalsTableArn'
+        - PolicyName: 'S3BroadbandAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::blockbuster-index-broadband-${Environment}'
+                  - !Sub 'arn:aws:s3:::blockbuster-index-broadband-${Environment}/*'
 
   EventBridgeInvokeRole:
     Type: AWS::IAM::Role

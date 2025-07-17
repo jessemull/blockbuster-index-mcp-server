@@ -1,12 +1,11 @@
 import { AmazonSignalService } from './amazon-signal-service';
-import { getAmazonScores } from '../signals/amazon';
-import { logger } from '../util';
-import { States } from '../types';
-import type { JobSignalRecord } from '../types/amazon';
-import type { SignalRepository } from '../types/amazon';
+import { getAmazonScores } from '../../signals/amazon';
+import { logger } from '../../util';
+import { States } from '../../types';
+import type { JobSignalRecord, SignalRepository } from '../../types/amazon';
 
-jest.mock('../signals/amazon');
-jest.mock('../util', () => ({
+jest.mock('../../signals/amazon');
+jest.mock('../../util', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
