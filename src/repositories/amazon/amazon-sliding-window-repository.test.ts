@@ -32,10 +32,11 @@ mockedPutCommand.mockImplementation(function (
 
 const mockedUpdateCommand = UpdateCommand as unknown as jest.Mock;
 mockedUpdateCommand.mockImplementation(function (
-  this: UpdateCommand,
+  this: any,
   input: UpdateCommandInput,
 ) {
-  Object.assign(this, input);
+  this.input = input;
+  return this;
 });
 
 const mockSend = jest.fn();
@@ -156,14 +157,27 @@ describe('DynamoDBAmazonSlidingWindowRepository', () => {
       );
     });
 
-    it('updates aggregate with old day', async () => {
+    it('updates aggregate with old day and includes windowStart updates', async () => {
       jest.spyOn(repository, 'getAggregate').mockResolvedValueOnce(aggregate);
       mockSend.mockResolvedValue({});
-      await repository.updateAggregate('CA', 5, 2000, 0, 5);
-      expect(mockSend).toHaveBeenCalledWith(expect.any(UpdateCommand));
+      // This test expects #windowStart to be updated, so oldDayTimestamp must be non-zero
+      await repository.updateAggregate('CA', 5, 2000, 1000, 5);
+      const sentCommand = mockSend.mock.calls[0][0] as UpdateCommand;
+      expect(sentCommand.input.UpdateExpression).toMatch(
+        /#windowStart = :windowStart/,
+      );
+      expect(sentCommand.input.ExpressionAttributeNames!['#windowStart']).toBe(
+        'windowStart',
+      );
+      expect(
+        sentCommand.input.ExpressionAttributeValues![':windowStart'],
+      ).toBeDefined();
       expect(mockedLogger.info).toHaveBeenCalledWith(
         'Successfully updated sliding window aggregate',
-        expect.objectContaining({ state: 'CA', oldDayRemoved: true }),
+        expect.objectContaining({
+          state: 'CA',
+          oldDayRemoved: true,
+        }),
       );
     });
 
