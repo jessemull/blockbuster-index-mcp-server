@@ -4,10 +4,14 @@ import { getEqualScores } from './get-equal-scores';
 import { logger } from '../../util';
 import { scrapeAmazonJobs } from './scrape-amazon-jobs';
 import { CONFIG } from '../../config';
+import { AmazonSlidingWindowService } from '../../services/amazon/amazon-sliding-window-service';
 
 jest.mock('./scrape-amazon-jobs');
 jest.mock('./calculate-scores');
 jest.mock('./get-equal-scores');
+jest.mock('../../services/amazon/amazon-sliding-window-service', () => ({
+  AmazonSlidingWindowService: jest.fn(),
+}));
 jest.mock('../../config', () => ({
   CONFIG: {
     IS_DEVELOPMENT: false,
@@ -35,6 +39,11 @@ const mockGetEqualScores = getEqualScores as jest.MockedFunction<
 
 const mockCONFIG = CONFIG as jest.Mocked<typeof CONFIG>;
 
+const mockAmazonSlidingWindowService =
+  AmazonSlidingWindowService as jest.MockedClass<
+    typeof AmazonSlidingWindowService
+  >;
+
 describe('getAmazonScores', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -42,22 +51,148 @@ describe('getAmazonScores', () => {
 
   it('returns calculated scores when scrape succeeds', async () => {
     const mockJobCounts = { CA: 10, TX: 50 };
-    const mockScores = { CA: 0.05, TX: 0.2 };
+    const mockSlidingWindowJobCounts = {
+      AK: 0,
+      AL: 10,
+      AR: 10,
+      AZ: 267,
+      CA: 1130,
+      CO: 257,
+      CT: 22,
+      DE: 9,
+      FL: 107,
+      GA: 330,
+      HI: 5,
+      IA: 18,
+      ID: 7,
+      IL: 361,
+      IN: 201,
+      KS: 10,
+      KY: 36,
+      LA: 37,
+      MA: 790,
+      MD: 173,
+      ME: 0,
+      MI: 52,
+      MN: 68,
+      MO: 37,
+      MS: 52,
+      MT: 5,
+      NC: 54,
+      ND: 7,
+      NE: 17,
+      NH: 2,
+      NJ: 143,
+      NM: 12,
+      NV: 42,
+      NY: 1480,
+      OH: 164,
+      OK: 9,
+      OR: 189,
+      PA: 149,
+      RI: 5,
+      SC: 21,
+      SD: 6,
+      TN: 650,
+      TX: 750,
+      UT: 17,
+      VA: 2020,
+      VT: 0,
+      WA: 5695,
+      WI: 37,
+      WV: 10,
+      WY: 1,
+    };
+    const mockScores = {
+      AK: 0,
+      AL: 10,
+      AR: 10,
+      AZ: 267,
+      CA: 1130,
+      CO: 257,
+      CT: 22,
+      DE: 9,
+      FL: 107,
+      GA: 330,
+      HI: 5,
+      IA: 18,
+      ID: 7,
+      IL: 361,
+      IN: 201,
+      KS: 10,
+      KY: 36,
+      LA: 37,
+      MA: 790,
+      MD: 173,
+      ME: 0,
+      MI: 52,
+      MN: 68,
+      MO: 37,
+      MS: 52,
+      MT: 5,
+      NC: 54,
+      ND: 7,
+      NE: 17,
+      NH: 2,
+      NJ: 143,
+      NM: 12,
+      NV: 42,
+      NY: 1480,
+      OH: 164,
+      OK: 9,
+      OR: 189,
+      PA: 149,
+      RI: 5,
+      SC: 21,
+      SD: 6,
+      TN: 650,
+      TX: 750,
+      UT: 17,
+      VA: 2020,
+      VT: 0,
+      WA: 5695,
+      WI: 37,
+      WV: 10,
+      WY: 1,
+    };
 
     mockScrapeAmazonJobs.mockResolvedValue(mockJobCounts);
     mockCalculateScores.mockReturnValue(mockScores);
     mockGetEqualScores.mockReturnValue({ CA: 0.1, TX: 0.1 });
 
+    // Mock the sliding window service
+    const mockUpdateSlidingWindow = jest.fn();
+    const mockGetSlidingWindowScores = jest
+      .fn()
+      .mockResolvedValue(mockSlidingWindowJobCounts);
+    const mockInitializeSlidingWindowFromHistoricalData = jest.fn();
+    mockAmazonSlidingWindowService.mockImplementation(
+      () =>
+        ({
+          updateSlidingWindow: mockUpdateSlidingWindow,
+          getSlidingWindowScores: mockGetSlidingWindowScores,
+          initializeSlidingWindowFromHistoricalData:
+            mockInitializeSlidingWindowFromHistoricalData,
+        }) as any,
+    );
+
     const scores = await getAmazonScores();
 
     expect(scores).toEqual(mockScores);
     expect(mockScrapeAmazonJobs).toHaveBeenCalled();
-    expect(mockCalculateScores).toHaveBeenCalledWith(mockJobCounts);
+    expect(mockCalculateScores).toHaveBeenCalledWith(
+      mockSlidingWindowJobCounts,
+    );
+    expect(mockUpdateSlidingWindow).toHaveBeenCalledTimes(2); // Called for CA and TX
+    expect(mockGetSlidingWindowScores).toHaveBeenCalled();
     expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('Amazon job presence calculation completed...'),
+      expect.stringContaining(
+        'Amazon job presence calculation completed with sliding window...',
+      ),
       expect.objectContaining({
-        totalJobs: 60,
-        totalStates: 2,
+        totalJobs: 15474,
+        totalStates: 50,
+        windowDays: 90,
       }),
     );
   });
