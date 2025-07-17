@@ -9,6 +9,8 @@ jest.mock('@aws-sdk/lib-dynamodb', () => ({
   },
   GetCommand: jest.fn(),
   PutCommand: jest.fn(),
+  QueryCommand: jest.fn(),
+  ScanCommand: jest.fn(),
 }));
 
 jest.mock('@aws-sdk/client-dynamodb', () => ({
@@ -23,9 +25,27 @@ jest.mock('../../util', () => ({
   },
 }));
 
-import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+  ScanCommand,
+} from '@aws-sdk/lib-dynamodb';
 const mockGetCommand = GetCommand as jest.MockedClass<typeof GetCommand>;
 const mockPutCommand = PutCommand as jest.MockedClass<typeof PutCommand>;
+
+const mockedQueryCommand = QueryCommand as unknown as jest.Mock;
+mockedQueryCommand.mockImplementation(function (
+  this: QueryCommand,
+  input: any,
+) {
+  Object.assign(this, input);
+});
+
+const mockedScanCommand = ScanCommand as unknown as jest.Mock;
+mockedScanCommand.mockImplementation(function (this: ScanCommand, input: any) {
+  Object.assign(this, input);
+});
 
 type RepositoryWithPrivateMembers = DynamoDBBroadbandSignalRepository & {
   client: { send: jest.MockedFunction<(command: unknown) => Promise<unknown>> };
@@ -358,6 +378,458 @@ describe('DynamoDBBroadbandSignalRepository', () => {
       const result = await repository.get('TX', mockTimestamp);
 
       expect(result).toEqual(recordWithoutOptionalFields);
+    });
+  });
+
+  describe('getLatestVersionForState', () => {
+    const mockState = 'CA';
+
+    it('should return latest version when records exist', async () => {
+      const mockItems = [
+        {
+          state: 'CA',
+          dataVersion: 'Dec2021-v2',
+          timestamp: 1640995200000,
+        },
+      ];
+
+      mockSend.mockResolvedValueOnce({
+        Items: mockItems,
+      });
+
+      const result = await repository.getLatestVersionForState(mockState);
+
+      expect(result).toBe('Dec2021-v2');
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          IndexName: 'state-dataVersion-index',
+          KeyConditionExpression: '#state = :state',
+          ExpressionAttributeNames: {
+            '#state': 'state',
+          },
+          ExpressionAttributeValues: {
+            ':state': 'CA',
+          },
+          ScanIndexForward: false,
+          Limit: 1,
+        }),
+      );
+    });
+
+    it('should return null when no records exist', async () => {
+      mockSend.mockResolvedValueOnce({
+        Items: [],
+      });
+
+      const result = await repository.getLatestVersionForState(mockState);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when Items is undefined', async () => {
+      mockSend.mockResolvedValueOnce({});
+
+      const result = await repository.getLatestVersionForState(mockState);
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle records without dataVersion', async () => {
+      const mockItems = [
+        {
+          state: 'CA',
+          timestamp: 1640995200000,
+        },
+      ];
+
+      mockSend.mockResolvedValueOnce({
+        Items: mockItems,
+      });
+
+      const result = await repository.getLatestVersionForState(mockState);
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle DynamoDB errors gracefully', async () => {
+      const dynamoDbError = new Error('DynamoDB service error');
+      mockSend.mockRejectedValueOnce(dynamoDbError);
+
+      const result = await repository.getLatestVersionForState(mockState);
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle unknown error types', async () => {
+      mockSend.mockRejectedValueOnce('Unknown error');
+
+      const result = await repository.getLatestVersionForState(mockState);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('saveStateVersionMetadata', () => {
+    const mockMetadata = {
+      state: 'CA',
+      dataVersion: 'Dec2021-v1',
+      lastProcessed: 1640995200000,
+    };
+
+    it('should save metadata successfully', async () => {
+      mockSend.mockResolvedValueOnce({});
+
+      await repository.saveStateVersionMetadata(mockMetadata);
+
+      expect(mockPutCommand).toHaveBeenCalledWith({
+        Item: {
+          state: 'CA',
+          timestamp: 1640995200000,
+          dataVersion: 'Dec2021-v1',
+          isMetadata: true,
+        },
+        TableName: mockTableName,
+        ConditionExpression:
+          'attribute_not_exists(#state) AND attribute_not_exists(#timestamp)',
+        ExpressionAttributeNames: {
+          '#state': 'state',
+          '#timestamp': 'timestamp',
+        },
+      });
+      expect(mockSend).toHaveBeenCalledWith(expect.any(PutCommand));
+    });
+
+    it('should handle duplicate metadata gracefully', async () => {
+      const conditionalCheckError = new Error('Conditional check failed');
+      conditionalCheckError.name = 'ConditionalCheckFailedException';
+      mockSend.mockRejectedValueOnce(conditionalCheckError);
+
+      await expect(
+        repository.saveStateVersionMetadata(mockMetadata),
+      ).resolves.not.toThrow();
+    });
+
+    it('should throw error for other DynamoDB errors', async () => {
+      const dynamoDbError = new Error('DynamoDB service error');
+      mockSend.mockRejectedValueOnce(dynamoDbError);
+
+      await expect(
+        repository.saveStateVersionMetadata(mockMetadata),
+      ).rejects.toThrow('DynamoDB service error');
+    });
+
+    it('should handle unknown error types', async () => {
+      mockSend.mockRejectedValueOnce('Unknown error');
+
+      await expect(
+        repository.saveStateVersionMetadata(mockMetadata),
+      ).rejects.toBe('Unknown error');
+    });
+  });
+
+  describe('getAllScores', () => {
+    it('should return scores for all states', async () => {
+      const mockItems = [
+        {
+          state: 'CA',
+          broadbandScore: 0.8765,
+          dataVersion: 'Dec2021-v1',
+        },
+        {
+          state: 'TX',
+          broadbandScore: 0.7234,
+          dataVersion: 'Dec2021-v1',
+        },
+        {
+          state: 'NY',
+          broadbandScore: 0.9123,
+          dataVersion: 'Dec2021-v1',
+        },
+      ];
+
+      mockSend.mockResolvedValueOnce({
+        Items: mockItems,
+        LastEvaluatedKey: undefined,
+      });
+
+      const result = await repository.getAllScores();
+
+      // Check that all states are initialized with 0
+      expect(result.AK).toBe(0);
+      expect(result.AL).toBe(0);
+      expect(result.AZ).toBe(0);
+      expect(result.AR).toBe(0);
+      expect(result.CA).toBe(0.8765);
+      expect(result.CO).toBe(0);
+      expect(result.CT).toBe(0);
+      expect(result.DE).toBe(0);
+      expect(result.FL).toBe(0);
+      expect(result.GA).toBe(0);
+      expect(result.HI).toBe(0);
+      expect(result.IA).toBe(0);
+      expect(result.ID).toBe(0);
+      expect(result.IL).toBe(0);
+      expect(result.IN).toBe(0);
+      expect(result.KS).toBe(0);
+      expect(result.KY).toBe(0);
+      expect(result.LA).toBe(0);
+      expect(result.MA).toBe(0);
+      expect(result.MD).toBe(0);
+      expect(result.ME).toBe(0);
+      expect(result.MI).toBe(0);
+      expect(result.MN).toBe(0);
+      expect(result.MO).toBe(0);
+      expect(result.MS).toBe(0);
+      expect(result.MT).toBe(0);
+      expect(result.NC).toBe(0);
+      expect(result.ND).toBe(0);
+      expect(result.NE).toBe(0);
+      expect(result.NH).toBe(0);
+      expect(result.NJ).toBe(0);
+      expect(result.NM).toBe(0);
+      expect(result.NV).toBe(0);
+      expect(result.NY).toBe(0.9123);
+      expect(result.OH).toBe(0);
+      expect(result.OK).toBe(0);
+      expect(result.OR).toBe(0);
+      expect(result.PA).toBe(0);
+      expect(result.RI).toBe(0);
+      expect(result.SC).toBe(0);
+      expect(result.SD).toBe(0);
+      expect(result.TN).toBe(0);
+      expect(result.TX).toBe(0.7234);
+      expect(result.UT).toBe(0);
+      expect(result.VA).toBe(0);
+      expect(result.VT).toBe(0);
+      expect(result.WA).toBe(0);
+      expect(result.WI).toBe(0);
+      expect(result.WV).toBe(0);
+      expect(result.WY).toBe(0);
+    });
+
+    it('should handle pagination correctly', async () => {
+      const firstPageItems = [
+        {
+          state: 'CA',
+          broadbandScore: 0.8765,
+          dataVersion: 'Dec2021-v1',
+        },
+      ];
+
+      const secondPageItems = [
+        {
+          state: 'TX',
+          broadbandScore: 0.7234,
+          dataVersion: 'Dec2021-v1',
+        },
+      ];
+
+      mockSend
+        .mockResolvedValueOnce({
+          Items: firstPageItems,
+          LastEvaluatedKey: { state: 'CA' },
+        })
+        .mockResolvedValueOnce({
+          Items: secondPageItems,
+          LastEvaluatedKey: undefined,
+        });
+
+      const result = await repository.getAllScores();
+
+      expect(result.CA).toBe(0.8765);
+      expect(result.TX).toBe(0.7234);
+      expect(result.AK).toBe(0); // Verify other states are initialized
+    });
+
+    it('should filter records by dataVersion', async () => {
+      const mockItems = [
+        {
+          state: 'CA',
+          broadbandScore: 0.8765,
+          dataVersion: 'Dec2021-v1',
+        },
+        {
+          state: 'TX',
+          broadbandScore: 0.7234,
+          dataVersion: 'Dec2021-v1',
+        },
+      ];
+
+      mockSend.mockResolvedValueOnce({
+        Items: mockItems,
+        LastEvaluatedKey: undefined,
+      });
+
+      await repository.getAllScores();
+
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          FilterExpression: '#dataVersion = :dataVersion',
+          ExpressionAttributeNames: {
+            '#dataVersion': 'dataVersion',
+          },
+          ExpressionAttributeValues: {
+            ':dataVersion': 'Dec2021-v1',
+          },
+        }),
+      );
+    });
+
+    it('should handle records without broadband scores', async () => {
+      const mockItems = [
+        {
+          state: 'CA',
+          dataVersion: 'Dec2021-v1',
+        },
+        {
+          state: 'TX',
+          broadbandScore: 0.7234,
+          dataVersion: 'Dec2021-v1',
+        },
+      ];
+
+      mockSend.mockResolvedValueOnce({
+        Items: mockItems,
+        LastEvaluatedKey: undefined,
+      });
+
+      const result = await repository.getAllScores();
+
+      expect(result.CA).toBe(0);
+      expect(result.TX).toBe(0.7234);
+      expect(result.AK).toBe(0); // Verify other states are initialized
+    });
+
+    it('should handle DynamoDB errors gracefully', async () => {
+      const dynamoDbError = new Error('DynamoDB service error');
+      mockSend.mockRejectedValueOnce(dynamoDbError);
+
+      const result = await repository.getAllScores();
+
+      expect(result).toEqual({});
+    });
+
+    it('should handle unknown error types', async () => {
+      mockSend.mockRejectedValueOnce('Unknown error');
+
+      const result = await repository.getAllScores();
+
+      expect(result).toEqual({});
+    });
+  });
+
+  describe('getByStateAndVersion', () => {
+    const mockState = 'CA';
+    const mockDataVersion = 'Dec2021-v1';
+
+    it('should return record when it exists', async () => {
+      const mockRecord = {
+        state: 'CA',
+        timestamp: 1640995200000,
+        dataVersion: 'Dec2021-v1',
+        broadbandScore: 0.8765,
+      };
+
+      mockSend.mockResolvedValueOnce({
+        Items: [mockRecord],
+      });
+
+      const result = await repository.getByStateAndVersion(
+        mockState,
+        mockDataVersion,
+      );
+
+      expect(result).toEqual(mockRecord);
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          IndexName: 'state-dataVersion-index',
+          KeyConditionExpression:
+            '#state = :state AND #dataVersion = :dataVersion',
+          ExpressionAttributeNames: {
+            '#state': 'state',
+            '#dataVersion': 'dataVersion',
+          },
+          ExpressionAttributeValues: {
+            ':state': 'CA',
+            ':dataVersion': 'Dec2021-v1',
+          },
+          ScanIndexForward: false,
+          Limit: 1,
+        }),
+      );
+    });
+
+    it('should return null when no records exist', async () => {
+      mockSend.mockResolvedValueOnce({
+        Items: [],
+      });
+
+      const result = await repository.getByStateAndVersion(
+        mockState,
+        mockDataVersion,
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when Items is undefined', async () => {
+      mockSend.mockResolvedValueOnce({});
+
+      const result = await repository.getByStateAndVersion(
+        mockState,
+        mockDataVersion,
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle DynamoDB errors gracefully', async () => {
+      const dynamoDbError = new Error('DynamoDB service error');
+      mockSend.mockRejectedValueOnce(dynamoDbError);
+
+      const result = await repository.getByStateAndVersion(
+        mockState,
+        mockDataVersion,
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle unknown error types', async () => {
+      mockSend.mockRejectedValueOnce('Unknown error');
+
+      const result = await repository.getByStateAndVersion(
+        mockState,
+        mockDataVersion,
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it('should use correct query parameters', async () => {
+      mockSend.mockResolvedValueOnce({
+        Items: [],
+      });
+
+      await repository.getByStateAndVersion(mockState, mockDataVersion);
+
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          IndexName: 'state-dataVersion-index',
+          KeyConditionExpression:
+            '#state = :state AND #dataVersion = :dataVersion',
+          ExpressionAttributeNames: {
+            '#state': 'state',
+            '#dataVersion': 'dataVersion',
+          },
+          ExpressionAttributeValues: {
+            ':state': 'CA',
+            ':dataVersion': 'Dec2021-v1',
+          },
+          ScanIndexForward: false,
+          Limit: 1,
+        }),
+      );
     });
   });
 

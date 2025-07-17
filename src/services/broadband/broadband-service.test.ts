@@ -1,6 +1,7 @@
 import { BroadbandService } from './broadband-service';
 import { BroadbandCsvRecord } from '../../types/broadband';
 import { SPEED_THRESHOLDS } from '../../constants/broadband';
+import { logger } from '../../util';
 
 jest.mock('fs');
 jest.mock('../../util', () => ({
@@ -658,6 +659,372 @@ describe('BroadbandService', () => {
       ).calculateBroadbandScore(mockMetrics);
 
       expect(result).toBe(1);
+    });
+  });
+
+  describe('processBroadbandData', () => {
+    beforeEach(() => {
+      // Mock the s3Loader.processStatesOneByOne method
+      (service as any).s3Loader = {
+        processStatesOneByOne: jest.fn(),
+      };
+    });
+
+    it('should process broadband data successfully', async () => {
+      (service as any).s3Loader.processStatesOneByOne.mockResolvedValue(
+        undefined,
+      );
+
+      await service.processBroadbandData();
+
+      expect(
+        (service as any).s3Loader.processStatesOneByOne,
+      ).toHaveBeenCalledWith(expect.any(Function));
+    });
+
+    it('should handle errors during processing', async () => {
+      const mockError = new Error('S3 processing failed');
+      (service as any).s3Loader.processStatesOneByOne.mockRejectedValue(
+        mockError,
+      );
+
+      await expect(service.processBroadbandData()).rejects.toThrow(
+        'S3 processing failed',
+      );
+    });
+
+    it('should log start and completion messages', async () => {
+      (service as any).s3Loader.processStatesOneByOne.mockResolvedValue(
+        undefined,
+      );
+
+      await service.processBroadbandData();
+
+      expect(logger.info).toHaveBeenCalledWith(
+        'Starting broadband data processing from S3...',
+      );
+      expect(logger.info).toHaveBeenCalledWith(
+        'Broadband data processing completed',
+      );
+    });
+
+    it('should log errors when processing fails', async () => {
+      const mockError = new Error('Processing error');
+      (service as any).s3Loader.processStatesOneByOne.mockRejectedValue(
+        mockError,
+      );
+
+      await expect(service.processBroadbandData()).rejects.toThrow(
+        'Processing error',
+      );
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'Error in broadband data processing:',
+        mockError,
+      );
+    });
+  });
+
+  describe('processStateData', () => {
+    let mockRepository: any;
+    let mockStateData: any;
+
+    beforeEach(() => {
+      mockRepository = {
+        save: jest.fn(),
+        saveStateVersionMetadata: jest.fn(),
+      };
+      (service as any).repository = mockRepository;
+
+      mockStateData = {
+        state: 'CA',
+        records: [
+          {
+            provider: 'Test Provider',
+            state: 'CA',
+            censusBlock: '060010001001000',
+            technology: 'Fiber',
+            speed: 100,
+          },
+          {
+            provider: 'Test Provider 2',
+            state: 'CA',
+            censusBlock: '060010001001001',
+            technology: 'Cable',
+            speed: 1500,
+          },
+        ],
+        dataVersion: 'test-version-1.0',
+      };
+    });
+
+    it('should process state data successfully when should process', async () => {
+      // Mock shouldProcessStateData to return true
+      jest
+        .spyOn(service as any, 'shouldProcessStateData')
+        .mockResolvedValue(true);
+
+      await (service as any).processStateData(mockStateData);
+
+      expect(mockRepository.save).toHaveBeenCalledTimes(1); // Main record only
+      expect(mockRepository.saveStateVersionMetadata).toHaveBeenCalledWith({
+        state: 'CA',
+        dataVersion: 'test-version-1.0',
+        lastProcessed: expect.any(Number),
+      });
+    });
+
+    it('should skip processing when shouldProcessStateData returns false', async () => {
+      jest
+        .spyOn(service as any, 'shouldProcessStateData')
+        .mockResolvedValue(false);
+
+      await (service as any).processStateData(mockStateData);
+
+      expect(mockRepository.save).not.toHaveBeenCalled();
+      expect(mockRepository.saveStateVersionMetadata).not.toHaveBeenCalled();
+      expect(logger.info).toHaveBeenCalledWith(
+        'Skipping CA - data version test-version-1.0 already processed',
+      );
+    });
+
+    it('should handle repository save errors gracefully', async () => {
+      const mockError = new Error('DynamoDB save failed');
+      mockRepository.save.mockRejectedValue(mockError);
+      jest
+        .spyOn(service as any, 'shouldProcessStateData')
+        .mockResolvedValue(true);
+
+      await (service as any).processStateData(mockStateData);
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'Error processing state data for CA:',
+        mockError,
+      );
+    });
+
+    it('should handle metadata save errors gracefully', async () => {
+      const mockError = new Error('Metadata save failed');
+      mockRepository.saveStateVersionMetadata.mockRejectedValue(mockError);
+      jest
+        .spyOn(service as any, 'shouldProcessStateData')
+        .mockResolvedValue(true);
+
+      await (service as any).processStateData(mockStateData);
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'Error processing state data for CA:',
+        mockError,
+      );
+    });
+
+    it('should convert technology codes correctly', async () => {
+      const stateDataWithDifferentTechnologies = {
+        state: 'TX',
+        records: [
+          {
+            provider: 'Fiber Co',
+            state: 'TX',
+            censusBlock: '480010001001000',
+            technology: 'Fiber',
+            speed: 1000,
+          },
+          {
+            provider: 'Cable Co',
+            state: 'TX',
+            censusBlock: '480010001001001',
+            technology: 'Cable',
+            speed: 500,
+          },
+          {
+            provider: 'DSL Co',
+            state: 'TX',
+            censusBlock: '480010001001002',
+            technology: 'DSL',
+            speed: 50,
+          },
+          {
+            provider: 'Wireless Co',
+            state: 'TX',
+            censusBlock: '480010001001003',
+            technology: 'Wireless',
+            speed: 100,
+          },
+          {
+            provider: 'Other Co',
+            state: 'TX',
+            censusBlock: '480010001001004',
+            technology: 'Satellite',
+            speed: 25,
+          },
+        ],
+        dataVersion: 'test-version-2.0',
+      };
+
+      jest
+        .spyOn(service as any, 'shouldProcessStateData')
+        .mockResolvedValue(true);
+
+      await (service as any).processStateData(
+        stateDataWithDifferentTechnologies,
+      );
+
+      expect(mockRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          state: 'TX',
+          dataVersion: 'test-version-2.0',
+          technologyCounts: expect.objectContaining({
+            fiber: 1,
+            cable: 1,
+            dsl: 1,
+            wireless: 1,
+            other: 1,
+          }),
+        }),
+      );
+    });
+
+    it('should handle empty records array', async () => {
+      const emptyStateData = {
+        state: 'NV',
+        records: [],
+        dataVersion: 'test-version-3.0',
+      };
+
+      jest
+        .spyOn(service as any, 'shouldProcessStateData')
+        .mockResolvedValue(true);
+
+      await (service as any).processStateData(emptyStateData);
+
+      expect(mockRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          state: 'NV',
+          totalCensusBlocks: 0,
+          blocksWithBroadband: 0,
+          broadbandAvailabilityPercent: 0,
+          broadbandScore: 0,
+        }),
+      );
+    });
+
+    it('should log processing progress correctly', async () => {
+      jest
+        .spyOn(service as any, 'shouldProcessStateData')
+        .mockResolvedValue(true);
+
+      await (service as any).processStateData(mockStateData);
+
+      expect(logger.info).toHaveBeenCalledWith(
+        'Starting to process CA with 2 records (S3 version: test-version-1.0)',
+      );
+      expect(logger.info).toHaveBeenCalledWith(
+        'Will process 2 records for CA (version: test-version-1.0)',
+      );
+      expect(logger.info).toHaveBeenCalledWith(
+        'About to save broadband record for CA to DynamoDB',
+      );
+      expect(logger.info).toHaveBeenCalledWith(
+        'Successfully saved broadband record for CA to DynamoDB',
+      );
+      expect(logger.info).toHaveBeenCalledWith(
+        'Successfully saved metadata record for CA to DynamoDB',
+      );
+      expect(logger.info).toHaveBeenCalledWith(
+        'Successfully processed aggregated metrics for CA (version: test-version-1.0)',
+        expect.objectContaining({
+          totalBlocks: 2,
+          availabilityPercent: 100,
+          score: expect.any(Number),
+        }),
+      );
+    });
+
+    it('should handle shouldProcessStateData errors gracefully', async () => {
+      const mockError = new Error('Version check failed');
+      jest
+        .spyOn(service as any, 'shouldProcessStateData')
+        .mockRejectedValue(mockError);
+
+      await (service as any).processStateData(mockStateData);
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'Error processing state data for CA:',
+        mockError,
+      );
+    });
+
+    it('should create correct broadband record structure', async () => {
+      jest
+        .spyOn(service as any, 'shouldProcessStateData')
+        .mockResolvedValue(true);
+
+      await (service as any).processStateData(mockStateData);
+
+      const savedRecord = mockRepository.save.mock.calls[0][0];
+      expect(savedRecord).toMatchObject({
+        state: 'CA',
+        timestamp: expect.any(Number),
+        dataVersion: 'test-version-1.0',
+        totalCensusBlocks: 2,
+        blocksWithBroadband: 2,
+        broadbandAvailabilityPercent: 100,
+        blocksWithHighSpeed: 2,
+        highSpeedAvailabilityPercent: 100,
+        blocksWithGigabit: 1,
+        gigabitAvailabilityPercent: 50,
+        technologyCounts: {
+          fiber: 1,
+          cable: 1,
+          dsl: 0,
+          wireless: 0,
+          other: 0,
+        },
+        averageDownloadSpeed: 800,
+        medianDownloadSpeed: 800,
+        broadbandScore: expect.any(Number),
+      });
+    });
+
+    it('should create correct metadata record structure', async () => {
+      jest
+        .spyOn(service as any, 'shouldProcessStateData')
+        .mockResolvedValue(true);
+
+      await (service as any).processStateData(mockStateData);
+
+      const savedMetadata =
+        mockRepository.saveStateVersionMetadata.mock.calls[0][0];
+      expect(savedMetadata).toMatchObject({
+        state: 'CA',
+        dataVersion: 'test-version-1.0',
+        lastProcessed: expect.any(Number),
+      });
+    });
+
+    it('should handle technology mapping edge cases', async () => {
+      const edgeCaseStateData = {
+        state: 'AK',
+        records: [
+          {
+            provider: 'Unknown Co',
+            state: 'AK',
+            censusBlock: '020010001001000',
+            technology: 'Unknown',
+            speed: 10,
+          },
+        ],
+        dataVersion: 'test-version-edge',
+      };
+
+      jest
+        .spyOn(service as any, 'shouldProcessStateData')
+        .mockResolvedValue(true);
+
+      await (service as any).processStateData(edgeCaseStateData);
+
+      const savedRecord = mockRepository.save.mock.calls[0][0];
+      expect(savedRecord.technologyCounts.other).toBe(1);
     });
   });
 });
