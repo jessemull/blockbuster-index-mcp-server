@@ -1,7 +1,9 @@
 import { CONFIG } from '../../config';
-import { logger } from '../../util/logger';
+import { LoggerFactory } from '../../util/logger';
 import { BroadbandService } from '../../services';
 import type { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband';
+
+const logger = LoggerFactory.getBroadbandLogger();
 
 const DEFAULT_TABLE = 'blockbuster-index-broadband-signals-dev';
 

@@ -7,7 +7,8 @@ import {
   GetCommandInput,
 } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBCensusSignalRepository } from './census-signal-repository';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
+const logger = LoggerFactory.getCensusLogger();
 
 jest.mock('@aws-sdk/client-dynamodb');
 jest.mock('@aws-sdk/lib-dynamodb');

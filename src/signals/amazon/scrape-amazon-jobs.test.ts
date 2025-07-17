@@ -1,7 +1,8 @@
 import puppeteer from 'puppeteer';
 import { scrapeAmazonJobs } from './scrape-amazon-jobs';
 import { searchJobsInState } from './search-jobs-in-state';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
+const logger = LoggerFactory.getAmazonLogger();
 
 jest.mock('puppeteer');
 

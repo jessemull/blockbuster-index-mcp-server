@@ -1,4 +1,4 @@
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
 import { BroadbandCsvRecord } from '../../types/broadband';
 import { SPEED_THRESHOLDS, TECHNOLOGY_CODES } from '../../constants/broadband';
 import { PRECISION } from '../../constants';
@@ -10,6 +10,8 @@ import type {
   BroadbandSignalRecord,
   StateVersionMetadata,
 } from '../../types/broadband';
+
+const logger = LoggerFactory.getBroadbandLogger();
 
 export class BroadbandService {
   private repository: DynamoDBBroadbandSignalRepository | undefined;

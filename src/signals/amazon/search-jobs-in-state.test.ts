@@ -1,5 +1,5 @@
 import { Browser } from 'puppeteer';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
 import { searchJobsInState } from './search-jobs-in-state';
 
 declare global {
@@ -18,6 +18,8 @@ jest.mock('../../util', () => ({
     warn: jest.fn(),
   },
 }));
+
+const logger = LoggerFactory.getAmazonLogger();
 
 const mockPage = {
   close: jest.fn(),

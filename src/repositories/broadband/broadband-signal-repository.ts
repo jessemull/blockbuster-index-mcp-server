@@ -4,7 +4,8 @@ import {
   QueryCommand,
   ScanCommand,
 } from '@aws-sdk/lib-dynamodb';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
+const logger = LoggerFactory.getBroadbandLogger();
 import type {
   BroadbandSignalRecord,
   StateVersionMetadata,

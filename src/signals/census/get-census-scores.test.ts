@@ -1,6 +1,6 @@
 import { CONFIG } from '../../config';
 import { fetchCensusData } from '../../services';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
 import { getCensusScores } from './get-census-scores';
 import { DynamoDBCensusSignalRepository } from '../../repositories/census';
 import { CensusData } from '../../types';
@@ -19,7 +19,7 @@ const mockFetchCensusData = fetchCensusData as jest.MockedFunction<
   typeof fetchCensusData
 >;
 
-const mockLogger = logger as jest.Mocked<typeof logger>;
+const logger = LoggerFactory.getCensusLogger();
 const mockCONFIG = CONFIG as jest.Mocked<typeof CONFIG>;
 const mockDynamoDBCensusSignalRepository = jest.fn();
 jest.mock('../../repositories/census', () => ({
@@ -74,19 +74,19 @@ describe('getCensusScores', () => {
         TX: 10,
       });
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         'Starting Census retail establishment calculation...',
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         'Attempting to fetch Census data for year 2024 (attempt 1/3)',
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         'Successfully found Census data for year 2024',
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         'Using Census data for year 2024 (current year: 2025)',
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         'Completed Census calculation: processed 3 states',
       );
     });
@@ -105,7 +105,7 @@ describe('getCensusScores', () => {
       const scores = await getCensusScores();
 
       expect(scores.AL).toBe(0);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(logger.warn).toHaveBeenCalledWith(
         'No population data for AL, setting score to 0',
       );
     });
@@ -137,7 +137,7 @@ describe('getCensusScores', () => {
 
       expect(scores.AL).toBe(20);
       expect(scores.CA).toBe(0);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(logger.warn).toHaveBeenCalledWith(
         'No population data for CA, setting score to 0',
       );
     });
@@ -157,17 +157,17 @@ describe('getCensusScores', () => {
         TX: 10,
       });
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         'Attempting to fetch Census data for year 2024 (attempt 1/3)',
       );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(logger.warn).toHaveBeenCalledWith(
         'Census data not available for year 2024, trying previous year',
         expect.any(Error),
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         'Attempting to fetch Census data for year 2023 (attempt 2/3)',
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         'Successfully found Census data for year 2023',
       );
     });
@@ -208,7 +208,7 @@ describe('getCensusScores', () => {
 
       await getCensusScores();
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         'Record already exists for AL year 2024, skipping storage',
       );
     });
@@ -227,7 +227,7 @@ describe('getCensusScores', () => {
 
       await getCensusScores();
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         'Record already exists for AL year 2024, skipping storage',
       );
     });
@@ -244,7 +244,7 @@ describe('getCensusScores', () => {
         CA: 13,
         TX: 10,
       });
-      expect(mockLogger.info).not.toHaveBeenCalledWith(
+      expect(logger.info).not.toHaveBeenCalledWith(
         expect.stringContaining('Record already exists'),
       );
     });
@@ -255,7 +255,7 @@ describe('getCensusScores', () => {
 
       await getCensusScores();
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         'Stored Census data for AL: 20 establishments per 100k',
       );
     });
@@ -278,7 +278,7 @@ describe('getCensusScores', () => {
         state: 'AL',
         timestamp: 1704067200,
       });
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         'Stored Census data for AL: 20 establishments per 100k',
       );
     });
@@ -297,7 +297,7 @@ describe('getCensusScores', () => {
       await getCensusScores();
 
       expect(mockRepository.save).not.toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         'Record already exists for AL year 2024, skipping storage',
       );
     });
@@ -361,7 +361,7 @@ describe('getCensusScores', () => {
 
       await getCensusScores();
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         'Successfully found Census data for year 2024',
       );
     });
@@ -380,7 +380,7 @@ describe('getCensusScores', () => {
       const scores = await getCensusScores();
 
       expect(scores).toEqual({});
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         'Completed Census calculation: processed 0 states',
       );
     });

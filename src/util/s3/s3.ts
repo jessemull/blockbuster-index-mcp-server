@@ -5,7 +5,8 @@ import {
   S3ServiceException,
 } from '@aws-sdk/client-s3';
 import { CONFIG } from '../../config';
-import { logger } from '../logger';
+import { LoggerFactory } from '../logger';
+const logger = LoggerFactory.getMainLogger();
 
 export const s3Client = new S3Client({
   maxAttempts: 3,

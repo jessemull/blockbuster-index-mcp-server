@@ -14,7 +14,10 @@ import {
   States,
   SignalConfig,
 } from './types';
-import { logger, retryWithBackoff, uploadToS3 } from './util';
+import { LoggerFactory } from './util/logger';
+import { retryWithBackoff, uploadToS3 } from './util';
+
+const logger = LoggerFactory.getMainLogger();
 
 export const main = async () => {
   const startTime = Date.now();

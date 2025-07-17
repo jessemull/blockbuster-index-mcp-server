@@ -2,7 +2,9 @@ import { CONFIG } from '../../config';
 import { CensusSignalRecord } from '../../types/census';
 import { SignalRepository } from '../../types/amazon';
 import { fetchCensusData } from '../../services';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
+
+const logger = LoggerFactory.getCensusLogger();
 
 const DEFAULT_TABLE = 'blockbuster-index-census-signals-dev';
 

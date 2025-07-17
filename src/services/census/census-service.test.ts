@@ -4,7 +4,8 @@ import {
   fetchCensusPopulationData,
   fetchCensusData,
 } from './census-service';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
+const logger = LoggerFactory.getCensusLogger();
 
 jest.mock('axios');
 jest.mock('../../util/helpers/retry', () => ({

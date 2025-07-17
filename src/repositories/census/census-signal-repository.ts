@@ -1,5 +1,6 @@
 import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
+const logger = LoggerFactory.getCensusLogger();
 import type { CensusSignalRecord } from '../../types/census';
 import { DynamoDBSignalRepository } from '../base-signal-repository';
 

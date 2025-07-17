@@ -1,6 +1,7 @@
 import { AmazonSignalService } from './amazon-signal-service';
 import { getAmazonScores } from '../../signals/amazon';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
+const logger = LoggerFactory.getAmazonLogger();
 import { States } from '../../types';
 import type { JobSignalRecord, SignalRepository } from '../../types/amazon';
 

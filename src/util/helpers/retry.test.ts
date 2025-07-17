@@ -1,5 +1,7 @@
-import { logger } from '../logger';
+import { LoggerFactory } from '../logger';
 import { retryWithBackoff } from './retry';
+
+const logger = LoggerFactory.getMainLogger();
 
 jest.mock('../logger', () => ({
   logger: {

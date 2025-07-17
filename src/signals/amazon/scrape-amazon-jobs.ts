@@ -1,9 +1,11 @@
 import puppeteer from 'puppeteer';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
 import { States } from '../../types';
 import { STATE_ABBR_TO_NAME } from '../../constants';
 import { searchJobsInState } from './search-jobs-in-state';
 import type { SignalRepository, JobSignalRecord } from '../../types/amazon';
+
+const logger = LoggerFactory.getAmazonLogger();
 
 export async function scrapeAmazonJobs(
   repository?: SignalRepository<JobSignalRecord>,

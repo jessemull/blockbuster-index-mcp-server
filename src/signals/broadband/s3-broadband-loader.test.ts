@@ -13,7 +13,8 @@ import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband'
 import type { S3BroadbandCsvRecord } from '../../types/broadband';
 import type { Readable } from 'stream';
 import { TECHNOLOGY_CODES } from '../../constants';
-import { logger } from '../../util/logger';
+import { LoggerFactory } from '../../util/logger';
+const logger = LoggerFactory.getBroadbandLogger();
 
 jest.mock('../../util/logger', () => ({
   logger: {

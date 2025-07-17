@@ -1,7 +1,8 @@
 import { BroadbandService } from './broadband-service';
 import { BroadbandCsvRecord } from '../../types/broadband';
 import { SPEED_THRESHOLDS } from '../../constants/broadband';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
+const logger = LoggerFactory.getBroadbandLogger();
 
 jest.mock('fs');
 jest.mock('../../util', () => ({

@@ -9,7 +9,8 @@ import {
   QueryCommandInput,
 } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBAmazonSignalRepository } from './amazon-signal-repository';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
+const logger = LoggerFactory.getAmazonLogger();
 
 jest.mock('@aws-sdk/client-dynamodb');
 jest.mock('@aws-sdk/lib-dynamodb');

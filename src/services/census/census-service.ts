@@ -5,7 +5,8 @@ import {
   CensusEstablishmentData,
   CensusPopulationData,
 } from '../../types';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
+const logger = LoggerFactory.getCensusLogger();
 
 const STATE_CODE_TO_ABBR: Record<string, string> = {
   '01': 'AL',

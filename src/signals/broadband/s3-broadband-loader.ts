@@ -1,4 +1,4 @@
-import { logger } from '../../util/logger';
+import { LoggerFactory } from '../../util/logger';
 import {
   S3Client,
   ListObjectsV2Command,
@@ -14,6 +14,7 @@ import type {
 } from '../../types/broadband';
 import { BroadbandService } from '../../services/broadband/broadband-service';
 
+const logger = LoggerFactory.getBroadbandLogger();
 const DEFAULT_TABLE = 'blockbuster-index-broadband-signals-dev';
 
 export function mapTechCodeToTechnology(techCode: string): string {

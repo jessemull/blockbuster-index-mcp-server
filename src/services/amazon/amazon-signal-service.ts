@@ -1,7 +1,9 @@
 import { getAmazonScores } from '../../signals/amazon';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
 import { States } from '../../types';
 import type { JobSignalRecord, SignalRepository } from '../../types/amazon';
+
+const logger = LoggerFactory.getAmazonLogger();
 
 export class AmazonSignalService {
   private repository: SignalRepository<JobSignalRecord>;

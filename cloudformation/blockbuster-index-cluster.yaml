@@ -53,6 +53,30 @@ Resources:
       LogGroupName: !Sub '/ecs/blockbuster-index-${Environment}'
       RetentionInDays: 14
 
+  AmazonLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: !Sub '/ecs/blockbuster-index-amazon-${Environment}'
+      RetentionInDays: 14
+
+  BroadbandLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: !Sub '/ecs/blockbuster-index-broadband-${Environment}'
+      RetentionInDays: 14
+
+  CensusLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: !Sub '/ecs/blockbuster-index-census-${Environment}'
+      RetentionInDays: 14
+
   ECSTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -76,7 +100,11 @@ Resources:
                 Action:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-${Environment}:*'
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-${Environment}:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-amazon-${Environment}:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-broadband-${Environment}:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-census-${Environment}:*'
 
   ECSTaskRole:
     Type: AWS::IAM::Role
@@ -205,10 +233,25 @@ Outputs:
     Export:
       Name: !Sub '${Environment}-BlockbusterECSClusterArn'
   ECSLogGroupName:
-    Description: 'Log group name'
+    Description: 'Main log group name'
     Value: !Ref ECSLogGroup
     Export:
       Name: !Sub '${Environment}-BlockbusterLogGroupName'
+  AmazonLogGroupName:
+    Description: 'Amazon signal log group name'
+    Value: !Ref AmazonLogGroup
+    Export:
+      Name: !Sub '${Environment}-BlockbusterAmazonLogGroupName'
+  BroadbandLogGroupName:
+    Description: 'Broadband signal log group name'
+    Value: !Ref BroadbandLogGroup
+    Export:
+      Name: !Sub '${Environment}-BlockbusterBroadbandLogGroupName'
+  CensusLogGroupName:
+    Description: 'Census signal log group name'
+    Value: !Ref CensusLogGroup
+    Export:
+      Name: !Sub '${Environment}-BlockbusterCensusLogGroupName'
   ExecutionRoleArn:
     Description: 'ECS Execution Role ARN'
     Value: !GetAtt ECSTaskExecutionRole.Arn

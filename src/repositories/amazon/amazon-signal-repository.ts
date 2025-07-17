@@ -1,5 +1,6 @@
 import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
+const logger = LoggerFactory.getAmazonLogger();
 import type { JobSignalRecord } from '../../types/amazon';
 import { DynamoDBSignalRepository } from '../base-signal-repository';
 

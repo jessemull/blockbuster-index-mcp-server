@@ -2,7 +2,9 @@ import { CONFIG } from '../../config';
 import { SignalRepository, JobSignalRecord } from '../../types/amazon';
 import { calculateScores } from './calculate-scores';
 import { scrapeAmazonJobs } from './scrape-amazon-jobs';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
+
+const logger = LoggerFactory.getAmazonLogger();
 
 const DEFAULT_TABLE = 'blockbuster-index-amazon-jobs-dev';
 

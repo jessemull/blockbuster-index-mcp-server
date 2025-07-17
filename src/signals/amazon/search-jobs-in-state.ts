@@ -1,6 +1,8 @@
 import { Browser } from 'puppeteer';
-import { logger } from '../../util';
+import { LoggerFactory } from '../../util/logger';
 import type { BrowserDocument } from '../../types/browser';
+
+const logger = LoggerFactory.getAmazonLogger();
 
 export async function searchJobsInState(
   browser: Browser,
