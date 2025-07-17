@@ -51,7 +51,7 @@ Resources:
     Properties:
       Family: !Sub 'blockbuster-index-task-${Environment}'
       Cpu: '512'
-      Memory: '1024'
+      Memory: '2048'
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE

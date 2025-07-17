@@ -5,13 +5,15 @@ import {
   GetObjectCommand,
 } from '@aws-sdk/client-s3';
 import { parse } from 'csv-parse';
-import { TECHNOLOGY_CODES } from '../../constants/broadband';
+import { TECHNOLOGY_CODES, SPEED_THRESHOLDS } from '../../constants/broadband';
 import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband';
 import type {
   S3BroadbandCsvRecord,
-  BroadbandRecord,
   S3BroadbandData,
+  BroadbandMetrics,
+  TechnologyCounts,
 } from '../../types/broadband';
+import { BroadbandService } from '../../services/broadband/broadband-service';
 
 export function mapTechCodeToTechnology(techCode: string): string {
   const code = parseInt(techCode);
@@ -101,7 +103,20 @@ export class S3BroadbandLoader {
     }
   }
 
-  async downloadAndParseCSV(s3Key: string): Promise<BroadbandRecord[]> {
+  private initializeMetrics() {
+    return {
+      blocksWithBroadband: new Set<string>(),
+      blocksWithHighSpeed: new Set<string>(),
+      blocksWithGigabit: new Set<string>(),
+    };
+  }
+
+  async downloadAndParseCSV(s3Key: string): Promise<{
+    state: string;
+    metrics: BroadbandMetrics;
+    dataVersion: string;
+    lastUpdated: Date;
+  }> {
     try {
       const command = new GetObjectCommand({
         Bucket: this.bucketName,
@@ -115,25 +130,28 @@ export class S3BroadbandLoader {
       }
 
       // Extract state from filename (e.g., "Dec2021-v1/CA-Fixed-Dec2021-v1.csv" -> "CA")...
-
       const stateMatch = s3Key.match(/\/([A-Z]{2})-Fixed-/);
       if (!stateMatch) {
         throw new Error(`Could not extract state from S3 key: ${s3Key}`);
       }
-
       const state = stateMatch[1];
       logger.info(`Processing ${state} data from S3 key: ${s3Key}`);
 
-      // Stream parse CSV content to avoid memory issues with large files...
-
-      const broadbandRecords: BroadbandRecord[] = [];
+      // Stream parse CSV content and aggregate metrics on the fly...
+      const metrics = this.initializeMetrics();
+      const uniqueBlocks = new Set<string>();
+      const speeds: number[] = [];
+      const technologyCounts: TechnologyCounts = {
+        fiber: 0,
+        cable: 0,
+        dsl: 0,
+        wireless: 0,
+        other: 0,
+      };
 
       return new Promise(async (resolve, reject) => {
         try {
-          // Convert the response body to a readable stream...
-
           const stream = response.Body as NodeJS.ReadableStream;
-
           const parser = parse({
             columns: true,
             skip_empty_lines: true,
@@ -142,28 +160,90 @@ export class S3BroadbandLoader {
           parser.on('readable', () => {
             let record: S3BroadbandCsvRecord;
             while ((record = parser.read() as S3BroadbandCsvRecord)) {
-              broadbandRecords.push({
-                state: record.StateAbbr || state,
-                censusBlock: record.BlockCode || '',
-                provider: record.ProviderName || '',
-                technology: mapTechCodeToTechnology(record.TechCode || ''),
-                speed: parseFloat(record.MaxAdDown || '0'),
-              });
+              // Streaming aggregation logic
+              const blockCode = record.BlockCode || '';
+              uniqueBlocks.add(blockCode);
+              const speed = parseFloat(record.MaxAdDown || '0');
+              speeds.push(speed);
+              const tech = mapTechCodeToTechnology(record.TechCode || '');
+              if (
+                technologyCounts[
+                  tech.toLowerCase() as keyof TechnologyCounts
+                ] !== undefined
+              ) {
+                technologyCounts[
+                  tech.toLowerCase() as keyof TechnologyCounts
+                ]! += 1;
+              } else {
+                technologyCounts.other += 1;
+              }
+              // Count blocks with broadband, high speed, gigabit
+              if (speed >= SPEED_THRESHOLDS.BROADBAND_MIN)
+                metrics.blocksWithBroadband.add(blockCode);
+              if (speed >= SPEED_THRESHOLDS.BROADBAND_MIN)
+                metrics.blocksWithHighSpeed.add(blockCode);
+              if (speed >= SPEED_THRESHOLDS.GIGABIT)
+                metrics.blocksWithGigabit.add(blockCode);
             }
           });
 
           parser.on('end', () => {
-            logger.info(
-              `Processed ${broadbandRecords.length} records for ${state}`,
-            );
-            resolve(broadbandRecords);
+            // Final aggregation
+            const totalCensusBlocks = uniqueBlocks.size;
+            const blocksWithBroadband = metrics.blocksWithBroadband.size;
+            const blocksWithHighSpeed = metrics.blocksWithHighSpeed.size;
+            const blocksWithGigabit = metrics.blocksWithGigabit.size;
+            const broadbandAvailabilityPercent =
+              totalCensusBlocks > 0
+                ? (blocksWithBroadband / totalCensusBlocks) * 100
+                : 0;
+            const highSpeedAvailabilityPercent =
+              totalCensusBlocks > 0
+                ? (blocksWithHighSpeed / totalCensusBlocks) * 100
+                : 0;
+            const gigabitAvailabilityPercent =
+              totalCensusBlocks > 0
+                ? (blocksWithGigabit / totalCensusBlocks) * 100
+                : 0;
+            const averageDownloadSpeed =
+              speeds.length > 0
+                ? speeds.reduce((a, b) => a + b, 0) / speeds.length
+                : 0;
+            const medianDownloadSpeed =
+              speeds.length > 0
+                ? speeds.sort((a, b) => a - b)[Math.floor(speeds.length / 2)]
+                : 0;
+            // Calculate broadbandScore (reuse your existing logic if possible)
+            const broadbandScore =
+              BroadbandService.calculateBroadbandScoreStatic({
+                broadbandAvailabilityPercent,
+                highSpeedAvailabilityPercent,
+                gigabitAvailabilityPercent,
+                technologyCounts,
+              });
+            resolve({
+              state,
+              metrics: {
+                totalCensusBlocks,
+                blocksWithBroadband,
+                broadbandAvailabilityPercent,
+                blocksWithHighSpeed,
+                highSpeedAvailabilityPercent,
+                blocksWithGigabit,
+                gigabitAvailabilityPercent,
+                technologyCounts,
+                averageDownloadSpeed,
+                medianDownloadSpeed,
+                broadbandScore,
+              },
+              dataVersion: s3Key.split('/')[0],
+              lastUpdated: new Date(),
+            });
           });
 
           parser.on('error', (error) => {
             reject(error);
           });
-
-          // Pipe the S3 response body to the parser...
 
           stream.pipe(parser);
         } catch (error) {
@@ -204,20 +284,12 @@ export class S3BroadbandLoader {
     for (const s3Key of statesToProcess) {
       try {
         logger.info(`Downloading and processing ${s3Key}`);
-        const records = await this.downloadAndParseCSV(s3Key);
-
-        // Extract state from the first record or filename...
-
-        const state =
-          records.length > 0
-            ? records[0].state
-            : s3Key.match(/\/([A-Z]{2})-Fixed-/)?.[1] || 'Unknown';
-
+        const result = await this.downloadAndParseCSV(s3Key);
         processedData.push({
-          state,
-          records,
-          dataVersion,
-          lastUpdated: new Date(),
+          state: result.state,
+          records: [], // No longer storing all records, just the aggregate
+          dataVersion: result.dataVersion,
+          lastUpdated: result.lastUpdated,
         });
       } catch (error) {
         logger.error(`Error processing S3 file ${s3Key}:`, error);
@@ -247,51 +319,15 @@ export class S3BroadbandLoader {
       return;
     }
 
-    // Process all states...
-
-    const statesToProcess = stateFiles;
-    logger.info(`Processing all ${statesToProcess.length} states`);
-
-    for (const s3Key of statesToProcess) {
+    for (const s3Key of stateFiles) {
       try {
-        // Extract state from filename before downloading...
-
-        const stateMatch = s3Key.match(/\/([A-Z]{2})-Fixed-/);
-        if (!stateMatch) {
-          logger.error(`Could not extract state from S3 key: ${s3Key}`);
-          continue;
-        }
-        const state = stateMatch[1];
-
-        // Check if this state+version already exists in DynamoDB...
-
-        const existingRecord = await this.checkIfStateExists(
-          state,
-          dataVersion,
-        );
-
-        if (existingRecord) {
-          logger.info(
-            `State ${state} version ${dataVersion} already exists in DynamoDB, skipping download`,
-          );
-          continue;
-        }
-
-        logger.info(
-          `State ${state} version ${dataVersion} not found in DynamoDB, downloading CSV`,
-        );
-        const records = await this.downloadAndParseCSV(s3Key);
-
-        const stateData: S3BroadbandData = {
-          state,
-          records,
-          dataVersion,
-          lastUpdated: new Date(),
-        };
-
-        // Immediately process this state...
-
-        await callback(stateData);
+        const result = await this.downloadAndParseCSV(s3Key);
+        await callback({
+          state: result.state,
+          records: [], // No longer storing all records, just the aggregate
+          dataVersion: result.dataVersion,
+          lastUpdated: result.lastUpdated,
+        });
       } catch (error) {
         logger.error(`Error processing S3 file ${s3Key}:`, error);
       }
