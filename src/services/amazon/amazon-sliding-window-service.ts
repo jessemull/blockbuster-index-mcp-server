@@ -34,12 +34,14 @@ export class AmazonSlidingWindowService {
         newTimestamp,
       });
 
-      // Get the current sliding window aggregate
+      // Get the current sliding window aggregate...
+
       const currentAggregate =
         await this.slidingWindowRepository.getAggregate(state);
 
       if (!currentAggregate) {
-        // First time - create initial aggregate
+        // First time - create initial aggregate...
+
         await this.slidingWindowRepository.updateAggregate(
           state,
           newJobCount,
@@ -48,15 +50,18 @@ export class AmazonSlidingWindowService {
         return;
       }
 
-      // Calculate the window boundaries
+      // Calculate the window boundaries...
+
       const windowStart = newTimestamp - WINDOW_DAYS * MILLISECONDS_PER_DAY;
 
-      // Find the oldest day that should be removed from the window
+      // Find the oldest day that should be removed from the window...
+
       const oldestDayToRemove = currentAggregate.windowStart;
       let oldDayJobCount: number | undefined;
 
       if (oldestDayToRemove < windowStart) {
-        // We need to remove the oldest day
+        // We need to remove the oldest day...
+
         const oldDayRecord = await this.jobRepository.query(
           state,
           oldestDayToRemove,
@@ -68,7 +73,8 @@ export class AmazonSlidingWindowService {
         }
       }
 
-      // Update the sliding window aggregate
+      // Update the sliding window aggregate...
+
       await this.slidingWindowRepository.updateAggregate(
         state,
         newJobCount,
@@ -105,10 +111,12 @@ export class AmazonSlidingWindowService {
           await this.slidingWindowRepository.getAggregate(state);
 
         if (aggregate && aggregate.dayCount > 0) {
-          // Use the average job count for scoring
+          // Use the average job count for scoring...
+
           scores[state] = aggregate.averageJobCount;
         } else {
-          // No data available, use 0
+          // No data available, use 0...
+
           scores[state] = 0;
         }
       }
@@ -138,7 +146,8 @@ export class AmazonSlidingWindowService {
       for (const state of Object.values(States)) {
         logger.info(`Processing historical data for ${state}`);
 
-        // Query all job records for this state within the window
+        // Query all job records for this state within the window...
+
         const jobRecords = await this.jobRepository.query(
           state,
           windowStart,
@@ -150,7 +159,8 @@ export class AmazonSlidingWindowService {
           continue;
         }
 
-        // Calculate the sliding window aggregate
+        // Calculate the sliding window aggregate...
+
         const totalJobCount = jobRecords.reduce(
           (sum, record) => sum + record.jobCount,
           0,

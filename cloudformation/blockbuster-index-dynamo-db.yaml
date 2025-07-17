@@ -85,7 +85,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      TableName: !Sub blockbuster-index-amazon-sliding-window-${Environment}'
+      TableName: !Sub 'blockbuster-index-amazon-sliding-window-${Environment}'
       AttributeDefinitions:
         - AttributeName: state
           AttributeType: S

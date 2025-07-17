@@ -10,7 +10,6 @@ export interface SignalRepository<T> {
   query?(state: string, start?: number, end?: number): Promise<T[]>;
 }
 
-// New types for sliding window optimization
 export interface SlidingWindowAggregate {
   state: string;
   windowStart: number;

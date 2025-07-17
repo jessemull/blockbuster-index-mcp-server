@@ -10,7 +10,7 @@ const DEFAULT_TABLE = 'blockbuster-index-amazon-jobs-dev';
 function getStartOfDayTimestamp(date: Date = new Date()): number {
   const startOfDay = new Date(date);
   startOfDay.setUTCHours(0, 0, 0, 0);
-  return Math.floor(startOfDay.getTime() / 1000); // Unix timestamp in seconds
+  return Math.floor(startOfDay.getTime() / 1000); // Unix timestamp in seconds.
 }
 
 export const getAmazonScores = async (): Promise<Record<string, number>> => {
@@ -33,20 +33,23 @@ export const getAmazonScores = async (): Promise<Record<string, number>> => {
     slidingWindowService = new AmazonSlidingWindowService();
   }
 
-  // Get current day job counts and store them
+  // Get current day job counts and store them...
+
   const jobCounts = await scrapeAmazonJobs(repository, timestamp);
 
-  // Update sliding window aggregates with new data
+  // Update sliding window aggregates with new data...
+
   if (slidingWindowService) {
     for (const [state, jobCount] of Object.entries(jobCounts)) {
       await slidingWindowService.updateSlidingWindow(
         state,
         jobCount,
-        timestamp * 1000, // Convert seconds to milliseconds
+        timestamp * 1000, // Convert seconds to milliseconds.
       );
     }
 
-    // Get scores from sliding window aggregates
+    // Get scores from sliding window aggregates...
+
     const slidingWindowJobCounts =
       await slidingWindowService.getSlidingWindowScores();
     const scores = calculateScores(slidingWindowJobCounts);
@@ -65,7 +68,8 @@ export const getAmazonScores = async (): Promise<Record<string, number>> => {
 
     return scores;
   } else {
-    // Fallback to original calculation for development without DynamoDB
+    // Fallback to original calculation for development without DynamoDB...
+
     const scores = calculateScores(jobCounts);
 
     logger.info('Amazon job presence calculation completed (fallback)...', {

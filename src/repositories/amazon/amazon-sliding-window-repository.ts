@@ -17,7 +17,7 @@ export class DynamoDBAmazonSlidingWindowRepository
           TableName: this.tableName,
           Key: {
             state,
-            windowStart: 0, // We use a single record per state
+            windowStart: 0,
           },
         }),
       );
@@ -40,7 +40,7 @@ export class DynamoDBAmazonSlidingWindowRepository
     try {
       const item = {
         state: aggregate.state,
-        windowStart: 0, // We use a single record per state
+        windowStart: 0,
         windowEnd: aggregate.windowEnd,
         totalJobCount: aggregate.totalJobCount,
         dayCount: aggregate.dayCount,
@@ -100,7 +100,8 @@ export class DynamoDBAmazonSlidingWindowRepository
       const now = Date.now();
 
       if (!currentAggregate) {
-        // First time creating aggregate
+        // First time creating aggregate...
+
         const newAggregate: SlidingWindowAggregate = {
           state,
           windowStart: newDayTimestamp,
@@ -115,20 +116,23 @@ export class DynamoDBAmazonSlidingWindowRepository
         return;
       }
 
-      // Update existing aggregate
+      // Update existing aggregate...
+
       let newTotalJobCount = currentAggregate.totalJobCount + newDayJobCount;
       let newDayCount = currentAggregate.dayCount + 1;
       let newWindowStart = currentAggregate.windowStart;
       let newWindowEnd = newDayTimestamp;
 
-      // If we have an old day to remove (sliding window)
+      // If we have an old day to remove (sliding window)...
+
       if (oldDayTimestamp && oldDayJobCount !== undefined) {
         newTotalJobCount -= oldDayJobCount;
         newDayCount -= 1;
-        newWindowStart = oldDayTimestamp + 86400000; // Add one day to start
+        newWindowStart = oldDayTimestamp + 86400000; // Add one day to start.
       }
 
-      // Ensure we dont go below 1
+      // Ensure we dont go below 1...
+
       newDayCount = Math.max(1, newDayCount);
       const newAverageJobCount = newTotalJobCount / newDayCount;
 
@@ -195,7 +199,8 @@ export class DynamoDBAmazonSlidingWindowRepository
     }
   }
 
-  // Required by base class but not used for sliding window
+  // Required by base class but not used for sliding window...
+
   async save(record: SlidingWindowAggregate): Promise<void> {
     await this.saveAggregate(record);
   }
