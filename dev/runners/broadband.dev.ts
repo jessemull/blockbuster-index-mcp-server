@@ -2,8 +2,8 @@
 
 import fs from 'fs';
 import path from 'path';
-import { getBroadbandScores } from '../../src/signals/broadband/get-broadband-scores';
-import { BroadbandService } from '../../src/services/broadband-service';
+import { getBroadbandScores } from '../../src/signals';
+import { BroadbandService } from '../../src/services';
 import { logger } from '../../src/util';
 
 async function runBroadbandTest() {
