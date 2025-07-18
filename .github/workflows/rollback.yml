@@ -13,7 +13,7 @@ on:
           - broadband
           - blockbuster-index
       container_image_uri:
-        description: 'Container image URI to rollback to (e.g., 123456789012.dkr.ecr.us-west-2.amazonaws.com/blockbuster-index-amazon-dev:abcdef)'
+        description: 'Container image URI to rollback to (e.g., 123456789012.dkr.ecr.us-west-2.amazonaws.com/blockbuster-index-dev:amazon-abcdef)'
         required: true
         type: string
       environment:
