@@ -69,8 +69,6 @@
     "bastion": "node ./scripts/connect.js",
     "build": "webpack --config webpack.config.js",
     "clean": "rm -rf dist",
-    "dev": "sh scripts/local.sh",
-    "dev:signal": "sh scripts/local-signal.sh",
     "commit": "git-cz",
     "coverage:open": "open ./coverage/lcov-report/index.html",
     "ecs:run": "sh scripts/run-ecs-task.sh",
@@ -81,14 +79,9 @@
     "prebuild": "npm run clean",
     "prepare": "husky",
     "signal": "node scripts/run-signal.js",
-    "signal:all": "node scripts/run-all-signals.js",
-    "run-all": "NODE_ENV=development ts-node src/index.ts",
+    "signal:container": "sh scripts/run-signal-container.sh",
     "test": "jest",
-    "test:watch": "jest --watch",
-    "signal:amazon": "ts-node src/signals/amazon/entrypoint.ts",
-    "signal:census": "ts-node src/signals/census/entrypoint.ts",
-    "signal:broadband": "ts-node src/signals/broadband/entrypoint.ts",
-    "calculate-index": "ts-node src/calculate-index/entrypoint.ts"
+    "test:watch": "jest --watch"
   },
   "version": "1.0.0"
 }

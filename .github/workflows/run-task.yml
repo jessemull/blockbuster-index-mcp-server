@@ -12,7 +12,7 @@ on:
           - dev
           - prod
       component:
-        description: 'Which signal or combiner to run'
+        description: 'Which signal to run'
         required: true
         default: 'amazon'
         type: choice
@@ -20,7 +20,7 @@ on:
           - amazon
           - census
           - broadband
-          - combiner
+          - blockbuster-index
 
 jobs:
   run-task:

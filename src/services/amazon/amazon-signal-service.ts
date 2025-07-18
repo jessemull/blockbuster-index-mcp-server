@@ -1,4 +1,4 @@
-import { getAmazonScores } from '../../signals/amazon';
+import { getAmazonScores } from '../../signals/amazon/get-amazon-scores';
 import { logger } from '../../util';
 import { States } from '../../types';
 import type { JobSignalRecord, SignalRepository } from '../../types/amazon';
@@ -26,7 +26,7 @@ export class AmazonSignalService {
         {
           timestamp,
           totalJobs: Object.values(jobScores).reduce(
-            (sum, count) => sum + count,
+            (sum: number, count: number) => sum + count,
             0,
           ),
           totalStates: Object.keys(jobScores).length,

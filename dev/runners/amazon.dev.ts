@@ -2,7 +2,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { getAmazonScores } from '../../src/signals';
+import { getAmazonScores } from '../../src/signals/amazon/get-amazon-scores';
 import { logger } from '../../src/util';
 
 async function runAmazonTest() {

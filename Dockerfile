@@ -1,6 +1,6 @@
 FROM node:20-alpine
 
-# Install System Dependencies for Chromium
+# Install Chromium and other system dependencies
 
 RUN apk add --no-cache \
   chromium \
@@ -9,31 +9,31 @@ RUN apk add --no-cache \
   harfbuzz \
   ca-certificates \
   ttf-freefont \
-  nodejs \
-  yarn \
   udev \
   bash
 
-# Define Path to Chromium Binary
+# Define path to Chromium binary
 
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
-# Set Working Directory
 WORKDIR /app
 
-# Install Node Dependencies
+# Copy package files and install dependencies
 
 COPY package*.json ./
 RUN npm ci
 
-# Copy App Code
+# Set build argument and environment variable for signal type
+
+ARG SIGNAL_TYPE
+ENV SIGNAL_TYPE=$SIGNAL_TYPE
+
+# Copy source code
 
 COPY . .
 
-# Build App
+# Build the project using the specified signal type
 
 RUN npm run build
-
-# Run App
 
 CMD ["node", "dist/index.js"]

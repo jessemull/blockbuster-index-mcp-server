@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'ECS Task Definitions and Scheduled Rules for Blockbuster Index Signals and Combiner.'
+Description: 'ECS Task Definitions and Scheduled Rules for Blockbuster Index Signals.'
 
 Mappings:
   EnvConfig:
@@ -45,7 +45,7 @@ Parameters:
     Default: 'cron(0 10 * * ? *)'
     Description: 'EventBridge schedule expression (cron or rate) - default is daily at 2AM PST (10AM UTC)'
 
-# --- ECS Task Definitions for Each Signal and the Combiner ---
+# --- ECS Task Definitions for Each Signal ---
 Resources:
   AmazonECSTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -66,7 +66,7 @@ Resources:
           Cpu: 512
           Memory: 1024
           Essential: true
-          Command: ["npm", "run", "signal:amazon"]
+          Command: ["node", "dist/index.js"]
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -120,7 +120,7 @@ Resources:
           Cpu: 512
           Memory: 1024
           Essential: true
-          Command: ["npm", "run", "signal:census"]
+          Command: ["node", "dist/index.js"]
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -174,7 +174,7 @@ Resources:
           Cpu: 512
           Memory: 1024
           Essential: true
-          Command: ["npm", "run", "signal:broadband"]
+          Command: ["node", "dist/index.js"]
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -211,10 +211,10 @@ Resources:
             - Name: CW_LOG_STREAM
               Value: !Sub 'blockbuster-index-mcp-broadband-${Environment}-${AWS::StackName}'
 
-  CombinerECSTaskDefinition:
+  BlockbusterIndexECSTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
-      Family: !Sub 'blockbuster-index-combiner-task-${Environment}'
+      Family: !Sub 'blockbuster-index-blockbuster-index-task-${Environment}'
       Cpu: '512'
       Memory: '2048'
       NetworkMode: awsvpc
@@ -225,19 +225,19 @@ Resources:
       TaskRoleArn: !ImportValue
         Fn::Sub: '${Environment}-BlockbusterTaskRoleArn'
       ContainerDefinitions:
-        - Name: blockbuster-index-combiner-container
+        - Name: blockbuster-index-blockbuster-index-container
           Image: !Ref ContainerImage
           Cpu: 512
           Memory: 1024
           Essential: true
-          Command: ["npm", "run", "combine-index"]
+          Command: ["node", "dist/index.js"]
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-group: !ImportValue
                 Fn::Sub: '${Environment}-BlockbusterLogGroupName'
               awslogs-region: !Ref AWS::Region
-              awslogs-stream-prefix: 'blockbuster-index-combiner'
+              awslogs-stream-prefix: 'blockbuster-index-blockbuster-index'
           Environment:
             - Name: NODE_ENV
               Value: !If [IsDev, 'development', 'production']
@@ -261,7 +261,7 @@ Resources:
               Value: !ImportValue
                 Fn::Sub: '${Environment}-BlockbusterLogGroupName'
             - Name: CW_LOG_STREAM
-              Value: !Sub 'blockbuster-index-mcp-combiner-${Environment}-${AWS::StackName}'
+              Value: !Sub 'blockbuster-index-mcp-blockbuster-index-${Environment}-${AWS::StackName}'
 
 # --- Scheduled EventBridge Rules for Each Task ---
   AmazonScheduledTaskRule:
@@ -333,21 +333,21 @@ Resources:
                 SecurityGroups: !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
                 Subnets: !FindInMap [EnvConfig, !Ref Environment, Subnets]
 
-  CombinerScheduledTaskRule:
+  BlockbusterIndexScheduledTaskRule:
     Type: AWS::Events::Rule
     Condition: IsProd
     Properties:
-      Name: !Sub 'blockbuster-index-combiner-scheduled-task-rule-${Environment}'
+      Name: !Sub 'blockbuster-index-blockbuster-index-scheduled-task-rule-${Environment}'
       ScheduleExpression: 'cron(0 22 * * ? *)' # 10PM UTC (12 hours after signals)
       State: ENABLED
       Targets:
         - Arn: !ImportValue
             Fn::Sub: '${Environment}-BlockbusterECSClusterArn'
-          Id: 'BlockbusterIndexCombinerECSTask'
+          Id: 'BlockbusterIndexBlockbusterIndexECSTask'
           RoleArn: !ImportValue
             Fn::Sub: '${Environment}-BlockbusterEventBridgeInvokeRoleArn'
           EcsParameters:
-            TaskDefinitionArn: !Ref CombinerECSTaskDefinition
+            TaskDefinitionArn: !Ref BlockbusterIndexECSTaskDefinition
             TaskCount: 1
             LaunchType: FARGATE
             NetworkConfiguration:
@@ -367,9 +367,9 @@ Outputs:
   BroadbandECSTaskDefinitionArn:
     Description: 'Broadband ECS Task Definition ARN'
     Value: !Ref BroadbandECSTaskDefinition
-  CombinerECSTaskDefinitionArn:
-    Description: 'Combiner ECS Task Definition ARN'
-    Value: !Ref CombinerECSTaskDefinition
+  BlockbusterIndexECSTaskDefinitionArn:
+    Description: 'Blockbuster Index ECS Task Definition ARN'
+    Value: !Ref BlockbusterIndexECSTaskDefinition
   S3BucketName:
     Description: 'S3 Bucket Name for data storage'
     Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]

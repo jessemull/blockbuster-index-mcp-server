@@ -2,7 +2,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { getCensusScores } from '../../src/signals';
+import { getCensusScores } from '../../src/signals/census/get-census-scores';
 import { logger } from '../../src/util';
 
 async function runCensusTest() {

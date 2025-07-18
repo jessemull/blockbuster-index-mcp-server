@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        component: [amazon, census, broadband, combiner]
+        component: [amazon, census, broadband, blockbuster-index]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -59,7 +59,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t blockbuster-index-${{ matrix.component }}:$GITHUB_SHA .
+          docker build --build-arg SIGNAL_TYPE=${{ matrix.component }} -t blockbuster-index-${{ matrix.component }}:$GITHUB_SHA .
           docker tag blockbuster-index-${{ matrix.component }}:$GITHUB_SHA ${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ matrix.component }}-${{ github.event.inputs.environment }}:$GITHUB_SHA
 
       - name: Push Docker Image to ECR

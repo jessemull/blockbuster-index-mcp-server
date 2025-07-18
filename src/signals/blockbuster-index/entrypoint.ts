@@ -1,7 +1,12 @@
-import { CONFIG } from '../config';
-import { WEIGHTS } from '../constants';
-import { States, Signal, StateScore, BlockbusterIndexResponse } from '../types';
-import { logger, uploadToS3, downloadFromS3 } from '../util';
+import { CONFIG } from '../../config';
+import { WEIGHTS } from '../../constants';
+import {
+  States,
+  Signal,
+  StateScore,
+  BlockbusterIndexResponse,
+} from '../../types';
+import { logger, uploadToS3, downloadFromS3 } from '../../util';
 import fs from 'fs';
 import path from 'path';
 
@@ -23,8 +28,11 @@ async function getSignalScores(
     const { scores } = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     return scores;
   } else {
+    if (!CONFIG.S3_BUCKET_NAME) {
+      throw new Error('S3_BUCKET_NAME is required for production mode');
+    }
     const key = `data/signals/${signalName}-scores.json`;
-    const data = await downloadFromS3(CONFIG.S3_BUCKET_NAME!, key);
+    const data = await downloadFromS3(CONFIG.S3_BUCKET_NAME, key);
     const { scores } = JSON.parse(data);
     return scores;
   }
@@ -76,8 +84,11 @@ async function main() {
       fs.writeFileSync(filePath, JSON.stringify(response, null, 2));
       logger.info('Blockbuster index written to file', { filePath });
     } else {
+      if (!CONFIG.S3_BUCKET_NAME) {
+        throw new Error('S3_BUCKET_NAME is required for production mode');
+      }
       await uploadToS3({
-        bucket: CONFIG.S3_BUCKET_NAME!,
+        bucket: CONFIG.S3_BUCKET_NAME,
         key: 'data/data.json',
         body: JSON.stringify(response, null, 2),
         metadata: {
@@ -86,7 +97,7 @@ async function main() {
         },
       });
       logger.info('Blockbuster index uploaded to S3', {
-        bucket: CONFIG.S3_BUCKET_NAME!,
+        bucket: CONFIG.S3_BUCKET_NAME,
         key: 'data/data.json',
       });
     }
