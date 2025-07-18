@@ -38,13 +38,11 @@ This MCP server is part of the **Blockbuster Index Project** which includes the 
 16. [Build & Deployment](#build--deployment)
     - [Build Process](#build-process)
     - [Docker Container](#docker-container)
-    - [ECS Deployment](#ecs-deployment)
-17. [Infrastructure](#infrastructure)
-    - [CloudFormation](#cloudformation)
-    - [Task Definitions](#task-definitions)
-18. [Connecting to the Bastion Host](#connecting-to-the-bastion-host)
+    - [GitHub Workflows](#github-workflows)
+    - [Infrastructure](#infrastructure)
+17. [Connecting to the Bastion Host](#connecting-to-the-bastion-host)
     - [Environment Variables](#environment-variables-2)
-19. [License](#license)
+18. [License](#license)
 
 ## Project Overview
 
@@ -308,13 +306,36 @@ To run all tasks:
 npm run ecs:run:all
 ```
 
-### Build Process
+## Development Workflow
 
-Each task is built with a shared webpack configuration. To build a specific signal set the signal type environment variable:
+The **Blockbuster Index MCP Server** follows a structured development workflow that ensures code quality, testing, and proper deployment practices.
 
-```bash
-SIGNAL_TYPE=<signalName> npm run build
-```
+### Development Process
+
+1. **Feature Development**: Create feature branches from main for new functionality
+2. **Local Testing**: Run signals locally using the provided npm scripts
+3. **Code Quality**: Ensure all linting and formatting standards are met
+4. **Unit Testing**: Write and run comprehensive unit tests with 92% coverage
+5. **Pull Request**: Submit PR with proper commitizen-formatted commits
+6. **CI/CD Pipeline**: Automated testing and quality checks via GitHub Actions
+7. **Deployment**: Use GitHub workflows for targeted signal deployment
+
+### Signal Development
+
+When developing new signals or modifying existing ones:
+
+1. **Local Development**: Use `npm run signal -- <signalName>` for local testing
+2. **Container Testing**: Use `npm run signal:container -- <signalName>` for production-like testing
+3. **ECS Testing**: Use `npm run ecs:run -- <signalName>` for AWS environment testing
+4. **Deployment**: Use GitHub Actions deploy workflow for production deployment
+
+### Code Standards
+
+- **TypeScript**: All code must be written in TypeScript with proper type definitions
+- **ESLint**: Code must pass all linting rules without warnings
+- **Prettier**: Code must be properly formatted using Prettier
+- **Jest**: All new code must include comprehensive unit tests
+- **Coverage**: Maintain 92% minimum code coverage across all metrics
 
 ## Commits & Commitizen
 
@@ -447,31 +468,100 @@ The following environment variables must be set in a `.env` file in the root of 
 | `RETRY_DELAY`               | Delay between retry attempts in milliseconds (default: 1000).         |
 | `PUPPETEER_EXECUTABLE_PATH` | Path to Puppeteer executable for web scraping.                        |
 
-## Deployment
+## Build & Deployment
+
+The **Blockbuster Index MCP Server** uses a sophisticated CI/CD pipeline with GitHub Actions to enable independent deployment of each signal. This modular approach allows for targeted updates and rollbacks without affecting the entire system.
+
+### Build Process
+
+Each signal is built using a shared webpack configuration with the `SIGNAL_TYPE` environment variable determining which signal to compile:
+
+```bash
+SIGNAL_TYPE=<signalName> npm run build
+```
 
 ### Docker Container
 
-The application is containerized using Docker for consistent deployment. A shared Dockerfile is used with a signal type environment variable set to indicate which signal and ECS task to build.
+The application is containerized using Docker for consistent deployment across environments. A shared Dockerfile is used with the `SIGNAL_TYPE` build argument to create signal-specific containers:
 
-## Infrastructure
+```dockerfile
+ARG SIGNAL_TYPE
+ENV SIGNAL_TYPE=$SIGNAL_TYPE
+```
 
-### CloudFormation
+### GitHub Workflows
 
-Infrastructure is managed using AWS CloudFormation templates:
+The project includes four GitHub Actions workflows that enable granular control over deployment and execution.
 
-- **`blockbuster-index-task-definition.yaml`**: Defines ECS task definitions and scheduled execution rules for all signals.
-- **`blockbuster-index-cluster.yaml`**: Defines the ECS cluster and related resources.
-- **`blockbuster-index-dynamo-db.yaml`**: Defines DynamoDB tables for data storage.
-- **`blockbuster-index-broadband-s3.yaml`**: Defines S3 buckets for data storage.
+#### Deploy Workflow
 
-### Task Definitions
+Deploy individual signals to ECS Fargate with full CI/CD pipeline. Triggered manually from GitHub Actions UI with parameter selection.
 
-Each signal has its own ECS task definition with optimized resource allocation:
+**Process**:
 
-- **Amazon Task**: Higher CPU allocation for web scraping operations
-- **Census Task**: Balanced CPU/memory for API processing
-- **Broadband Task**: Optimized for large dataset processing
-- **Blockbuster Index Task**: Lightweight aggregation and calculation
+1. **Code Quality Checks**: Runs linting and unit tests with 92% coverage threshold.
+2. **Docker Build**: Creates signal-specific container image with versioned tag.
+3. **ECR Push**: Uploads image to AWS ECR with environment-specific repository.
+4. **CloudFormation Deployment**: Updates ECS task definition with new container image.
+5. **Task Execution**: Automatically runs the deployed task to verify functionality.
+
+#### Rollback Workflow
+
+Quickly rollback a specific signal to a previous container image version. Triggered manually when issues are detected with a recent deployment.
+
+**Process**:
+
+1. **CloudFormation Update**: Deploys task definition with previous container image.
+2. **Verification**: Ensures rollback completes successfully.
+
+#### Run Task Workflow
+
+Manually trigger execution of any signal task for testing or data refresh. Triggered manually for on-demand signal execution.
+
+**Process**:
+
+1. **Task Launch**: Executes ECS task with current task definition.
+2. **Monitoring**: Provides task ARN for CloudWatch monitoring.
+
+#### Pull Request Workflow
+
+Automated quality gates for all pull requests. Automatically triggered on all pull requests to main branch.
+
+**Process**:
+
+1. **Build Verification**: Ensures code compiles correctly.
+2. **Linting**: Enforces code style and quality standards.
+3. **Unit Testing**: Runs comprehensive test suite with coverage reporting.
+4. **Coverage Threshold**: Enforces 92% minimum coverage requirement.
+
+### Infrastructure
+
+#### CloudFormation Templates
+
+Infrastructure is managed using AWS CloudFormation templates with environment-specific parameterization:
+
+- **`blockbuster-index-task-definition.yaml`**: Defines ECS task definitions and scheduled execution rules for all signals with environment-specific configurations.
+- **`blockbuster-index-cluster.yaml`**: Defines the ECS cluster, IAM roles, security groups, and related resources.
+- **`blockbuster-index-dynamo-db.yaml`**: Defines DynamoDB tables for signal data storage with environment-specific naming.
+- **`blockbuster-index-broadband-s3.yaml`**: Defines S3 buckets for broadband data storage.
+
+#### Task Definitions
+
+Each signal has its own ECS task definition with optimized resource allocation and environment-specific configurations:
+
+- **Amazon Task**: Higher CPU allocation for web scraping operations with Puppeteer
+- **Census Task**: Balanced CPU/memory for API processing and data analysis
+- **Broadband Task**: Optimized for large dataset processing with S3 integration
+- **Blockbuster Index Task**: Lightweight aggregation and calculation with minimal resource requirements
+
+#### Environment Parameterization
+
+All infrastructure components use environment-specific naming and configuration:
+
+- **Resource Naming**: All AWS resources include environment prefix (e.g., `blockbuster-index-amazon-task-dev`)
+- **Configuration Mapping**: Environment-specific settings for logging levels, S3 buckets, and DynamoDB tables
+- **Security Groups**: Environment-specific network security configurations
+- **Scheduling**: Environment-specific EventBridge rules for task execution
 
 ## Connecting to the Bastion Host
 
