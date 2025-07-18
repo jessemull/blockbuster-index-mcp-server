@@ -83,13 +83,14 @@ export class DynamoDBAmazonSignalRepository extends DynamoDBSignalRepository<Job
         new QueryCommand({
           TableName: this.tableName,
           KeyConditionExpression:
-            'state = :state AND #ts BETWEEN :start AND :end',
+            '#state = :state AND #ts BETWEEN :start AND :end',
           ExpressionAttributeValues: {
             ':state': state,
             ':start': start || 0,
             ':end': end || Math.floor(Date.now() / 1000),
           },
           ExpressionAttributeNames: {
+            '#state': 'state',
             '#ts': 'timestamp',
           },
         }),

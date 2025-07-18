@@ -431,6 +431,72 @@ describe('BroadbandService', () => {
 
       expect(result.other).toBe(1);
     });
+
+    it('should categorize wireless technology codes correctly', () => {
+      const mockRecords: BroadbandCsvRecord[] = [
+        {
+          LogRecNo: '1',
+          Provider_Id: '1',
+          FRN: '1',
+          ProviderName: 'Test Provider',
+          DBAName: 'Test DBA',
+          HoldingCompanyName: 'Test Holding',
+          HocoNum: '1',
+          HocoFinal: '1',
+          StateAbbr: 'CA',
+          BlockCode: '060010001001000',
+          TechCode: '40',
+          Consumer: '1',
+          MaxAdDown: '100',
+          MaxAdUp: '10',
+          Business: '1',
+        },
+        {
+          LogRecNo: '2',
+          Provider_Id: '2',
+          FRN: '2',
+          ProviderName: 'Test Provider 2',
+          DBAName: 'Test DBA 2',
+          HoldingCompanyName: 'Test Holding 2',
+          HocoNum: '2',
+          HocoFinal: '2',
+          StateAbbr: 'CA',
+          BlockCode: '060010001001001',
+          TechCode: '41',
+          Consumer: '1',
+          MaxAdDown: '50',
+          MaxAdUp: '5',
+          Business: '1',
+        },
+        {
+          LogRecNo: '3',
+          Provider_Id: '3',
+          FRN: '3',
+          ProviderName: 'Test Provider 3',
+          DBAName: 'Test DBA 3',
+          HoldingCompanyName: 'Test Holding 3',
+          HocoNum: '3',
+          HocoFinal: '3',
+          StateAbbr: 'CA',
+          BlockCode: '060010001001002',
+          TechCode: '42',
+          Consumer: '1',
+          MaxAdDown: '25',
+          MaxAdUp: '3',
+          Business: '1',
+        },
+      ];
+
+      const result = (
+        service as unknown as BroadbandServicePrivate
+      ).calculateTechnologyCounts(mockRecords);
+
+      expect(result.wireless).toBe(3);
+      expect(result.fiber).toBe(0);
+      expect(result.cable).toBe(0);
+      expect(result.dsl).toBe(0);
+      expect(result.other).toBe(0);
+    });
   });
 
   describe('extractSpeeds', () => {

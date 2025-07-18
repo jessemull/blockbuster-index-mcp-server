@@ -229,7 +229,7 @@ describe('DynamoDBAmazonSignalRepository', () => {
       expect(call).toBeInstanceOf(QueryCommand);
       expect(call.TableName).toBe(mockTableName);
       expect(call.KeyConditionExpression).toBe(
-        'state = :state AND #ts BETWEEN :start AND :end',
+        '#state = :state AND #ts BETWEEN :start AND :end',
       );
       expect(call.ExpressionAttributeValues).toEqual({
         ':state': 'CA',
@@ -237,6 +237,7 @@ describe('DynamoDBAmazonSignalRepository', () => {
         ':end': expect.any(Number),
       });
       expect(call.ExpressionAttributeNames).toEqual({
+        '#state': 'state',
         '#ts': 'timestamp',
       });
       expect(result).toEqual(mockItems);

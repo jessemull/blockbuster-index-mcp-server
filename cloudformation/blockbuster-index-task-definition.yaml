@@ -96,6 +96,8 @@ Resources:
               Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]
             - Name: AMAZON_DYNAMODB_TABLE_NAME
               Value: !Sub 'blockbuster-index-amazon-jobs-${Environment}'
+            - Name: AMAZON_SLIDING_WINDOW_TABLE_NAME
+              Value: !Sub 'blockbuster-index-amazon-sliding-window-${Environment}'
             - Name: AWS_REGION
               Value: !Ref AWS::Region
             - Name: CACHE_CONTROL

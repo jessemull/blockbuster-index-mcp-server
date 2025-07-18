@@ -15,7 +15,7 @@ export function calculateScores(
     const normalizedScore =
       ((jobCount - minJobs) / (maxJobs - minJobs)) * 0.15 + 0.05;
 
-    scores[state] = parseFloat(normalizedScore.toFixed(2));
+    scores[state] = parseFloat(normalizedScore.toFixed(10));
   }
 
   return scores;

@@ -145,6 +145,20 @@ Resources:
                   - dynamodb:DescribeTable
                 Resource: !ImportValue
                   Fn::Sub: '${Environment}-BlockbusterAmazonJobsTableArn'
+        - PolicyName: 'DynamoDBAmazonSlidingWindowAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:UpdateItem
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterAmazonSlidingWindowTableArn'
         - PolicyName: 'DynamoDBCensusSignalsAccess'
           PolicyDocument:
             Version: '2012-10-17'
