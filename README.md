@@ -442,13 +442,14 @@ The following environment variables must be set in a `.env` file in the root of 
 
 ### AWS Infrastructure
 
-| Variable                        | Description                                   |
-| ------------------------------- | --------------------------------------------- |
-| `AWS_TASK_ID`                   | ECS task ID for CloudWatch log stream naming. |
-| `BROADBAND_S3_BUCKET`           | S3 bucket for broadband data storage.         |
-| `BROADBAND_DYNAMODB_TABLE_NAME` | DynamoDB table for broadband signal data.     |
-| `CENSUS_DYNAMODB_TABLE_NAME`    | DynamoDB table for census signal data.        |
-| `AMAZON_DYNAMODB_TABLE_NAME`    | DynamoDB table for Amazon signal data.        |
+| Variable                           | Description                                          |
+| ---------------------------------- | ---------------------------------------------------- |
+| `AWS_TASK_ID`                      | ECS task ID for CloudWatch log stream naming.        |
+| `BROADBAND_S3_BUCKET`              | S3 bucket for broadband data storage.                |
+| `BROADBAND_DYNAMODB_TABLE_NAME`    | DynamoDB table for broadband signal data.            |
+| `CENSUS_DYNAMODB_TABLE_NAME`       | DynamoDB table for census signal data.               |
+| `AMAZON_DYNAMODB_TABLE_NAME`       | DynamoDB table for Amazon signal data.               |
+| `AMAZON_SLIDING_WINDOW_TABLE_NAME` | DynamoDB table for Amazon sliding window aggregates. |
 
 ### Signal Processing
 
