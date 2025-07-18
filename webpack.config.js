@@ -5,7 +5,8 @@ const TerserPlugin = require('terser-webpack-plugin');
 
 dotenv.config();
 
-// Determine entry point based on environment variable
+// Determine entry point based on environment variable...
+
 const getEntryPoint = () => {
   const signal = process.env.SIGNAL_TYPE;
   console.log('SIGNAL', signal);
@@ -13,7 +14,8 @@ const getEntryPoint = () => {
     return `./src/signals/${signal}/entrypoint.ts`;
   }
 
-  // Default to blockbuster-index
+  // Default to blockbuster-index...
+
   return './src/signals/blockbuster-index/entrypoint.ts';
 };
 
