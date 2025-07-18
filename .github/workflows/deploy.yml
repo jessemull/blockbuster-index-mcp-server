@@ -67,12 +67,12 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build --build-arg SIGNAL_TYPE=${{ github.event.inputs.signal_type }} -t blockbuster-index-${{ github.event.inputs.signal_type }}:$GITHUB_SHA .
-          docker tag blockbuster-index-${{ github.event.inputs.signal_type }}:$GITHUB_SHA ${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ github.event.inputs.signal_type }}-${{ github.event.inputs.environment }}:$GITHUB_SHA
+          docker tag blockbuster-index-${{ github.event.inputs.signal_type }}:$GITHUB_SHA ${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ github.event.inputs.environment }}:${{ github.event.inputs.signal_type }}-$GITHUB_SHA
 
       - name: Push Docker Image to ECR
         run: |
-          docker push ${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ github.event.inputs.signal_type }}-${{ github.event.inputs.environment }}:$GITHUB_SHA
-          echo "CONTAINER_IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ github.event.inputs.signal_type }}-${{ github.event.inputs.environment }}:$GITHUB_SHA" >> $GITHUB_ENV
+          docker push ${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ github.event.inputs.environment }}:${{ github.event.inputs.signal_type }}-$GITHUB_SHA
+          echo "CONTAINER_IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ github.event.inputs.environment }}:${{ github.event.inputs.signal_type }}-$GITHUB_SHA" >> $GITHUB_ENV
 
       - name: Deploy CloudFormation Stack
         run: |

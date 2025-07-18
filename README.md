@@ -266,14 +266,6 @@ To clone the repository, install dependencies, and run the project locally follo
 
 4. Set up environment variables. Please see the [Environment Variables](#environment-variables) section.
 
-5. Run individual signals locally:
-
-   ```bash
-   npm run signal:amazon
-   npm run signal:census
-   npm run signal:broadband
-   ```
-
 ## Running Signals Locally
 
 ### Individual Signal Execution
