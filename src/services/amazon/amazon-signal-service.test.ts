@@ -1,10 +1,8 @@
-import { AmazonSignalService } from './amazon-signal-service';
-import { getAmazonScores } from '../../signals/amazon';
-import { logger } from '../../util';
-import { States } from '../../types';
-import type { JobSignalRecord, SignalRepository } from '../../types/amazon';
+const mockGetAmazonScores = jest.fn();
 
-jest.mock('../../signals/amazon');
+jest.mock('../../signals/amazon/get-amazon-scores', () => ({
+  getAmazonScores: mockGetAmazonScores,
+}));
 jest.mock('../../util', () => ({
   logger: {
     info: jest.fn(),
@@ -13,9 +11,10 @@ jest.mock('../../util', () => ({
   },
 }));
 
-const mockGetAmazonScores = getAmazonScores as jest.MockedFunction<
-  typeof getAmazonScores
->;
+import { AmazonSignalService } from './amazon-signal-service';
+import { logger } from '../../util';
+import { States } from '../../types';
+import type { JobSignalRecord, SignalRepository } from '../../types/amazon';
 
 interface AmazonSignalServiceWithPrivate {
   getStartOfDayTimestamp(date?: Date): number;

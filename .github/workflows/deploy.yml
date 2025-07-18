@@ -11,14 +11,21 @@ on:
         options:
           - dev
           - prod
+      signal_type:
+        description: 'Choose signal type to deploy'
+        required: true
+        default: 'amazon'
+        type: choice
+        options:
+          - amazon
+          - census
+          - broadband
+          - blockbuster-index
 
 jobs:
   deploy-ecs-task:
     name: Deploy ECS Fargate Task
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        component: [amazon, census, broadband, blockbuster-index]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -59,20 +66,20 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build --build-arg SIGNAL_TYPE=${{ matrix.component }} -t blockbuster-index-${{ matrix.component }}:$GITHUB_SHA .
-          docker tag blockbuster-index-${{ matrix.component }}:$GITHUB_SHA ${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ matrix.component }}-${{ github.event.inputs.environment }}:$GITHUB_SHA
+          docker build --build-arg SIGNAL_TYPE=${{ github.event.inputs.signal_type }} -t blockbuster-index-${{ github.event.inputs.signal_type }}:$GITHUB_SHA .
+          docker tag blockbuster-index-${{ github.event.inputs.signal_type }}:$GITHUB_SHA ${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ github.event.inputs.signal_type }}-${{ github.event.inputs.environment }}:$GITHUB_SHA
 
       - name: Push Docker Image to ECR
         run: |
-          docker push ${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ matrix.component }}-${{ github.event.inputs.environment }}:$GITHUB_SHA
-          echo "CONTAINER_IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ matrix.component }}-${{ github.event.inputs.environment }}:$GITHUB_SHA" >> $GITHUB_ENV
+          docker push ${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ github.event.inputs.signal_type }}-${{ github.event.inputs.environment }}:$GITHUB_SHA
+          echo "CONTAINER_IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/blockbuster-index-${{ github.event.inputs.signal_type }}-${{ github.event.inputs.environment }}:$GITHUB_SHA" >> $GITHUB_ENV
 
       - name: Deploy CloudFormation Stack
         run: |
           aws cloudformation deploy \
-            --stack-name blockbuster-index-${{ matrix.component }}-task-stack-${{ github.event.inputs.environment }} \
+            --stack-name blockbuster-index-${{ github.event.inputs.signal_type }}-task-stack-${{ github.event.inputs.environment }} \
             --template-file cloudformation/blockbuster-index-task-definition.yaml \
-            --parameter-overrides ContainerImage=${{ env.CONTAINER_IMAGE_URI }} Environment=${{ github.event.inputs.environment }} \
+            --parameter-overrides ContainerImage=${{ env.CONTAINER_IMAGE_URI }} Environment=${{ github.event.inputs.environment }} SignalType=${{ github.event.inputs.signal_type }} \
             --capabilities CAPABILITY_NAMED_IAM \
             --region us-west-2
 
@@ -85,10 +92,10 @@ jobs:
         run: |
           if [[ "${{ github.event.inputs.environment }}" == "prod" ]]; then
             CLUSTER="blockbuster-index-prod"
-            TASK_DEF="blockbuster-index-${{ matrix.component }}-task-prod"
+            TASK_DEF="blockbuster-index-${{ github.event.inputs.signal_type }}-task-prod"
           else
             CLUSTER="blockbuster-index-dev"
-            TASK_DEF="blockbuster-index-${{ matrix.component }}-task-dev"
+            TASK_DEF="blockbuster-index-${{ github.event.inputs.signal_type }}-task-dev"
           fi
           TASK_ARN=$(aws ecs run-task \
             --cluster $CLUSTER \
