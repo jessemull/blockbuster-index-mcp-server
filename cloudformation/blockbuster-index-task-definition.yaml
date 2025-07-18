@@ -89,7 +89,7 @@ Resources:
               awslogs-stream-prefix: 'blockbuster-index-amazon'
           Environment:
             - Name: NODE_ENV
-              Value: !If [IsDev, 'development', 'production']
+              Value: 'production'
             - Name: LOG_LEVEL
               Value: !FindInMap [EnvConfig, !Ref Environment, LogLevel]
             - Name: S3_BUCKET_NAME
@@ -144,7 +144,7 @@ Resources:
               awslogs-stream-prefix: 'blockbuster-index-census'
           Environment:
             - Name: NODE_ENV
-              Value: !If [IsDev, 'development', 'production']
+              Value: 'production'
             - Name: LOG_LEVEL
               Value: !FindInMap [EnvConfig, !Ref Environment, LogLevel]
             - Name: S3_BUCKET_NAME
@@ -199,7 +199,7 @@ Resources:
               awslogs-stream-prefix: 'blockbuster-index-broadband'
           Environment:
             - Name: NODE_ENV
-              Value: !If [IsDev, 'development', 'production']
+              Value: 'production'
             - Name: LOG_LEVEL
               Value: !FindInMap [EnvConfig, !Ref Environment, LogLevel]
             - Name: S3_BUCKET_NAME
@@ -256,7 +256,7 @@ Resources:
               awslogs-stream-prefix: 'blockbuster-index-blockbuster-index'
           Environment:
             - Name: NODE_ENV
-              Value: !If [IsDev, 'development', 'production']
+              Value: 'production'
             - Name: LOG_LEVEL
               Value: !FindInMap [EnvConfig, !Ref Environment, LogLevel]
             - Name: S3_BUCKET_NAME
