@@ -1,6 +1,6 @@
 # Blockbuster Index MCP Server
 
-The **Blockbuster Index MCP Server** calculates the **Blockbuster Index** for all U.S. states by aggregating multiple retail footprint signals. It runs as an ECS Fargate task on a daily schedule, fetching data from various retail APIs, computing weighted scores, and uploading the results to S3 for use by the **Blockbuster Index** website.
+The **Blockbuster Index MCP Server** calculates the **Blockbuster Index** for all U.S. states by aggregating multiple retail footprint signals. It runs as independent ECS Fargate tasks on a daily schedule, fetching data from various retail APIs, computing weighted scores, and uploading the results to S3 for use by the **Blockbuster Index** website.
 
 The **Blockbuster Index** is an AI-powered exploration of how consumer buying habits have shifted across the United States—from traditional brick-and-mortar retail to online commerce. Inspired by the cultural decline of physical video rental stores like Blockbuster, this project builds a unique state-by-state index using signals that reflect the tension between digital and analog purchasing behavior.
 
@@ -13,50 +13,188 @@ This repository is part of the **Blockbuster Index Project** which includes the 
 ## Table of Contents
 
 1. [Project Overview](#project-overview)
-2. [Environments](#environments)
-3. [Tech Stack](#tech-stack)
-4. [Setup Instructions](#setup-instructions)
-5. [Running Individual Signals](#running-individual-signals)
-6. [Commits & Commitizen](#commits--commitizen)
-   - [Making a Commit](#making-a-commit)
-7. [Linting & Formatting](#linting--formatting)
-   - [Linting Commands](#linting-commands)
-   - [Formatting Commands](#formatting-commands)
-   - [Pre-Commit Hook](#pre-commit-hook)
-8. [Unit Tests & Code Coverage](#unit-tests--code-coverage)
-   - [Unit Tests](#unit-tests)
-   - [Code Coverage](#code-coverage)
-9. [Error & Performance Monitoring](#error--performance-monitoring)
-   - [Configuration](#configuration)
-   - [CloudWatch Logging](#cloudwatch-logging)
-10. [Environment Variables](#environment-variables)
-11. [Running Locally w/ Docker](#running-locally-w-docker)
-12. [Build & Deployment](#build--deployment)
-    - [Environment Variables](#environment-variables-1)
+2. [Architecture Overview](#architecture-overview)
+3. [Signal Calculations](#signal-calculations)
+4. [Blockbuster Index Calculation](#blockbuster-index-calculation)
+5. [ECS Task Scheduling](#ecs-task-scheduling)
+6. [Environments](#environments)
+7. [Tech Stack](#tech-stack)
+8. [Setup Instructions](#setup-instructions)
+9. [Running Signals Locally](#running-signals-locally)
+10. [Development Workflow](#development-workflow)
+11. [Commits & Commitizen](#commits--commitizen)
+    - [Making a Commit](#making-a-commit)
+12. [Linting & Formatting](#linting--formatting)
+    - [Linting Commands](#linting-commands)
+    - [Formatting Commands](#formatting-commands)
+    - [Pre-Commit Hook](#pre-commit-hook)
+13. [Unit Tests & Code Coverage](#unit-tests--code-coverage)
+    - [Unit Tests](#unit-tests)
+    - [Code Coverage](#code-coverage)
+14. [Error & Performance Monitoring](#error--performance-monitoring)
+    - [Configuration](#configuration)
+    - [CloudWatch Logging](#cloudwatch-logging)
+15. [Environment Variables](#environment-variables)
+16. [Build & Deployment](#build--deployment)
     - [Build Process](#build-process)
     - [Docker Container](#docker-container)
-13. [Infrastructure](#infrastructure)
+    - [ECS Deployment](#ecs-deployment)
+17. [Infrastructure](#infrastructure)
     - [CloudFormation](#cloudformation)
-    - [Scheduled Execution](#scheduled-execution)
-14. [Connecting to the Bastion Host](#connecting-to-the-bastion-host)
+    - [Task Definitions](#task-definitions)
+18. [Connecting to the Bastion Host](#connecting-to-the-bastion-host)
     - [Environment Variables](#environment-variables-2)
-15. [License](#license)
+19. [License](#license)
 
 ## Project Overview
 
-This project calculates the **Blockbuster Index** by aggregating seven different retail footprint signals for each U.S. state. The server fetches data from various retail APIs, applies weighted calculations, and uploads the results to S3 for use by the **Blockbuster Index** website.
+This project calculates the **Blockbuster Index** by aggregating three distinct retail footprint signals for each U.S. state. The server fetches data from various retail APIs, applies weighted calculations, and uploads the results to S3 for use by the **Blockbuster Index** website.
 
 The calculation process includes the following signals:
 
-- **Amazon** – E-commerce adoption and digital retail presence.
-- **Analog** – Traditional retail and physical store metrics.
-- **Broadband** – Internet infrastructure and connectivity.
-- **E-commerce** – Online shopping adoption rates.
-- **Physical** – Brick-and-mortar retail presence.
-- **Streaming** – Digital media consumption patterns.
-- **Walmart** – Traditional retail giant footprint.
+- **Amazon** – E-commerce adoption and digital retail presence through job posting analysis
+- **Census** – Demographic and economic indicators from U.S. Census Bureau data
+- **Broadband** – Internet infrastructure and connectivity metrics
 
 Each signal is weighted and combined to generate a comprehensive score that reflects the balance between digital and physical retail activity in each state.
+
+## Architecture Overview
+
+The Blockbuster Index MCP Server employs a **modular microservices architecture** where each signal runs as an independent ECS Fargate task. This design provides several key advantages:
+
+### Modular Signal Processing
+
+- **Independent Deployment**: Each signal can be deployed, updated, and scaled independently
+- **Fault Isolation**: A failure in one signal doesn't affect the others
+- **Resource Optimization**: Each task can be configured with appropriate CPU/memory for its specific workload
+- **Parallel Execution**: Signals can run concurrently, reducing total processing time
+
+### Task Architecture
+
+- **Amazon Signal Task**: Web scraping and job posting analysis
+- **Census Signal Task**: Demographic data processing and analysis
+- **Broadband Signal Task**: Infrastructure and connectivity metrics
+- **Blockbuster Index Task**: Signal aggregation and final index calculation
+
+### Data Flow
+
+1. **Signal Collection**: Each signal task fetches and processes its respective data
+2. **S3 Storage**: Individual signal results are uploaded to S3 with versioned filenames
+3. **Index Calculation**: The blockbuster index task downloads all signal results and computes the final index
+4. **Result Publication**: Final index is uploaded to S3 for consumption by the website
+
+## Signal Calculations
+
+### Amazon Signal
+
+The Amazon signal measures e-commerce adoption and digital retail presence by analyzing job posting patterns across all U.S. states.
+
+**Data Source**: Amazon job postings via web scraping
+**Calculation Method**:
+
+- Scrapes job postings for each state using Puppeteer
+- Counts total job postings per state
+- Normalizes by state population to account for size differences
+- Applies logarithmic scaling to handle outliers
+- Generates a score from 0-100 where higher scores indicate greater e-commerce activity
+
+**Technical Implementation**:
+
+- Uses Puppeteer for dynamic content scraping
+- Implements retry logic with exponential backoff
+- Handles rate limiting and anti-bot measures
+- Processes results in parallel for efficiency
+
+### Census Signal
+
+The Census signal captures demographic and economic indicators that correlate with retail behavior patterns.
+
+**Data Source**: U.S. Census Bureau API
+**Calculation Method**:
+
+- Fetches demographic data including population density, median income, and age distribution
+- Analyzes economic indicators such as employment rates and industry composition
+- Computes urbanization metrics and household characteristics
+- Normalizes data across states and applies statistical weighting
+- Generates a score from 0-100 reflecting retail market maturity
+
+**Technical Implementation**:
+
+- RESTful API integration with Census Bureau endpoints
+- Statistical normalization using z-score methodology
+- Multi-factor analysis with configurable weights
+- Caching layer for API response optimization
+
+### Broadband Signal
+
+The Broadband signal measures internet infrastructure quality and connectivity, which directly impacts e-commerce adoption.
+
+**Data Source**: FCC broadband availability data
+**Calculation Method**:
+
+- Analyzes broadband availability and speed metrics by state
+- Evaluates infrastructure quality and coverage percentages
+- Considers both fixed and mobile broadband penetration
+- Normalizes by geographic area and population density
+- Generates a score from 0-100 where higher scores indicate better connectivity
+
+**Technical Implementation**:
+
+- S3-based data loading from FCC datasets
+- Geographic data processing and aggregation
+- Statistical analysis of coverage patterns
+- Performance optimization for large datasets
+
+## Blockbuster Index Calculation
+
+The Blockbuster Index combines all three signals using a sophisticated weighted aggregation algorithm that reflects the relative importance of each factor in determining retail behavior patterns.
+
+### Weighting System
+
+- **Amazon Signal**: 40% weight - Direct measure of e-commerce activity
+- **Census Signal**: 30% weight - Demographic and economic foundation
+- **Broadband Signal**: 30% weight - Infrastructure enabling factor
+
+### Calculation Algorithm
+
+1. **Signal Normalization**: All signals are normalized to a 0-100 scale
+2. **Weighted Aggregation**: Each signal is multiplied by its respective weight
+3. **State-by-State Calculation**: The weighted sum is computed for each state
+4. **Final Index**: Results in a 0-100 Blockbuster Index score per state
+
+### Interpretation
+
+- **Higher Scores (70-100)**: States with strong digital retail adoption and modern consumer behavior
+- **Medium Scores (30-70)**: States in transition between traditional and digital retail
+- **Lower Scores (0-30)**: States maintaining traditional retail patterns
+
+## ECS Task Scheduling
+
+The system employs a sophisticated scheduling architecture using AWS EventBridge to orchestrate the execution of all signals and the final index calculation.
+
+### Execution Schedule
+
+- **Signal Tasks**: Run daily at staggered intervals to avoid resource contention
+  - Amazon Signal: 2:00 AM UTC
+  - Census Signal: 2:30 AM UTC
+  - Broadband Signal: 3:00 AM UTC
+- **Blockbuster Index Task**: Runs at 4:00 AM UTC after all signals complete
+
+### Task Dependencies
+
+The scheduling system ensures proper execution order:
+
+1. All signal tasks run independently and in parallel
+2. Each signal uploads its results to S3 upon completion
+3. The blockbuster index task waits for all signal results before executing
+4. Final index is published to S3 for website consumption
+
+### Error Handling
+
+- **Retry Logic**: Failed tasks are automatically retried with exponential backoff
+- **Dead Letter Queues**: Failed executions are captured for manual review
+- **Monitoring**: CloudWatch alarms trigger on task failures
+- **Rollback Capability**: Previous versions can be quickly restored
 
 ## Environments
 
@@ -66,17 +204,17 @@ The **Blockbuster Index** operates in multiple environments to ensure smooth dev
 
 The **Blockbuster Index MCP Server** is built using modern technologies to ensure reliability, scalability, and maintainability.
 
-- **AWS ECS Fargate**: Containerized deployment platform that runs the server as a scheduled task without managing servers.
+- **AWS ECS Fargate**: Containerized deployment platform that runs each signal as an independent scheduled task without managing servers.
 
 - **AWS CloudFormation**: Infrastructure as Code (IaC) is used to define and provision AWS resources like ECS tasks, EventBridge rules, and IAM roles.
 
-- **AWS EventBridge**: Triggers scheduled executions of the server to refresh data periodically (daily by default).
+- **AWS EventBridge**: Triggers scheduled executions of each signal and the index combiner with precise timing and dependency management.
 
-- **AWS S3**: Stores the calculated index data for consumption by the website, ensuring high availability and durability.
+- **AWS S3**: Stores the calculated signal data and final index for consumption by the website, ensuring high availability and durability.
 
-- **AWS CloudWatch**: Provides logging and monitoring capabilities for the server, including structured logging with bunyan.
+- **AWS CloudWatch**: Provides logging and monitoring capabilities for all tasks, including structured logging with bunyan.
 
-- **Docker**: Containerization technology used to package the application for consistent deployment across environments.
+- **Docker**: Containerization technology used to package each signal for consistent deployment across environments.
 
 - **Webpack**: Bundles the TypeScript code for production deployment with optimization and minification.
 
@@ -95,6 +233,8 @@ The **Blockbuster Index MCP Server** is built using modern technologies to ensur
 - **TypeScript**: Provides type safety and enhanced developer experience for the server codebase.
 
 - **Node.js**: Runtime environment for executing the server application.
+
+- **Puppeteer**: Headless browser automation for web scraping Amazon job postings.
 
 This tech stack ensures that the **Blockbuster Index MCP Server** remains performant, secure, and easily maintainable while leveraging AWS infrastructure for scalability and reliability.
 
@@ -122,62 +262,88 @@ To clone the repository, install dependencies, and run the project locally follo
 
 4. Set up environment variables. Please see the [Environment Variables](#environment-variables) section.
 
-5. Run the server locally inside a docker container:
+5. Run individual signals locally:
 
    ```bash
-   npm run dev
+   npm run signal:amazon
+   npm run signal:census
+   npm run signal:broadband
    ```
 
-## New Modular Architecture (2024 Refactor)
+## Running Signals Locally
 
-The Blockbuster Index MCP Server now runs each signal as a separate ECS task, with a dedicated entrypoint for each signal and for the index combiner. This enables independent deployment, scaling, and testing of each signal and the index calculation.
+### Individual Signal Execution
 
-### Directory Structure
-
-- `src/signals/amazon/entrypoint.ts` – Amazon signal ECS task entrypoint
-- `src/signals/census/entrypoint.ts` – Census signal ECS task entrypoint
-- `src/signals/broadband/entrypoint.ts` – Broadband signal ECS task entrypoint
-- `src/calculate-index/entrypoint.ts` – Blockbuster index combiner ECS task entrypoint
-- Shared code remains in `src/util/`, `src/types/`, and `src/constants/`
-
-### Running Signals and Index Combiner
-
-To run each signal or the index combiner locally:
+To run each signal independently for development and testing:
 
 ```bash
-npm run signal:amazon      # Run Amazon signal
-npm run signal:census      # Run Census signal
-npm run signal:broadband   # Run Broadband signal
-npm run calculate-index      # Run the index combiner (after all signals have run)
-```
-
-Each signal writes its results to S3 (or to `dev/scores/` in development). The index combiner reads all signal outputs and produces the final Blockbuster Index.
-
-### CI/CD and ECS
-
-Each signal and the index combiner can be deployed and scheduled independently as ECS tasks. See the `.github/workflows/` directory and CloudFormation templates for details.
-
-## Running Individual Signals
-
-To test individual signals (legacy):
-
-```bash
-npm run signal
-```
-
-To test all signals (legacy):
-
-```bash
-npm run signal:all
-```
-
-To use the new modular scripts (recommended):
-
-```bash
+# Run Amazon signal (web scraping)
 npm run signal:amazon
+
+# Run Census signal (demographic analysis)
 npm run signal:census
+
+# Run Broadband signal (infrastructure analysis)
 npm run signal:broadband
-npm run calculate-index
+
+# Run Blockbuster Index calculation (after all signals complete)
+npm run signal:blockbuster-index
+```
+
+### Container-Based Testing
+
+To test signals in a containerized environment that mirrors production:
+
+```bash
+# Test Amazon signal in container
+npm run signal:container -- amazon
+
+# Test Census signal in container
+npm run signal:container -- census
+
+# Test Broadband signal in container
+npm run signal:container -- broadband
+```
+
+### Development Mode
+
+In development mode, signals write results to local files in `dev/scores/` instead of S3:
+
+```bash
+# Development mode - writes to dev/scores/
+NODE_ENV=development npm run signal:amazon
+```
+
+## Development Workflow
+
+### Signal Development
+
+1. **Modify Signal Logic**: Update signal calculation algorithms in respective directories
+2. **Test Locally**: Run individual signals to verify changes
+3. **Run Tests**: Ensure all tests pass with `npm test`
+4. **Deploy Signal**: Use GitHub Actions to deploy specific signal updates
+
+### ECS Task Management
+
+```bash
+# Deploy specific signal to ECS
+npm run ecs:deploy -- --signal-type amazon
+
+# Run specific signal task manually
+npm run ecs:run -- amazon
+
+# Run all signals sequentially
+npm run ecs:run:all
+```
+
+### Build Process
+
+```bash
+# Build for specific signal
+SIGNAL_TYPE=amazon npm run build
+
+# Build for all signals (default)
+npm run build
 ```
 
 ## Commits & Commitizen
@@ -232,7 +398,7 @@ npm run format:check
 
 ### Unit Tests
 
-This project uses **Jest** for testing. Code coverage is enforced during every CI/CD pipeline. The build will fail if any tests fail or coverage drops below **100%**.
+This project uses **Jest** for testing. Code coverage is enforced during every CI/CD pipeline. The build will fail if any tests fail or coverage drops below **92%**.
 
 Run tests:
 
@@ -254,7 +420,7 @@ npm run coverage:open
 
 ### Code Coverage
 
-Coverage thresholds are enforced at **100%** for all metrics. The build will fail if coverage drops below this threshold.
+Coverage thresholds are enforced at **92%** for all metrics. The build will fail if coverage drops below this threshold.
 
 ## Error & Performance Monitoring
 
@@ -276,7 +442,7 @@ The server uses **Bunyan** for structured logging with the following features:
 
 ## Environment Variables
 
-The following environment variables must be set in a `.env.local` file in the root of the project:
+The following environment variables must be set in a `.env` file in the root of the project:
 
 | Variable         | Description                                      |
 | ---------------- | ------------------------------------------------ |
@@ -289,38 +455,17 @@ The following environment variables must be set in a `.env.local` file in the ro
 | `OPENAI_API_KEY` | OpenAI API key for AI-powered signal processing. |
 | `S3_BUCKET_NAME` | S3 bucket name for data uploads.                 |
 
-## Running Locally w/ Docker
-
-To run the server in development mode:
-
-```bash
-npm run dev
-```
-
-Running the server locally will:
-
-- Calculate the Blockbuster Index for all states.
-- Write results to `dev/scores/blockbuster-index.json`.
-- Log performance metrics and signal scores.
-
 ## Build & Deployment
-
-### Environment Variables
-
-The following environment variables must be set for production deployment:
-
-| Variable         | Description                                     |
-| ---------------- | ----------------------------------------------- |
-| `AWS_REGION`     | AWS region for S3 and CloudWatch operations     |
-| `LOG_LEVEL`      | Logging level for production                    |
-| `OPENAI_API_KEY` | OpenAI API key for AI-powered signal processing |
-| `S3_BUCKET_NAME` | S3 bucket name for data uploads                 |
 
 ### Build Process
 
 To build the project for production:
 
 ```bash
+# Build for specific signal
+SIGNAL_TYPE=amazon npm run build
+
+# Build for all signals (default)
 npm run build
 ```
 
@@ -335,16 +480,35 @@ Building the server will:
 
 The application is containerized using Docker for consistent deployment.
 
-To build the docker container:
+To build the docker container for a specific signal:
 
 ```bash
-docker build -t blockbuster-index-mcp-server .
+# Build Amazon signal container
+docker build --build-arg SIGNAL_TYPE=amazon -t blockbuster-amazon .
+
+# Build Census signal container
+docker build --build-arg SIGNAL_TYPE=census -t blockbuster-census .
+
+# Build Broadband signal container
+docker build --build-arg SIGNAL_TYPE=broadband -t blockbuster-broadband .
 ```
 
 To run the docker container:
 
 ```bash
-docker run -e S3_BUCKET_NAME=your-bucket -e OPENAI_API_KEY=your-key blockbuster-index-mcp-server
+docker run -e S3_BUCKET_NAME=your-bucket -e OPENAI_API_KEY=your-key blockbuster-amazon
+```
+
+### ECS Deployment
+
+Each signal can be deployed independently using GitHub Actions:
+
+```bash
+# Deploy specific signal
+npm run ecs:deploy -- --signal-type amazon
+
+# Deploy all signals
+npm run ecs:deploy:all
 ```
 
 ## Infrastructure
@@ -353,17 +517,19 @@ docker run -e S3_BUCKET_NAME=your-bucket -e OPENAI_API_KEY=your-key blockbuster-
 
 Infrastructure is managed using AWS CloudFormation templates:
 
-- **`blockbuster-index-task-definition.yaml`**: Defines the ECS task definition and scheduled execution rule.
+- **`blockbuster-index-task-definition.yaml`**: Defines ECS task definitions and scheduled execution rules for all signals.
 - **`blockbuster-index-cluster.yaml`**: Defines the ECS cluster and related resources.
+- **`blockbuster-index-dynamo-db.yaml`**: Defines DynamoDB tables for data storage.
+- **`blockbuster-index-broadband-s3.yaml`**: Defines S3 buckets for broadband data.
 
-### Scheduled Execution
+### Task Definitions
 
-The server runs on a daily schedule using AWS EventBridge:
+Each signal has its own ECS task definition with optimized resource allocation:
 
-- **Schedule Expression**: once per day (configurable).
-- **Target**: ECS Fargate task.
-- **Network**: VPC with public IP assignment.
-- **Security Groups**: Environment-specific security groups.
+- **Amazon Task**: Higher CPU allocation for web scraping operations
+- **Census Task**: Balanced CPU/memory for API processing
+- **Broadband Task**: Optimized for large dataset processing
+- **Blockbuster Index Task**: Lightweight aggregation and calculation
 
 ## Connecting to the Bastion Host
 
@@ -375,7 +541,7 @@ npm run bastion
 
 ### Environment Variables
 
-The following environment variables must be set in a `.env.local` file in the root of the project:
+The following environment variables must be set in a `.env` file in the root of the project:
 
 | Variable               | Description                               |
 | ---------------------- | ----------------------------------------- |
