@@ -30,7 +30,7 @@ async function main() {
         key: 'data/signals/census-scores.json',
       });
     }
-    logger.info('Census signal task completed!');
+    logger.info('SUCCESS: Census signal task completed successfully!');
   } catch (err) {
     logger.error('Census signal task failed:', err);
     process.exit(1);
