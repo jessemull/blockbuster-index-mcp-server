@@ -50,7 +50,7 @@ This project calculates the **Blockbuster Index** by aggregating distinct retail
 
 The calculation process currently includes the following signals with more signals on the way:
 
-- **Amazon** – E-commerce adoption and digital retail presence through job posting analysis.
+- **Amazon** – E-commerce adoption and digital retail presence through job posting analysis with sliding window aggregation for improved accuracy.
 - **Census** – Demographic and economic indicators from U.S. Census Bureau data.
 - **Broadband** – Internet infrastructure and connectivity metrics.
 
@@ -69,7 +69,7 @@ The Blockbuster Index MCP Server employs a **modular microservices architecture*
 
 ### Task Architecture
 
-- **Amazon Signal Task**: Web scraping and job posting analysis.
+- **Amazon Signal Task**: Web scraping and job posting analysis with sliding window aggregation.
 - **Census Signal Task**: Demographic data processing and analysis.
 - **Broadband Signal Task**: Infrastructure and connectivity metrics.
 - **Blockbuster Index Task**: Signal aggregation and final index calculation.
@@ -77,15 +77,16 @@ The Blockbuster Index MCP Server employs a **modular microservices architecture*
 ### Data Flow
 
 1. **Signal Collection**: Each signal task fetches and processes its respective data.
-2. **S3 Storage**: Individual signal results are uploaded to S3 with versioned filenames.
-3. **Index Calculation**: The blockbuster index task downloads all signal results and computes the final index.
-4. **Result Publication**: Final index is uploaded to S3 for consumption by the website.
+2. **Data Persistence**: Signal-specific data is stored in DynamoDB tables (e.g., Amazon job data, sliding window aggregates).
+3. **S3 Storage**: Individual signal results are uploaded to S3 with versioned filenames.
+4. **Index Calculation**: The blockbuster index task downloads all signal results and computes the final index.
+5. **Result Publication**: Final index is uploaded to S3 for consumption by the website.
 
 ## Signal Calculations
 
 ### Amazon Signal
 
-The Amazon signal measures e-commerce adoption and digital retail presence by analyzing job posting patterns across all U.S. states.
+The Amazon signal measures e-commerce adoption and digital retail presence by analyzing job posting patterns across all U.S. states using a sophisticated sliding window algorithm for improved accuracy and stability.
 
 **Data Source**
 
@@ -94,10 +95,19 @@ The Amazon signal measures e-commerce adoption and digital retail presence by an
 **Calculation Method**:
 
 - Scrapes job postings for each state using Puppeteer.
-- Counts total job postings per state.
+- Counts total job postings per state for the current day.
+- Maintains a 90-day sliding window of job posting data in DynamoDB.
+- Calculates rolling averages to smooth out daily fluctuations and seasonal variations.
 - Normalizes by state population to account for size differences.
 - Applies logarithmic scaling to handle outliers.
 - Generates a score from 0-100 where higher scores indicate greater e-commerce activity.
+
+**Sliding Window Algorithm**:
+
+- **Window Size**: 90-day rolling window for optimal balance of responsiveness and stability.
+- **Data Aggregation**: Maintains daily job counts and calculates running averages.
+- **Window Management**: Automatically removes data older than 90 days and adds new daily data.
+- **Fallback Logic**: Uses current day data for development environments without DynamoDB access.
 
 **Technical Implementation**:
 
@@ -105,6 +115,8 @@ The Amazon signal measures e-commerce adoption and digital retail presence by an
 - Implements retry logic with exponential backoff.
 - Handles rate limiting and anti-bot measures.
 - Processes results in parallel for efficiency.
+- DynamoDB integration for sliding window data persistence.
+- Automatic window management with efficient aggregate updates.
 
 ### Census Signal
 
@@ -215,6 +227,8 @@ The **Blockbuster Index MCP Server** is built using modern technologies to ensur
 - **AWS EventBridge**: Triggers scheduled executions of each signal and the index combiner with precise timing and dependency management.
 
 - **AWS S3**: Stores the calculated signal data and final index for consumption by the website, ensuring high availability and durability.
+
+- **AWS DynamoDB**: Provides persistent storage for signal-specific data including job posting records and sliding window aggregates, enabling efficient data processing and historical analysis.
 
 - **AWS CloudWatch**: Provides logging and monitoring capabilities for all tasks, including structured logging with bunyan.
 
