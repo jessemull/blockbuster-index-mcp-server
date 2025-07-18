@@ -84,7 +84,7 @@ Resources:
             LogDriver: awslogs
             Options:
               awslogs-group: !ImportValue
-                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
+                Fn::Sub: '${Environment}-BlockbusterAmazonLogGroupName'
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: 'blockbuster-index-amazon'
           Environment:
@@ -110,7 +110,7 @@ Resources:
               Value: '1000'
             - Name: CW_LOG_GROUP
               Value: !ImportValue
-                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
+                Fn::Sub: '${Environment}-BlockbusterAmazonLogGroupName'
             - Name: CW_LOG_STREAM
               Value: !Sub 'blockbuster-index-mcp-amazon-${Environment}-${AWS::StackName}'
 
@@ -139,7 +139,7 @@ Resources:
             LogDriver: awslogs
             Options:
               awslogs-group: !ImportValue
-                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
+                Fn::Sub: '${Environment}-BlockbusterCensusLogGroupName'
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: 'blockbuster-index-census'
           Environment:
@@ -165,7 +165,7 @@ Resources:
               Value: '1000'
             - Name: CW_LOG_GROUP
               Value: !ImportValue
-                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
+                Fn::Sub: '${Environment}-BlockbusterCensusLogGroupName'
             - Name: CW_LOG_STREAM
               Value: !Sub 'blockbuster-index-mcp-census-${Environment}-${AWS::StackName}'
 
@@ -194,7 +194,7 @@ Resources:
             LogDriver: awslogs
             Options:
               awslogs-group: !ImportValue
-                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
+                Fn::Sub: '${Environment}-BlockbusterBroadbandLogGroupName'
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: 'blockbuster-index-broadband'
           Environment:
@@ -222,7 +222,7 @@ Resources:
               Value: '1000'
             - Name: CW_LOG_GROUP
               Value: !ImportValue
-                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
+                Fn::Sub: '${Environment}-BlockbusterBroadbandLogGroupName'
             - Name: CW_LOG_STREAM
               Value: !Sub 'blockbuster-index-mcp-broadband-${Environment}-${AWS::StackName}'
 
@@ -251,7 +251,7 @@ Resources:
             LogDriver: awslogs
             Options:
               awslogs-group: !ImportValue
-                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
+                Fn::Sub: '${Environment}-BlockbusterBlockbusterIndexLogGroupName'
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: 'blockbuster-index-blockbuster-index'
           Environment:
@@ -275,7 +275,7 @@ Resources:
               Value: '1000'
             - Name: CW_LOG_GROUP
               Value: !ImportValue
-                Fn::Sub: '${Environment}-BlockbusterLogGroupName'
+                Fn::Sub: '${Environment}-BlockbusterBlockbusterIndexLogGroupName'
             - Name: CW_LOG_STREAM
               Value: !Sub 'blockbuster-index-mcp-blockbuster-index-${Environment}-${AWS::StackName}'
 
