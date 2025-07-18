@@ -3,8 +3,17 @@ name: Rollback
 on:
   workflow_dispatch:
     inputs:
+      signal_type:
+        description: 'Choose signal type to rollback'
+        required: true
+        type: choice
+        options:
+          - amazon
+          - census
+          - broadband
+          - blockbuster-index
       container_image_uri:
-        description: 'Container image URI to rollback to (e.g., 123456789012.dkr.ecr.us-west-2.amazonaws.com/blockbuster-index-dev:abcdef)'
+        description: 'Container image URI to rollback to (e.g., 123456789012.dkr.ecr.us-west-2.amazonaws.com/blockbuster-index-amazon-dev:abcdef)'
         required: true
         type: string
       environment:
@@ -33,8 +42,8 @@ jobs:
       - name: Deploy CloudFormation Stack with Rollback Image
         run: |
           aws cloudformation deploy \
-            --stack-name blockbuster-index-task-stack-${{ github.event.inputs.environment }} \
+            --stack-name blockbuster-index-${{ github.event.inputs.signal_type }}-task-stack-${{ github.event.inputs.environment }} \
             --template-file cloudformation/blockbuster-index-task-definition.yaml \
-            --parameter-overrides ContainerImage=${{ github.event.inputs.container_image_uri }} Environment=${{ github.event.inputs.environment }} \
+            --parameter-overrides ContainerImage=${{ github.event.inputs.container_image_uri }} Environment=${{ github.event.inputs.environment }} SignalType=${{ github.event.inputs.signal_type }} \
             --capabilities CAPABILITY_NAMED_IAM \
             --region us-west-2
