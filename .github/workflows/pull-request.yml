@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: Build
+    name: Build All Signals
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -22,10 +22,20 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Build ECS Task
+      - name: Discover Signal Types
+        id: signals
+        run: |
+          SIGNAL_TYPES=$(ls -d src/signals/*/ | xargs -n 1 basename | tr '\n' ' ')
+          echo "signal_types=$SIGNAL_TYPES" >> $GITHUB_OUTPUT
+          echo "Found signal types: $SIGNAL_TYPES"
+
+      - name: Build All Signals
         run: |
           export NODE_ENV=dev
-          npm run build
+          for signal_type in ${{ steps.signals.outputs.signal_types }}; do
+            echo "Building signal: $signal_type"
+            SIGNAL_TYPE=$signal_type npm run build
+          done
 
   lint:
     name: Lint Code
