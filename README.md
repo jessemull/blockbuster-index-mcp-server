@@ -1,10 +1,10 @@
 # Blockbuster Index MCP Server
 
-The **Blockbuster Index MCP Server** calculates the **Blockbuster Index** for all U.S. states by aggregating multiple retail footprint signals. It runs as independent ECS Fargate tasks on a daily schedule, fetching data from various retail APIs, computing weighted scores, and uploading the results to S3 for use by the **Blockbuster Index** website.
+The **Blockbuster Index MCP Server** calculates the **Blockbuster Index** for all U.S. states by aggregating multiple retail and digital commerce signals. Each signal runs as an independent ECS Fargate task on a daily schedule, fetching data from various retail APIs, computing weighted scores, and uploading the results to S3 for use by the **Blockbuster Index** website.
 
-The **Blockbuster Index** is an AI-powered exploration of how consumer buying habits have shifted across the United States—from traditional brick-and-mortar retail to online commerce. Inspired by the cultural decline of physical video rental stores like Blockbuster, this project builds a unique state-by-state index using signals that reflect the tension between digital and analog purchasing behavior.
+The **Blockbuster Index** is an AI-powered exploration of how consumer buying habits have shifted across the United States from traditional brick-and-mortar retail to online commerce. Inspired by the cultural decline of physical video rental stores like Blockbuster, this project builds a unique state-by-state index using signals that reflect the tension between digital and analog purchasing behavior.
 
-This repository is part of the **Blockbuster Index Project** which includes the following repositories:
+This MCP server is part of the **Blockbuster Index Project** which includes the following repositories:
 
 - **[Blockbuster Index MCP Server](https://github.com/jessemull/blockbuster-index-mcp-server)**: The **Blockbuster Index** calculation server (this repository).
 - **[Blockbuster Index Project Client](https://github.com/jessemull/blockbuster-index)**: The **Blockbuster Index** NextJS client.
@@ -48,13 +48,13 @@ This repository is part of the **Blockbuster Index Project** which includes the 
 
 ## Project Overview
 
-This project calculates the **Blockbuster Index** by aggregating three distinct retail footprint signals for each U.S. state. The server fetches data from various retail APIs, applies weighted calculations, and uploads the results to S3 for use by the **Blockbuster Index** website.
+This project calculates the **Blockbuster Index** by aggregating distinct retail footprint signals for each U.S. state. The server fetches data from various retail APIs, applies weighted calculations, and uploads the results to S3 for use by the **Blockbuster Index** website.
 
-The calculation process includes the following signals:
+The calculation process currently includes the following signals with more signals on the way:
 
-- **Amazon** – E-commerce adoption and digital retail presence through job posting analysis
-- **Census** – Demographic and economic indicators from U.S. Census Bureau data
-- **Broadband** – Internet infrastructure and connectivity metrics
+- **Amazon** – E-commerce adoption and digital retail presence through job posting analysis.
+- **Census** – Demographic and economic indicators from U.S. Census Bureau data.
+- **Broadband** – Internet infrastructure and connectivity metrics.
 
 Each signal is weighted and combined to generate a comprehensive score that reflects the balance between digital and physical retail activity in each state.
 
@@ -64,24 +64,24 @@ The Blockbuster Index MCP Server employs a **modular microservices architecture*
 
 ### Modular Signal Processing
 
-- **Independent Deployment**: Each signal can be deployed, updated, and scaled independently
-- **Fault Isolation**: A failure in one signal doesn't affect the others
-- **Resource Optimization**: Each task can be configured with appropriate CPU/memory for its specific workload
-- **Parallel Execution**: Signals can run concurrently, reducing total processing time
+- **Independent Deployment**: Each signal can be deployed, updated, and scaled independently.
+- **Fault Isolation**: A failure in one signal doesn't affect the others.
+- **Resource Optimization**: Each task can be configured with appropriate CPU/memory for its specific workload.
+- **Parallel Execution**: Signals can run concurrently, reducing total processing time.
 
 ### Task Architecture
 
-- **Amazon Signal Task**: Web scraping and job posting analysis
-- **Census Signal Task**: Demographic data processing and analysis
-- **Broadband Signal Task**: Infrastructure and connectivity metrics
-- **Blockbuster Index Task**: Signal aggregation and final index calculation
+- **Amazon Signal Task**: Web scraping and job posting analysis.
+- **Census Signal Task**: Demographic data processing and analysis.
+- **Broadband Signal Task**: Infrastructure and connectivity metrics.
+- **Blockbuster Index Task**: Signal aggregation and final index calculation.
 
 ### Data Flow
 
-1. **Signal Collection**: Each signal task fetches and processes its respective data
-2. **S3 Storage**: Individual signal results are uploaded to S3 with versioned filenames
-3. **Index Calculation**: The blockbuster index task downloads all signal results and computes the final index
-4. **Result Publication**: Final index is uploaded to S3 for consumption by the website
+1. **Signal Collection**: Each signal task fetches and processes its respective data.
+2. **S3 Storage**: Individual signal results are uploaded to S3 with versioned filenames.
+3. **Index Calculation**: The blockbuster index task downloads all signal results and computes the final index.
+4. **Result Publication**: Final index is uploaded to S3 for consumption by the website.
 
 ## Signal Calculations
 
@@ -89,84 +89,93 @@ The Blockbuster Index MCP Server employs a **modular microservices architecture*
 
 The Amazon signal measures e-commerce adoption and digital retail presence by analyzing job posting patterns across all U.S. states.
 
-**Data Source**: Amazon job postings via web scraping
+**Data Source**
+
+- Amazon job postings via web scraping.
+
 **Calculation Method**:
 
-- Scrapes job postings for each state using Puppeteer
-- Counts total job postings per state
-- Normalizes by state population to account for size differences
-- Applies logarithmic scaling to handle outliers
-- Generates a score from 0-100 where higher scores indicate greater e-commerce activity
+- Scrapes job postings for each state using Puppeteer.
+- Counts total job postings per state.
+- Normalizes by state population to account for size differences.
+- Applies logarithmic scaling to handle outliers.
+- Generates a score from 0-100 where higher scores indicate greater e-commerce activity.
 
 **Technical Implementation**:
 
-- Uses Puppeteer for dynamic content scraping
-- Implements retry logic with exponential backoff
-- Handles rate limiting and anti-bot measures
-- Processes results in parallel for efficiency
+- Uses Puppeteer for dynamic content scraping.
+- Implements retry logic with exponential backoff.
+- Handles rate limiting and anti-bot measures.
+- Processes results in parallel for efficiency.
 
 ### Census Signal
 
 The Census signal captures demographic and economic indicators that correlate with retail behavior patterns.
 
-**Data Source**: U.S. Census Bureau API
+**Data Source**:
+
+- U.S. Census Bureau API.
+
 **Calculation Method**:
 
-- Fetches demographic data including population density, median income, and age distribution
-- Analyzes economic indicators such as employment rates and industry composition
-- Computes urbanization metrics and household characteristics
-- Normalizes data across states and applies statistical weighting
-- Generates a score from 0-100 reflecting retail market maturity
+- Fetches demographic data including population density, median income, and age distribution.
+- Analyzes economic indicators such as employment rates and industry composition.
+- Computes urbanization metrics and household characteristics.
+- Normalizes data across states and applies statistical weighting.
+- Generates a score from 0-100 reflecting retail market maturity.
 
 **Technical Implementation**:
 
-- RESTful API integration with Census Bureau endpoints
-- Statistical normalization using z-score methodology
-- Multi-factor analysis with configurable weights
-- Caching layer for API response optimization
+- REST API integration with Census Bureau endpoints.
+- Statistical normalization using z-score methodology.
+- Multi-factor analysis with configurable weights.
+- Caching layer for API response optimization.
 
 ### Broadband Signal
 
 The Broadband signal measures internet infrastructure quality and connectivity, which directly impacts e-commerce adoption.
 
-**Data Source**: FCC broadband availability data
+**Data Source**:
+
+- FCC broadband availability data.
+
 **Calculation Method**:
 
-- Analyzes broadband availability and speed metrics by state
-- Evaluates infrastructure quality and coverage percentages
-- Considers both fixed and mobile broadband penetration
-- Normalizes by geographic area and population density
-- Generates a score from 0-100 where higher scores indicate better connectivity
+- Analyzes broadband availability and speed metrics by state.
+- Evaluates infrastructure quality and coverage percentages.
+- Considers both fixed and mobile broadband penetration.
+- Normalizes by geographic area and population density.
+- Generates a score from 0-100 where higher scores indicate better connectivity.
 
 **Technical Implementation**:
 
-- S3-based data loading from FCC datasets
-- Geographic data processing and aggregation
-- Statistical analysis of coverage patterns
-- Performance optimization for large datasets
+- S3-based data loading from FCC datasets.
+- Geographic data processing and aggregation.
+- Statistical analysis of coverage patterns.
+- Performance optimization for large datasets.
 
 ## Blockbuster Index Calculation
 
-The Blockbuster Index combines all three signals using a sophisticated weighted aggregation algorithm that reflects the relative importance of each factor in determining retail behavior patterns.
+The Blockbuster Index combines signals using a sophisticated weighted aggregation algorithm that reflects the relative importance of each factor in determining retail behavior patterns.
 
 ### Weighting System
 
-- **Amazon Signal**: 40% weight - Direct measure of e-commerce activity
-- **Census Signal**: 30% weight - Demographic and economic foundation
-- **Broadband Signal**: 30% weight - Infrastructure enabling factor
+- **Amazon Signal**: 40% weight - Direct measure of e-commerce activity.
+- **Census Signal**: 30% weight - Demographic and economic foundation.
+- **Broadband Signal**: 30% weight - Infrastructure enabling factor.
 
 ### Calculation Algorithm
 
-1. **Signal Normalization**: All signals are normalized to a 0-100 scale
-2. **Weighted Aggregation**: Each signal is multiplied by its respective weight
-3. **State-by-State Calculation**: The weighted sum is computed for each state
-4. **Final Index**: Results in a 0-100 Blockbuster Index score per state
+1. **Signal Normalization**: All signals are normalized to a 0-100 scale.
+2. **Weighted Aggregation**: Each signal is multiplied by its respective weight.
+3. **State-by-State Calculation**: The weighted sum is computed for each state.
+4. **Final Index**: Results in a 0-100 Blockbuster Index score per state.
 
 ### Interpretation
 
-- **Higher Scores (70-100)**: States with strong digital retail adoption and modern consumer behavior
-- **Medium Scores (30-70)**: States in transition between traditional and digital retail
-- **Lower Scores (0-30)**: States maintaining traditional retail patterns
+- **Higher Scores (70-100)**: States with strong digital retail adoption and modern consumer behavior.
+- **Medium Scores (30-70)**: States in transition between traditional and digital retail.
+- **Lower Scores (0-30)**: States maintaining traditional retail patterns.
 
 ## ECS Task Scheduling
 
@@ -174,27 +183,24 @@ The system employs a sophisticated scheduling architecture using AWS EventBridge
 
 ### Execution Schedule
 
-- **Signal Tasks**: Run daily at staggered intervals to avoid resource contention
-  - Amazon Signal: 2:00 AM UTC
-  - Census Signal: 2:30 AM UTC
-  - Broadband Signal: 3:00 AM UTC
-- **Blockbuster Index Task**: Runs at 4:00 AM UTC after all signals complete
+- **Signal Tasks**: Run daily at staggered intervals to avoid resource contention.
+- **Blockbuster Index Task**: Runs daily after all signals complete.
 
 ### Task Dependencies
 
 The scheduling system ensures proper execution order:
 
-1. All signal tasks run independently and in parallel
-2. Each signal uploads its results to S3 upon completion
-3. The blockbuster index task waits for all signal results before executing
-4. Final index is published to S3 for website consumption
+1. All signal tasks run independently and in parallel.
+2. Each signal uploads its results to S3 upon completion.
+3. The blockbuster index task waits for all signal results before executing.
+4. Final index is published to S3 for website consumption.
 
 ### Error Handling
 
-- **Retry Logic**: Failed tasks are automatically retried with exponential backoff
-- **Dead Letter Queues**: Failed executions are captured for manual review
-- **Monitoring**: CloudWatch alarms trigger on task failures
-- **Rollback Capability**: Previous versions can be quickly restored
+- **Retry Logic**: Failed tasks are automatically retried with exponential backoff.
+- **Dead Letter Queues**: Failed executions are captured for manual review.
+- **Monitoring**: CloudWatch alarms trigger on task failures.
+- **Rollback Capability**: Previous versions can be quickly restored.
 
 ## Environments
 
@@ -274,20 +280,10 @@ To clone the repository, install dependencies, and run the project locally follo
 
 ### Individual Signal Execution
 
-To run each signal independently for development and testing:
+In development mode, signals write results to local files instead of S3. To run each signal independently for development and testing:
 
 ```bash
-# Run Amazon signal (web scraping)
-npm run signal:amazon
-
-# Run Census signal (demographic analysis)
-npm run signal:census
-
-# Run Broadband signal (infrastructure analysis)
-npm run signal:broadband
-
-# Run Blockbuster Index calculation (after all signals complete)
-npm run signal:blockbuster-index
+npm run signal -- <signalName>
 ```
 
 ### Container-Based Testing
@@ -295,55 +291,29 @@ npm run signal:blockbuster-index
 To test signals in a containerized environment that mirrors production:
 
 ```bash
-# Test Amazon signal in container
-npm run signal:container -- amazon
-
-# Test Census signal in container
-npm run signal:container -- census
-
-# Test Broadband signal in container
-npm run signal:container -- broadband
+npm run signal:container -- <signalName>
 ```
-
-### Development Mode
-
-In development mode, signals write results to local files in `dev/scores/` instead of S3:
-
-```bash
-# Development mode - writes to dev/scores/
-NODE_ENV=development npm run signal:amazon
-```
-
-## Development Workflow
-
-### Signal Development
-
-1. **Modify Signal Logic**: Update signal calculation algorithms in respective directories
-2. **Test Locally**: Run individual signals to verify changes
-3. **Run Tests**: Ensure all tests pass with `npm test`
-4. **Deploy Signal**: Use GitHub Actions to deploy specific signal updates
 
 ### ECS Task Management
 
+Tasks can be triggered manually from the command line. To trigger a specific task:
+
 ```bash
-# Deploy specific signal to ECS
-npm run ecs:deploy -- --signal-type amazon
+npm run ecs:run -- <signalName>
+```
 
-# Run specific signal task manually
-npm run ecs:run -- amazon
+To run all tasks:
 
-# Run all signals sequentially
+```bash
 npm run ecs:run:all
 ```
 
 ### Build Process
 
-```bash
-# Build for specific signal
-SIGNAL_TYPE=amazon npm run build
+Each task is built with a shared webpack configuration. To build a specific signal set the signal type environment variable:
 
-# Build for all signals (default)
-npm run build
+```bash
+SIGNAL_TYPE=<signalName> npm run build
 ```
 
 ## Commits & Commitizen
@@ -444,6 +414,8 @@ The server uses **Bunyan** for structured logging with the following features:
 
 The following environment variables must be set in a `.env` file in the root of the project:
 
+### Core Configuration
+
 | Variable         | Description                                      |
 | ---------------- | ------------------------------------------------ |
 | `AWS_REGION`     | AWS region for S3 and CloudWatch operations.     |
@@ -455,61 +427,31 @@ The following environment variables must be set in a `.env` file in the root of 
 | `OPENAI_API_KEY` | OpenAI API key for AI-powered signal processing. |
 | `S3_BUCKET_NAME` | S3 bucket name for data uploads.                 |
 
-## Build & Deployment
+### AWS Infrastructure
 
-### Build Process
+| Variable                        | Description                                   |
+| ------------------------------- | --------------------------------------------- |
+| `AWS_TASK_ID`                   | ECS task ID for CloudWatch log stream naming. |
+| `BROADBAND_S3_BUCKET`           | S3 bucket for broadband data storage.         |
+| `BROADBAND_DYNAMODB_TABLE_NAME` | DynamoDB table for broadband signal data.     |
+| `CENSUS_DYNAMODB_TABLE_NAME`    | DynamoDB table for census signal data.        |
+| `AMAZON_DYNAMODB_TABLE_NAME`    | DynamoDB table for Amazon signal data.        |
 
-To build the project for production:
+### Signal Processing
 
-```bash
-# Build for specific signal
-SIGNAL_TYPE=amazon npm run build
+| Variable                    | Description                                                           |
+| --------------------------- | --------------------------------------------------------------------- |
+| `SIGNAL_TYPE`               | Type of signal to run (amazon, census, broadband, blockbuster-index). |
+| `FORCE_REFRESH`             | Force refresh flag for census data (true/false).                      |
+| `MAX_RETRIES`               | Maximum retry attempts for API calls (default: 3).                    |
+| `RETRY_DELAY`               | Delay between retry attempts in milliseconds (default: 1000).         |
+| `PUPPETEER_EXECUTABLE_PATH` | Path to Puppeteer executable for web scraping.                        |
 
-# Build for all signals (default)
-npm run build
-```
-
-Building the server will:
-
-- Compile TypeScript to JavaScript.
-- Bundle the application with Webpack.
-- Optimize and minify the code.
-- Output to `dist/` directory.
+## Deployment
 
 ### Docker Container
 
-The application is containerized using Docker for consistent deployment.
-
-To build the docker container for a specific signal:
-
-```bash
-# Build Amazon signal container
-docker build --build-arg SIGNAL_TYPE=amazon -t blockbuster-amazon .
-
-# Build Census signal container
-docker build --build-arg SIGNAL_TYPE=census -t blockbuster-census .
-
-# Build Broadband signal container
-docker build --build-arg SIGNAL_TYPE=broadband -t blockbuster-broadband .
-```
-
-To run the docker container:
-
-```bash
-docker run -e S3_BUCKET_NAME=your-bucket -e OPENAI_API_KEY=your-key blockbuster-amazon
-```
-
-### ECS Deployment
-
-Each signal can be deployed independently using GitHub Actions:
-
-```bash
-# Deploy specific signal
-npm run ecs:deploy -- --signal-type amazon
-
-# Deploy all signals
-npm run ecs:deploy:all
-```
+The application is containerized using Docker for consistent deployment. A shared Dockerfile is used with a signal type environment variable set to indicate which signal and ECS task to build.
 
 ## Infrastructure
 
@@ -520,7 +462,7 @@ Infrastructure is managed using AWS CloudFormation templates:
 - **`blockbuster-index-task-definition.yaml`**: Defines ECS task definitions and scheduled execution rules for all signals.
 - **`blockbuster-index-cluster.yaml`**: Defines the ECS cluster and related resources.
 - **`blockbuster-index-dynamo-db.yaml`**: Defines DynamoDB tables for data storage.
-- **`blockbuster-index-broadband-s3.yaml`**: Defines S3 buckets for broadband data.
+- **`blockbuster-index-broadband-s3.yaml`**: Defines S3 buckets for data storage.
 
 ### Task Definitions
 
