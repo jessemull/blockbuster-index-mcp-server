@@ -7,6 +7,34 @@ import path from 'path';
 async function main() {
   try {
     logger.info('Starting Broadband signal task...');
+
+    // DEBUG: Log environment variables at entrypoint
+    logger.info('ENV_DEBUG_ENTRYPOINT: Starting environment variable check');
+    logger.info(
+      `ENV_DEBUG_ENTRYPOINT: BROADBAND_S3_BUCKET = ${process.env.BROADBAND_S3_BUCKET || 'UNDEFINED'}`,
+    );
+    logger.info(
+      `ENV_DEBUG_ENTRYPOINT: NODE_ENV = ${process.env.NODE_ENV || 'UNDEFINED'}`,
+    );
+    logger.info(
+      `ENV_DEBUG_ENTRYPOINT: AWS_REGION = ${process.env.AWS_REGION || 'UNDEFINED'}`,
+    );
+    logger.info(
+      `ENV_DEBUG_ENTRYPOINT: BROADBAND_DYNAMODB_TABLE_NAME = ${process.env.BROADBAND_DYNAMODB_TABLE_NAME || 'UNDEFINED'}`,
+    );
+    logger.info(
+      `ENV_DEBUG_ENTRYPOINT: SIGNAL_SCORES_DYNAMODB_TABLE_NAME = ${process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME || 'UNDEFINED'}`,
+    );
+    logger.info(
+      `ENV_DEBUG_ENTRYPOINT: npm_package_version = ${process.env.npm_package_version || 'UNDEFINED'}`,
+    );
+    logger.info(
+      `ENV_DEBUG_ENTRYPOINT: CONFIG.IS_DEVELOPMENT = ${CONFIG.IS_DEVELOPMENT}`,
+    );
+    logger.info(
+      `ENV_DEBUG_ENTRYPOINT: CONFIG.S3_BUCKET_NAME = ${CONFIG.S3_BUCKET_NAME}`,
+    );
+    logger.info('ENV_DEBUG_ENTRYPOINT: Environment variable check completed');
     const scores = await getBroadbandScores();
     const calculatedAt = new Date().toISOString();
     const timestamp = Math.floor(Date.now() / 1000);
