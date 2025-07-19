@@ -106,6 +106,54 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
+  SignalScoresTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'blockbuster-index-signal-scores-${Environment}'
+      AttributeDefinitions:
+        - AttributeName: signalType
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: signalType
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: false
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  BlockbusterIndexTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'blockbuster-index-blockbuster-index-${Environment}'
+      AttributeDefinitions:
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: timestamp
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: false
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
 Outputs:
   AmazonJobsTableArn:
     Description: 'ARN of the Amazon Jobs table'
@@ -126,4 +174,14 @@ Outputs:
     Description: 'ARN of the Amazon Sliding Window table'
     Value: !GetAtt AmazonSlidingWindowTable.Arn
     Export:
-      Name: !Sub '${Environment}-BlockbusterAmazonSlidingWindowTableArn' 
+      Name: !Sub '${Environment}-BlockbusterAmazonSlidingWindowTableArn'
+  SignalScoresTableArn:
+    Description: 'ARN of the Signal Scores table'
+    Value: !GetAtt SignalScoresTable.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterSignalScoresTableArn'
+  BlockbusterIndexTableArn:
+    Description: 'ARN of the Blockbuster Index table'
+    Value: !GetAtt BlockbusterIndexTable.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterBlockbusterIndexTableArn' 

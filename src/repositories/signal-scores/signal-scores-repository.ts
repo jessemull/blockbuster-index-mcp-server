@@ -1,15 +1,16 @@
 import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { logger } from '../../util';
-import type { JobSignalRecord } from '../../types/amazon';
+import type { SignalScoreRecord } from '../../types';
 import { DynamoDBSignalRepository } from '../base-signal-repository';
 
-export class DynamoDBAmazonSignalRepository extends DynamoDBSignalRepository<JobSignalRecord> {
-  async save(record: JobSignalRecord): Promise<void> {
+export class DynamoDBSignalScoresRepository extends DynamoDBSignalRepository<SignalScoreRecord> {
+  async save(record: SignalScoreRecord): Promise<void> {
     try {
       const item = {
-        jobCount: record.jobCount,
-        state: record.state,
+        signalType: record.signalType,
         timestamp: record.timestamp,
+        calculatedAt: record.calculatedAt,
+        scores: record.scores,
       };
 
       await this.client.send(
@@ -17,16 +18,16 @@ export class DynamoDBAmazonSignalRepository extends DynamoDBSignalRepository<Job
           Item: item,
           TableName: this.tableName,
           ConditionExpression:
-            'attribute_not_exists(#state) AND attribute_not_exists(#timestamp)',
+            'attribute_not_exists(#signalType) AND attribute_not_exists(#timestamp)',
           ExpressionAttributeNames: {
-            '#state': 'state',
+            '#signalType': 'signalType',
             '#timestamp': 'timestamp',
           },
         }),
       );
 
-      logger.info('Successfully saved job signal record', {
-        state: record.state,
+      logger.info('Successfully saved signal scores record', {
+        signalType: record.signalType,
         timestamp: record.timestamp,
       });
     } catch (error: unknown) {
@@ -34,29 +35,29 @@ export class DynamoDBAmazonSignalRepository extends DynamoDBSignalRepository<Job
         error instanceof Error &&
         error.name === 'ConditionalCheckFailedException'
       ) {
-        logger.info('Record already exists, skipping duplicate', {
-          state: record.state,
+        logger.info('Signal scores record already exists, skipping duplicate', {
+          signalType: record.signalType,
           timestamp: record.timestamp,
         });
         return;
       }
 
-      logger.error('Failed to save job signal record', {
+      logger.error('Failed to save signal scores record', {
         error: error instanceof Error ? error.message : String(error),
-        state: record.state,
+        signalType: record.signalType,
         timestamp: record.timestamp,
       });
       throw error;
     }
   }
 
-  async exists(state: string, timestamp?: number): Promise<boolean> {
+  async exists(signalType: string, timestamp?: number): Promise<boolean> {
     try {
       const response = await this.client.send(
         new GetCommand({
           TableName: this.tableName,
           Key: {
-            state: state,
+            signalType: signalType,
             timestamp: timestamp || Math.floor(Date.now() / 1000),
           },
         }),
@@ -64,9 +65,9 @@ export class DynamoDBAmazonSignalRepository extends DynamoDBSignalRepository<Job
 
       return !!response.Item;
     } catch (error: unknown) {
-      logger.error('Failed to check if record exists', {
+      logger.error('Failed to check if signal scores record exists', {
         error: error instanceof Error ? error.message : String(error),
-        state,
+        signalType,
         timestamp,
       });
       throw error;
@@ -74,15 +75,15 @@ export class DynamoDBAmazonSignalRepository extends DynamoDBSignalRepository<Job
   }
 
   async get(
-    state: string,
+    signalType: string,
     timestamp?: number,
-  ): Promise<JobSignalRecord | null> {
+  ): Promise<SignalScoreRecord | null> {
     try {
       const response = await this.client.send(
         new GetCommand({
           TableName: this.tableName,
           Key: {
-            state: state,
+            signalType: signalType,
             timestamp: timestamp || Math.floor(Date.now() / 1000),
           },
         }),
@@ -93,14 +94,15 @@ export class DynamoDBAmazonSignalRepository extends DynamoDBSignalRepository<Job
       }
 
       return {
-        jobCount: response.Item.jobCount as number,
-        state: response.Item.state as string,
+        signalType: response.Item.signalType as string,
         timestamp: response.Item.timestamp as number,
+        calculatedAt: response.Item.calculatedAt as string,
+        scores: response.Item.scores as Record<string, number>,
       };
     } catch (error: unknown) {
-      logger.error('Failed to get job signal record', {
+      logger.error('Failed to get signal scores record', {
         error: error instanceof Error ? error.message : String(error),
-        state,
+        signalType,
         timestamp,
       });
       throw error;
@@ -108,39 +110,40 @@ export class DynamoDBAmazonSignalRepository extends DynamoDBSignalRepository<Job
   }
 
   async query(
-    state: string,
+    signalType: string,
     start?: number,
     end?: number,
-  ): Promise<JobSignalRecord[]> {
+  ): Promise<SignalScoreRecord[]> {
     try {
       const response = await this.client.send(
         new QueryCommand({
           TableName: this.tableName,
           KeyConditionExpression:
-            '#state = :state AND #ts BETWEEN :start AND :end',
+            '#signalType = :signalType AND #ts BETWEEN :start AND :end',
           ExpressionAttributeValues: {
-            ':state': state,
+            ':signalType': signalType,
             ':start': start || 0,
             ':end': end || Math.floor(Date.now() / 1000),
           },
           ExpressionAttributeNames: {
-            '#state': 'state',
+            '#signalType': 'signalType',
             '#ts': 'timestamp',
           },
         }),
       );
 
       return (response.Items || []).map((item: Record<string, unknown>) => ({
-        jobCount: item.jobCount as number,
-        state: item.state as string,
+        signalType: item.signalType as string,
         timestamp: item.timestamp as number,
+        calculatedAt: item.calculatedAt as string,
+        scores: item.scores as Record<string, number>,
       }));
     } catch (error: unknown) {
-      logger.error('Failed to query job signal records', {
+      logger.error('Failed to query signal scores records', {
         end,
         error: error instanceof Error ? error.message : String(error),
         start,
-        state,
+        signalType,
       });
       throw error;
     }

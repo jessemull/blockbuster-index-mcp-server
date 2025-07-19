@@ -1,62 +1,64 @@
 import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { logger } from '../../util';
-import type { JobSignalRecord } from '../../types/amazon';
-import { DynamoDBSignalRepository } from '../base-signal-repository';
+import type { BlockbusterIndexRecord, StateScore } from '../../types';
+import { DynamoDBBlockbusterRepository } from './base-blockbuster-repository';
 
-export class DynamoDBAmazonSignalRepository extends DynamoDBSignalRepository<JobSignalRecord> {
-  async save(record: JobSignalRecord): Promise<void> {
+export class DynamoDBBlockbusterIndexRepository extends DynamoDBBlockbusterRepository<BlockbusterIndexRecord> {
+  async save(record: BlockbusterIndexRecord): Promise<void> {
     try {
       const item = {
-        jobCount: record.jobCount,
-        state: record.state,
         timestamp: record.timestamp,
+        calculatedAt: record.calculatedAt,
+        version: record.version,
+        totalStates: record.totalStates,
+        states: record.states,
+        signalStatus: record.signalStatus,
       };
 
       await this.client.send(
         new PutCommand({
           Item: item,
           TableName: this.tableName,
-          ConditionExpression:
-            'attribute_not_exists(#state) AND attribute_not_exists(#timestamp)',
+          ConditionExpression: 'attribute_not_exists(#timestamp)',
           ExpressionAttributeNames: {
-            '#state': 'state',
             '#timestamp': 'timestamp',
           },
         }),
       );
 
-      logger.info('Successfully saved job signal record', {
-        state: record.state,
+      logger.info('Successfully saved blockbuster index record', {
         timestamp: record.timestamp,
+        version: record.version,
+        totalStates: record.totalStates,
       });
     } catch (error: unknown) {
       if (
         error instanceof Error &&
         error.name === 'ConditionalCheckFailedException'
       ) {
-        logger.info('Record already exists, skipping duplicate', {
-          state: record.state,
-          timestamp: record.timestamp,
-        });
+        logger.info(
+          'Blockbuster index record already exists, skipping duplicate',
+          {
+            timestamp: record.timestamp,
+          },
+        );
         return;
       }
 
-      logger.error('Failed to save job signal record', {
+      logger.error('Failed to save blockbuster index record', {
         error: error instanceof Error ? error.message : String(error),
-        state: record.state,
         timestamp: record.timestamp,
       });
       throw error;
     }
   }
 
-  async exists(state: string, timestamp?: number): Promise<boolean> {
+  async exists(timestamp?: number): Promise<boolean> {
     try {
       const response = await this.client.send(
         new GetCommand({
           TableName: this.tableName,
           Key: {
-            state: state,
             timestamp: timestamp || Math.floor(Date.now() / 1000),
           },
         }),
@@ -64,25 +66,20 @@ export class DynamoDBAmazonSignalRepository extends DynamoDBSignalRepository<Job
 
       return !!response.Item;
     } catch (error: unknown) {
-      logger.error('Failed to check if record exists', {
+      logger.error('Failed to check if blockbuster index record exists', {
         error: error instanceof Error ? error.message : String(error),
-        state,
         timestamp,
       });
       throw error;
     }
   }
 
-  async get(
-    state: string,
-    timestamp?: number,
-  ): Promise<JobSignalRecord | null> {
+  async get(timestamp?: number): Promise<BlockbusterIndexRecord | null> {
     try {
       const response = await this.client.send(
         new GetCommand({
           TableName: this.tableName,
           Key: {
-            state: state,
             timestamp: timestamp || Math.floor(Date.now() / 1000),
           },
         }),
@@ -93,54 +90,59 @@ export class DynamoDBAmazonSignalRepository extends DynamoDBSignalRepository<Job
       }
 
       return {
-        jobCount: response.Item.jobCount as number,
-        state: response.Item.state as string,
         timestamp: response.Item.timestamp as number,
+        calculatedAt: response.Item.calculatedAt as string,
+        version: response.Item.version as string,
+        totalStates: response.Item.totalStates as number,
+        states: response.Item.states as Record<string, StateScore>,
+        signalStatus: response.Item.signalStatus as {
+          total: number;
+          successful: number;
+          failed: number;
+        },
       };
     } catch (error: unknown) {
-      logger.error('Failed to get job signal record', {
+      logger.error('Failed to get blockbuster index record', {
         error: error instanceof Error ? error.message : String(error),
-        state,
         timestamp,
       });
       throw error;
     }
   }
 
-  async query(
-    state: string,
-    start?: number,
-    end?: number,
-  ): Promise<JobSignalRecord[]> {
+  async query(start?: number, end?: number): Promise<BlockbusterIndexRecord[]> {
     try {
       const response = await this.client.send(
         new QueryCommand({
           TableName: this.tableName,
-          KeyConditionExpression:
-            '#state = :state AND #ts BETWEEN :start AND :end',
+          KeyConditionExpression: '#ts BETWEEN :start AND :end',
           ExpressionAttributeValues: {
-            ':state': state,
             ':start': start || 0,
             ':end': end || Math.floor(Date.now() / 1000),
           },
           ExpressionAttributeNames: {
-            '#state': 'state',
             '#ts': 'timestamp',
           },
         }),
       );
 
       return (response.Items || []).map((item: Record<string, unknown>) => ({
-        jobCount: item.jobCount as number,
-        state: item.state as string,
         timestamp: item.timestamp as number,
+        calculatedAt: item.calculatedAt as string,
+        version: item.version as string,
+        totalStates: item.totalStates as number,
+        states: item.states as Record<string, StateScore>,
+        signalStatus: item.signalStatus as {
+          total: number;
+          successful: number;
+          failed: number;
+        },
       }));
     } catch (error: unknown) {
-      logger.error('Failed to query job signal records', {
+      logger.error('Failed to query blockbuster index records', {
         end,
         error: error instanceof Error ? error.message : String(error),
         start,
-        state,
       });
       throw error;
     }

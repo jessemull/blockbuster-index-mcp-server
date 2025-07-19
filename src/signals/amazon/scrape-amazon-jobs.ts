@@ -24,25 +24,39 @@ export async function scrapeAmazonJobs(
       jobCounts[state] = 0;
     }
 
-    // Query job data per state and store immediately if repository is provided...
+    // Query job data per state, checking for existing data first...
 
     for (const state of Object.values(States)) {
-      logger.info(`Searching for Amazon jobs in ${state}`);
+      logger.info(`Processing Amazon jobs for ${state}`);
 
-      const region = STATE_ABBR_TO_NAME[state];
-      const stateJobCount = await searchJobsInState(browser, state, region);
+      let stateJobCount = 0;
 
-      jobCounts[state] = stateJobCount;
-
-      // Store the data immediately if repository is provided...
+      // Check if data already exists for today before scraping...
 
       if (repository && timestamp) {
         try {
-          // Check if record already exists for today...
-
           const exists = await repository.exists(state, timestamp);
 
-          if (!exists) {
+          if (exists) {
+            // Use existing data, don't scrape
+            const existingRecord = await repository.get(state, timestamp);
+            if (existingRecord) {
+              stateJobCount = existingRecord.jobCount;
+              logger.info(
+                `Using existing data for ${state}: ${stateJobCount} jobs`,
+                {
+                  state,
+                  jobCount: stateJobCount,
+                  timestamp,
+                },
+              );
+            }
+          } else {
+            // Data doesn't exist, scrape and store
+            logger.info(`No existing data found for ${state}, scraping...`);
+            const region = STATE_ABBR_TO_NAME[state];
+            stateJobCount = await searchJobsInState(browser, state, region);
+
             const record: JobSignalRecord = {
               state,
               timestamp,
@@ -56,25 +70,26 @@ export async function scrapeAmazonJobs(
               jobCount: stateJobCount,
               timestamp,
             });
-          } else {
-            logger.info(
-              `Record already exists for ${state} today, skipping storage`,
-              {
-                state,
-                timestamp,
-              },
-            );
           }
         } catch (storageError) {
-          logger.error(`Failed to store job count for ${state}`, {
+          logger.error(`Failed to process data for ${state}`, {
             state,
-            jobCount: stateJobCount,
             error: storageError,
             timestamp,
           });
+          // Fallback to scraping if storage operations fail
+          logger.info(`Falling back to scraping for ${state}`);
+          const region = STATE_ABBR_TO_NAME[state];
+          stateJobCount = await searchJobsInState(browser, state, region);
         }
+      } else {
+        // No repository available, scrape directly
+        logger.info(`No repository available, scraping ${state}`);
+        const region = STATE_ABBR_TO_NAME[state];
+        stateJobCount = await searchJobsInState(browser, state, region);
       }
 
+      jobCounts[state] = stateJobCount;
       logger.info(`Completed ${state}: found ${stateJobCount} total jobs`);
 
       await new Promise((resolve) => setTimeout(resolve, 2000));

@@ -98,6 +98,8 @@ Resources:
               Value: !Sub 'blockbuster-index-amazon-jobs-${Environment}'
             - Name: AMAZON_SLIDING_WINDOW_TABLE_NAME
               Value: !Sub 'blockbuster-index-amazon-sliding-window-${Environment}'
+            - Name: SIGNAL_SCORES_DYNAMODB_TABLE_NAME
+              Value: !Sub 'blockbuster-index-signal-scores-${Environment}'
             - Name: AWS_REGION
               Value: !Ref AWS::Region
             - Name: CACHE_CONTROL
@@ -153,6 +155,8 @@ Resources:
               Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]
             - Name: CENSUS_DYNAMODB_TABLE_NAME
               Value: !Sub 'blockbuster-index-census-signals-${Environment}'
+            - Name: SIGNAL_SCORES_DYNAMODB_TABLE_NAME
+              Value: !Sub 'blockbuster-index-signal-scores-${Environment}'
             - Name: AWS_REGION
               Value: !Ref AWS::Region
             - Name: CACHE_CONTROL
@@ -210,6 +214,8 @@ Resources:
               Value: !Sub 'blockbuster-index-broadband-signals-${Environment}'
             - Name: BROADBAND_S3_BUCKET_NAME
               Value: !Sub 'blockbuster-index-broadband-${Environment}'
+            - Name: SIGNAL_SCORES_DYNAMODB_TABLE_NAME
+              Value: !Sub 'blockbuster-index-signal-scores-${Environment}'
             - Name: AWS_REGION
               Value: !Ref AWS::Region
             - Name: CACHE_CONTROL
@@ -263,6 +269,8 @@ Resources:
               Value: !FindInMap [EnvConfig, !Ref Environment, LogLevel]
             - Name: S3_BUCKET_NAME
               Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]
+            - Name: BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME
+              Value: !Sub 'blockbuster-index-blockbuster-index-${Environment}'
             - Name: AWS_REGION
               Value: !Ref AWS::Region
             - Name: CACHE_CONTROL

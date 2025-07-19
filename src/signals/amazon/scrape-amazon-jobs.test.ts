@@ -93,6 +93,7 @@ describe('scrapeAmazonJobs', () => {
   describe('with repository storage', () => {
     const mockRepository = {
       exists: jest.fn(),
+      get: jest.fn(),
       save: jest.fn(),
       query: jest.fn(),
       saveBatch: jest.fn(),
@@ -105,7 +106,7 @@ describe('scrapeAmazonJobs', () => {
       mockRepository.save.mockResolvedValue(undefined);
     });
 
-    it('stores job counts when repository and timestamp are provided', async () => {
+    it('scrapes and stores job counts when data does not exist', async () => {
       const jobs = await scrapeAmazonJobs(mockRepository, timestamp);
 
       expect(mockRepository.exists).toHaveBeenCalledTimes(2);
@@ -130,21 +131,28 @@ describe('scrapeAmazonJobs', () => {
       expect(jobs).toEqual({ CA: 42, TX: 42 });
     });
 
-    it('skips storage when record already exists', async () => {
+    it('uses existing data when record already exists', async () => {
       mockRepository.exists.mockResolvedValue(true);
+      mockRepository.get.mockResolvedValue({
+        state: 'CA',
+        timestamp,
+        jobCount: 25,
+      });
 
       const jobs = await scrapeAmazonJobs(mockRepository, timestamp);
 
       expect(mockRepository.exists).toHaveBeenCalledTimes(2);
+      expect(mockRepository.get).toHaveBeenCalledTimes(2);
       expect(mockRepository.save).not.toHaveBeenCalled();
       expect(logger.info).toHaveBeenCalledWith(
-        'Record already exists for CA today, skipping storage',
+        'Using existing data for CA: 25 jobs',
         {
           state: 'CA',
+          jobCount: 25,
           timestamp,
         },
       );
-      expect(jobs).toEqual({ CA: 42, TX: 42 });
+      expect(jobs).toEqual({ CA: 25, TX: 25 });
     });
 
     it('continues processing when storage fails for one state', async () => {
@@ -156,10 +164,9 @@ describe('scrapeAmazonJobs', () => {
 
       expect(mockRepository.save).toHaveBeenCalledTimes(2);
       expect(logger.error).toHaveBeenCalledWith(
-        'Failed to store job count for TX',
+        'Failed to process data for TX',
         {
           state: 'TX',
-          jobCount: 42,
           error: new Error('Storage failed'),
           timestamp,
         },
@@ -173,10 +180,9 @@ describe('scrapeAmazonJobs', () => {
       const jobs = await scrapeAmazonJobs(mockRepository, timestamp);
 
       expect(logger.error).toHaveBeenCalledWith(
-        'Failed to store job count for CA',
+        'Failed to process data for CA',
         {
           state: 'CA',
-          jobCount: 42,
           error: new Error('Exists check failed'),
           timestamp,
         },

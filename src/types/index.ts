@@ -35,3 +35,23 @@ export interface SignalConfig {
   signal: Signal;
   getter: () => Promise<Record<string, number>>;
 }
+
+export interface SignalScoreRecord {
+  signalType: string;
+  timestamp: number;
+  calculatedAt: string;
+  scores: Record<string, number>;
+}
+
+export interface BlockbusterIndexRecord {
+  timestamp: number;
+  calculatedAt: string;
+  version: string;
+  totalStates: number;
+  states: Record<string, StateScore>;
+  signalStatus: {
+    total: number;
+    successful: number;
+    failed: number;
+  };
+}
