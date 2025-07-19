@@ -199,6 +199,32 @@ Resources:
                 Resource:
                   - !Sub 'arn:aws:s3:::blockbuster-index-broadband-${Environment}'
                   - !Sub 'arn:aws:s3:::blockbuster-index-broadband-${Environment}/*'
+        - PolicyName: 'DynamoDBSignalScoresAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterSignalScoresTableArn'
+        - PolicyName: 'DynamoDBBlockbusterIndexAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterBlockbusterIndexTableArn'
 
   EventBridgeInvokeRole:
     Type: AWS::IAM::Role

@@ -72,4 +72,38 @@ export class DynamoDBCensusSignalRepository extends DynamoDBSignalRepository<Cen
       throw error;
     }
   }
+
+  async get(
+    state: string,
+    timestamp?: number,
+  ): Promise<CensusSignalRecord | null> {
+    try {
+      const response = await this.client.send(
+        new GetCommand({
+          TableName: this.tableName,
+          Key: {
+            state: state,
+            timestamp: timestamp || Math.floor(Date.now() / 1000),
+          },
+        }),
+      );
+
+      if (!response.Item) {
+        return null;
+      }
+
+      return {
+        retailStores: response.Item.retailStores as number,
+        state: response.Item.state as string,
+        timestamp: response.Item.timestamp as number,
+      };
+    } catch (error: unknown) {
+      logger.error('Failed to get census signal record', {
+        error: error instanceof Error ? error.message : String(error),
+        state,
+        timestamp,
+      });
+      throw error;
+    }
+  }
 }

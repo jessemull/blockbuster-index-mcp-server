@@ -209,4 +209,8 @@ export class DynamoDBAmazonSlidingWindowRepository
     const aggregate = await this.getAggregate(state);
     return aggregate !== null;
   }
+
+  async get(state: string): Promise<SlidingWindowAggregate | null> {
+    return this.getAggregate(state);
+  }
 }

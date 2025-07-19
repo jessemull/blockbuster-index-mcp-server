@@ -1,10 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
-import type { SignalRepository } from '../types/amazon';
 
-export abstract class DynamoDBSignalRepository<T>
-  implements SignalRepository<T>
-{
+export abstract class DynamoDBBlockbusterRepository<T> {
   protected client: DynamoDBDocumentClient;
   protected tableName: string;
 
@@ -15,6 +12,6 @@ export abstract class DynamoDBSignalRepository<T>
   }
 
   abstract save(record: T): Promise<void>;
-  abstract exists(state: string, timestamp?: number): Promise<boolean>;
-  abstract get(state: string, timestamp?: number): Promise<T | null>;
+  abstract exists(timestamp?: number): Promise<boolean>;
+  abstract get(timestamp?: number): Promise<T | null>;
 }
