@@ -212,7 +212,7 @@ Resources:
               Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]
             - Name: BROADBAND_DYNAMODB_TABLE_NAME
               Value: !Sub 'blockbuster-index-broadband-signals-${Environment}'
-            - Name: BROADBAND_S3_BUCKET_NAME
+            - Name: BROADBAND_S3_BUCKET
               Value: !Sub 'blockbuster-index-broadband-${Environment}'
             - Name: SIGNAL_SCORES_DYNAMODB_TABLE_NAME
               Value: !Sub 'blockbuster-index-signal-scores-${Environment}'
