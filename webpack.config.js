@@ -75,7 +75,45 @@ module.exports = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      'process.env.SECRET': JSON.stringify(process.env.SECRET),
+      'process.env.AMAZON_DYNAMODB_TABLE_NAME': JSON.stringify(
+        process.env.AMAZON_DYNAMODB_TABLE_NAME,
+      ),
+      'process.env.AMAZON_SLIDING_WINDOW_TABLE_NAME': JSON.stringify(
+        process.env.AMAZON_SLIDING_WINDOW_TABLE_NAME,
+      ),
+      'process.env.AWS_REGION': JSON.stringify(process.env.AWS_REGION),
+      'process.env.AWS_TASK_ID': JSON.stringify(process.env.AWS_TASK_ID),
+      'process.env.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME': JSON.stringify(
+        process.env.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME,
+      ),
+      'process.env.BROADBAND_DYNAMODB_TABLE_NAME': JSON.stringify(
+        process.env.BROADBAND_DYNAMODB_TABLE_NAME,
+      ),
+      'process.env.BROADBAND_S3_BUCKET': JSON.stringify(
+        process.env.BROADBAND_S3_BUCKET,
+      ),
+      'process.env.CACHE_CONTROL': JSON.stringify(process.env.CACHE_CONTROL),
+      'process.env.CENSUS_DYNAMODB_TABLE_NAME': JSON.stringify(
+        process.env.CENSUS_DYNAMODB_TABLE_NAME,
+      ),
+      'process.env.CW_LOG_GROUP': JSON.stringify(process.env.CW_LOG_GROUP),
+      'process.env.CW_LOG_STREAM': JSON.stringify(process.env.CW_LOG_STREAM),
+      'process.env.FORCE_REFRESH': JSON.stringify(process.env.FORCE_REFRESH),
+      'process.env.LOG_LEVEL': JSON.stringify(process.env.LOG_LEVEL),
+      'process.env.MAX_RETRIES': JSON.stringify(process.env.MAX_RETRIES),
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+      'process.env.PUPPETEER_EXECUTABLE_PATH': JSON.stringify(
+        process.env.PUPPETEER_EXECUTABLE_PATH,
+      ),
+      'process.env.RETRY_DELAY': JSON.stringify(process.env.RETRY_DELAY),
+      'process.env.S3_BUCKET_NAME': JSON.stringify(process.env.S3_BUCKET_NAME),
+      'process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME': JSON.stringify(
+        process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
+      ),
+      'process.env.SIGNAL_TYPE': JSON.stringify(process.env.SIGNAL_TYPE),
+      'process.env.npm_package_version': JSON.stringify(
+        process.env.npm_package_version,
+      ),
     }),
     new webpack.IgnorePlugin({
       resourceRegExp: /^dtrace-provider$/,
