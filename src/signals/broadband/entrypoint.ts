@@ -4,6 +4,32 @@ import { logger, uploadToS3 } from '../../util';
 import fs from 'fs';
 import path from 'path';
 
+// DEBUG: Log environment variables IMMEDIATELY when module loads
+logger.info(
+  'ENV_DEBUG_MODULE_LOAD: Starting environment variable check at module load',
+);
+logger.info(
+  `ENV_DEBUG_MODULE_LOAD: BROADBAND_S3_BUCKET = ${process.env.BROADBAND_S3_BUCKET || 'UNDEFINED'}`,
+);
+logger.info(
+  `ENV_DEBUG_MODULE_LOAD: NODE_ENV = ${process.env.NODE_ENV || 'UNDEFINED'}`,
+);
+logger.info(
+  `ENV_DEBUG_MODULE_LOAD: AWS_REGION = ${process.env.AWS_REGION || 'UNDEFINED'}`,
+);
+logger.info(
+  `ENV_DEBUG_MODULE_LOAD: BROADBAND_DYNAMODB_TABLE_NAME = ${process.env.BROADBAND_DYNAMODB_TABLE_NAME || 'UNDEFINED'}`,
+);
+logger.info(
+  `ENV_DEBUG_MODULE_LOAD: SIGNAL_SCORES_DYNAMODB_TABLE_NAME = ${process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME || 'UNDEFINED'}`,
+);
+logger.info(
+  `ENV_DEBUG_MODULE_LOAD: npm_package_version = ${process.env.npm_package_version || 'UNDEFINED'}`,
+);
+logger.info(
+  'ENV_DEBUG_MODULE_LOAD: Environment variable check completed at module load',
+);
+
 async function main() {
   try {
     logger.info('Starting Broadband signal task...');

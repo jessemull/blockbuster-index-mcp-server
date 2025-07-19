@@ -34,6 +34,12 @@ export class S3BroadbandLoader {
 
   constructor(bucketName: string) {
     this.bucketName = bucketName;
+    logger.info(
+      `S3_DEBUG: Initializing S3BroadbandLoader with bucket: ${this.bucketName}`,
+    );
+    logger.info(
+      `S3_DEBUG: AWS_REGION = ${process.env.AWS_REGION || 'UNDEFINED'}`,
+    );
     this.s3Client = new S3Client({
       region: process.env.AWS_REGION || 'us-west-2',
     });
@@ -41,6 +47,9 @@ export class S3BroadbandLoader {
 
   async getLatestDataVersion(): Promise<string | null> {
     try {
+      logger.info(
+        `S3_DEBUG: Getting latest data version from bucket: ${this.bucketName}`,
+      );
       const command = new ListObjectsV2Command({
         Bucket: this.bucketName,
         Delimiter: '/',
@@ -49,7 +58,9 @@ export class S3BroadbandLoader {
       const response = await this.s3Client.send(command);
 
       if (!response.CommonPrefixes || response.CommonPrefixes.length === 0) {
-        logger.warn('No data versions found in S3 bucket');
+        logger.warn(
+          `S3_DEBUG: No data versions found in S3 bucket: ${this.bucketName}`,
+        );
         return null;
       }
 

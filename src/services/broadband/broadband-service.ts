@@ -17,29 +17,6 @@ export class BroadbandService {
 
   constructor(repository?: DynamoDBBroadbandSignalRepository) {
     this.repository = repository;
-
-    // DEBUG: Log environment variables for troubleshooting
-    logger.info('ENV_DEBUG_BROADBAND: Starting environment variable check');
-    logger.info(
-      `ENV_DEBUG_BROADBAND: BROADBAND_S3_BUCKET = ${process.env.BROADBAND_S3_BUCKET || 'UNDEFINED'}`,
-    );
-    logger.info(
-      `ENV_DEBUG_BROADBAND: NODE_ENV = ${process.env.NODE_ENV || 'UNDEFINED'}`,
-    );
-    logger.info(
-      `ENV_DEBUG_BROADBAND: AWS_REGION = ${process.env.AWS_REGION || 'UNDEFINED'}`,
-    );
-    logger.info(
-      `ENV_DEBUG_BROADBAND: BROADBAND_DYNAMODB_TABLE_NAME = ${process.env.BROADBAND_DYNAMODB_TABLE_NAME || 'UNDEFINED'}`,
-    );
-    logger.info(
-      `ENV_DEBUG_BROADBAND: SIGNAL_SCORES_DYNAMODB_TABLE_NAME = ${process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME || 'UNDEFINED'}`,
-    );
-    logger.info(
-      `ENV_DEBUG_BROADBAND: npm_package_version = ${process.env.npm_package_version || 'UNDEFINED'}`,
-    );
-    logger.info('ENV_DEBUG_BROADBAND: Environment variable check completed');
-
     this.s3Loader = new S3BroadbandLoader(
       process.env.BROADBAND_S3_BUCKET || 'blockbuster-index-broadband-dev',
     );
