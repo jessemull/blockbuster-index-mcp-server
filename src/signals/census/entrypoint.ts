@@ -9,6 +9,43 @@ async function main() {
     logger.info('Starting Census signal task...');
     const scores = await getCensusScores();
     const calculatedAt = new Date().toISOString();
+    const timestamp = Math.floor(Date.now() / 1000);
+
+    // Store scores in DynamoDB for historical tracking...
+
+    if (
+      !CONFIG.IS_DEVELOPMENT &&
+      process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME
+    ) {
+      try {
+        const { DynamoDBSignalScoresRepository } = await import(
+          '../../repositories'
+        );
+        const signalScoresRepository = new DynamoDBSignalScoresRepository(
+          process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
+        );
+
+        await signalScoresRepository.save({
+          signalType: 'census',
+          timestamp,
+          calculatedAt,
+          scores,
+        });
+
+        logger.info('Census scores stored in DynamoDB', {
+          table: process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
+          timestamp,
+        });
+      } catch (dbError) {
+        // Continue with S3 upload even if DynamoDB fails...
+
+        logger.error('Failed to store Census scores in DynamoDB', {
+          error: dbError,
+          table: process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
+        });
+      }
+    }
+
     if (CONFIG.IS_DEVELOPMENT) {
       const scoresDir = path.resolve(__dirname, '../../../dev/scores');
       const filePath = path.join(scoresDir, 'census-scores.json');

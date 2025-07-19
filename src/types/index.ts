@@ -10,8 +10,8 @@ import {
   BroadbandMetrics,
   TechnologyCounts,
 } from './broadband';
-import { BlockbusterIndexResponse } from './response';
-import { Signal } from './signals';
+import { BlockbusterIndexResponse, BlockbusterIndexRecord } from './response';
+import { Signal, SignalScoreRecord } from './signals';
 import { StateScore, States } from './states';
 
 export {
@@ -25,7 +25,9 @@ export {
   BroadbandMetrics,
   TechnologyCounts,
   BlockbusterIndexResponse,
+  BlockbusterIndexRecord,
   Signal,
+  SignalScoreRecord,
   StateScore,
   States,
 };

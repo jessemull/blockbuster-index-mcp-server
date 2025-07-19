@@ -5,6 +5,7 @@ import {
   Signal,
   StateScore,
   BlockbusterIndexResponse,
+  BlockbusterIndexRecord,
 } from '../../types';
 import { logger, uploadToS3, downloadFromS3 } from '../../util';
 import fs from 'fs';
@@ -64,10 +65,13 @@ async function main() {
         components,
       };
     }
+    const calculatedAt = new Date().toISOString();
+    const timestamp = Math.floor(Date.now() / 1000);
+
     const response: BlockbusterIndexResponse = {
       states,
       metadata: {
-        calculatedAt: new Date().toISOString(),
+        calculatedAt,
         version: CONFIG.VERSION,
         totalStates: Object.keys(states).length,
         signalStatus: {
@@ -77,6 +81,49 @@ async function main() {
         },
       },
     };
+
+    // Store blockbuster index in DynamoDB for historical tracking
+    if (
+      !CONFIG.IS_DEVELOPMENT &&
+      process.env.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME
+    ) {
+      try {
+        const { DynamoDBBlockbusterIndexRepository } = await import(
+          '../../repositories'
+        );
+        const blockbusterIndexRepository =
+          new DynamoDBBlockbusterIndexRepository(
+            process.env.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME,
+          );
+
+        const blockbusterRecord: BlockbusterIndexRecord = {
+          timestamp,
+          calculatedAt,
+          version: CONFIG.VERSION,
+          totalStates: Object.keys(states).length,
+          states,
+          signalStatus: {
+            total: SIGNALS.length,
+            successful: SIGNALS.length,
+            failed: 0,
+          },
+        };
+
+        await blockbusterIndexRepository.save(blockbusterRecord);
+
+        logger.info('Blockbuster index stored in DynamoDB', {
+          table: process.env.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME,
+          timestamp,
+        });
+      } catch (dbError) {
+        logger.error('Failed to store blockbuster index in DynamoDB', {
+          error: dbError,
+          table: process.env.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME,
+        });
+        // Continue with S3 upload even if DynamoDB fails
+      }
+    }
+
     if (CONFIG.IS_DEVELOPMENT) {
       const scoresDir = path.resolve(__dirname, '../../dev/scores');
       const filePath = path.join(scoresDir, 'blockbuster-index.json');
