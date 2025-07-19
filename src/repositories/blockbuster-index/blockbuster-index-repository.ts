@@ -1,6 +1,7 @@
 import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { logger } from '../../util';
-import type { BlockbusterIndexRecord, StateScore } from '../../types';
+import type { BlockbusterIndexRecord } from '../../types/response';
+import type { StateScore } from '../../types/states';
 import { DynamoDBBlockbusterRepository } from './base-blockbuster-repository';
 
 export class DynamoDBBlockbusterIndexRepository extends DynamoDBBlockbusterRepository<BlockbusterIndexRecord> {

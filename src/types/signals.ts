@@ -3,3 +3,10 @@ export enum Signal {
   CENSUS = 'CENSUS',
   BROADBAND = 'BROADBAND',
 }
+
+export interface SignalScoreRecord {
+  signalType: string;
+  timestamp: number;
+  calculatedAt: string;
+  scores: Record<string, number>;
+}

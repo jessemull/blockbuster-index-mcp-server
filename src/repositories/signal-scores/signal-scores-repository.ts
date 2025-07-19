@@ -1,6 +1,6 @@
 import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { logger } from '../../util';
-import type { SignalScoreRecord } from '../../types';
+import type { SignalScoreRecord } from '../../types/signals';
 import { DynamoDBSignalRepository } from '../base-signal-repository';
 
 export class DynamoDBSignalScoresRepository extends DynamoDBSignalRepository<SignalScoreRecord> {

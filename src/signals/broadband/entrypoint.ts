@@ -11,7 +11,8 @@ async function main() {
     const calculatedAt = new Date().toISOString();
     const timestamp = Math.floor(Date.now() / 1000);
 
-    // Store scores in DynamoDB for historical tracking
+    // Store scores in DynamoDB for historical tracking...
+
     if (
       !CONFIG.IS_DEVELOPMENT &&
       process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME
@@ -36,11 +37,12 @@ async function main() {
           timestamp,
         });
       } catch (dbError) {
+        // Continue with S3 upload even if DynamoDB fails...
+
         logger.error('Failed to store Broadband scores in DynamoDB', {
           error: dbError,
           table: process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
         });
-        // Continue with S3 upload even if DynamoDB fails
       }
     }
 
