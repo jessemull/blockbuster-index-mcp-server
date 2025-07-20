@@ -98,9 +98,10 @@ The Amazon signal measures e-commerce adoption and digital retail presence by an
 - Counts total job postings per state for the current day.
 - Maintains a 90-day sliding window of job posting data in DynamoDB.
 - Calculates rolling averages to smooth out daily fluctuations and seasonal variations.
-- Normalizes by state population to account for size differences.
-- Applies logarithmic scaling to handle outliers.
-- Generates a score from 0-100 where higher scores indicate greater e-commerce activity.
+- **Workforce Normalization**: Normalizes job counts by workforce size per state using Census Bureau labor force data (`B23025_002E`).
+- **Fair Comparison**: Uses "jobs per 1000 workers" metric to eliminate population bias between large and small states.
+- **Data Efficiency**: Fetches workforce data from Census repository to avoid repeated API calls.
+- Generates a score representing job density relative to available workers, where higher scores indicate greater e-commerce activity per capita.
 
 **Sliding Window Algorithm**:
 
@@ -118,6 +119,20 @@ The Amazon signal measures e-commerce adoption and digital retail presence by an
 - DynamoDB integration for sliding window data persistence.
 - Automatic window management with efficient aggregate updates.
 
+**Workforce Normalization Details**:
+
+The Amazon signal uses workforce normalization to provide fair comparisons across states of different sizes:
+
+- **Data Source**: U.S. Census Bureau American Community Survey (ACS) labor force data
+- **Metric**: Jobs per 1000 workers in the labor force
+- **Formula**: `(job_count / workforce_size) * 1000`
+- **Benefits**:
+  - Eliminates bias toward large states with naturally higher job counts
+  - Enables fair comparison between states of different population sizes
+  - Reveals true job market strength relative to available workers
+- **Data Flow**: Census signal stores workforce data → Amazon signal fetches from repository → Applies normalization
+- **Example**: A state with 1000 jobs and 2M workers = 0.5 jobs per 1000 workers
+
 ### Census Signal
 
 The Census signal captures demographic and economic indicators that correlate with retail behavior patterns.
@@ -130,8 +145,10 @@ The Census signal captures demographic and economic indicators that correlate wi
 
 - Fetches demographic data including population density, median income, and age distribution.
 - Analyzes economic indicators such as employment rates and industry composition.
+- **Workforce Data**: Fetches labor force data (`B23025_002E`) for workforce normalization in other signals.
 - Computes urbanization metrics and household characteristics.
 - Normalizes data across states and applies statistical weighting.
+- **Data Storage**: Stores both retail establishment metrics and workforce data in DynamoDB for reuse by other signals.
 - Generates a score from 0-100 reflecting retail market maturity.
 
 **Technical Implementation**:

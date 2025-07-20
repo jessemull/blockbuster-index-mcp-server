@@ -1,6 +1,7 @@
 import { CONFIG } from '../../config';
 import { CensusSignalRecord } from '../../types/census';
 import { SignalRepository } from '../../types/amazon';
+import { States } from '../../types/states';
 import { logger } from '../../util';
 
 const DEFAULT_CENSUS_TABLE = 'blockbuster-index-census-signals-dev';
@@ -31,18 +32,7 @@ export const getWorkforceData = async (): Promise<Record<string, number>> => {
     const timestamp = Math.floor(new Date(yearToTry, 0, 1).getTime() / 1000);
 
     try {
-      const states = [
-        'CA',
-        'NY',
-        'TX',
-        'FL',
-        'IL',
-        'PA',
-        'OH',
-        'GA',
-        'NC',
-        'MI',
-      ];
+      const states = Object.values(States);
 
       for (const state of states) {
         const record = await repository.get(state, timestamp);
