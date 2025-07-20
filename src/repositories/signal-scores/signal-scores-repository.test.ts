@@ -96,6 +96,32 @@ describe('DynamoDBSignalScoresRepository', () => {
       );
     });
 
+    it('should handle ConditionalCheckFailedException gracefully', async () => {
+      const error = new Error('ConditionalCheckFailedException');
+      error.name = 'ConditionalCheckFailedException';
+      mockSend.mockRejectedValue(error);
+
+      const record = {
+        signalType: 'AMAZON',
+        timestamp: 1234567890,
+        calculatedAt: '2024-01-01T00:00:00Z',
+        scores: {
+          CA: 0.8,
+          TX: 0.7,
+        },
+      };
+
+      await repository.save(record);
+
+      expect(logger.info).toHaveBeenCalledWith(
+        'Signal scores record already exists, skipping duplicate',
+        expect.objectContaining({
+          signalType: record.signalType,
+          timestamp: record.timestamp,
+        }),
+      );
+    });
+
     it('should handle save errors', async () => {
       const error = new Error('Save failed');
       mockSend.mockRejectedValue(error);
@@ -113,6 +139,29 @@ describe('DynamoDBSignalScoresRepository', () => {
         'Failed to save signal scores record',
         expect.objectContaining({
           error: 'Save failed',
+          signalType: record.signalType,
+          timestamp: record.timestamp,
+        }),
+      );
+    });
+
+    it('should handle non-Error exceptions in save', async () => {
+      const error = { some: 'weird object' };
+      mockSend.mockRejectedValue(error);
+
+      const record = {
+        signalType: 'AMAZON',
+        timestamp: 1234567890,
+        calculatedAt: '2024-01-01T00:00:00Z',
+        scores: {},
+      };
+
+      await expect(repository.save(record)).rejects.toBe(error);
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to save signal scores record',
+        expect.objectContaining({
+          error: '[object Object]',
           signalType: record.signalType,
           timestamp: record.timestamp,
         }),
@@ -177,6 +226,42 @@ describe('DynamoDBSignalScoresRepository', () => {
         }),
       );
     });
+
+    it('should use current timestamp when timestamp is not provided', async () => {
+      jest.useFakeTimers().setSystemTime(1751089342000);
+      mockSend.mockResolvedValue({});
+
+      await repository.get('AMAZON');
+
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          input: {
+            TableName: 'test-table',
+            Key: {
+              signalType: 'AMAZON',
+              timestamp: Math.floor(Date.now() / 1000),
+            },
+          },
+        }),
+      );
+      jest.useRealTimers();
+    });
+
+    it('should handle non-Error exceptions in get', async () => {
+      const error = 'String error';
+      mockSend.mockRejectedValue(error);
+
+      await expect(repository.get('AMAZON', 1234567890)).rejects.toBe(error);
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to get signal scores record',
+        expect.objectContaining({
+          error: 'String error',
+          signalType: 'AMAZON',
+          timestamp: 1234567890,
+        }),
+      );
+    });
   });
 
   describe('exists', () => {
@@ -210,6 +295,42 @@ describe('DynamoDBSignalScoresRepository', () => {
         'Failed to check if signal scores record exists',
         expect.objectContaining({
           error: 'Exists failed',
+          signalType: 'AMAZON',
+          timestamp: 1234567890,
+        }),
+      );
+    });
+
+    it('should use current timestamp when timestamp is not provided', async () => {
+      jest.useFakeTimers().setSystemTime(1751089342000);
+      mockSend.mockResolvedValue({});
+
+      await repository.exists('AMAZON');
+
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          input: {
+            TableName: 'test-table',
+            Key: {
+              signalType: 'AMAZON',
+              timestamp: Math.floor(Date.now() / 1000),
+            },
+          },
+        }),
+      );
+      jest.useRealTimers();
+    });
+
+    it('should handle non-Error exceptions in exists', async () => {
+      const error = 12345;
+      mockSend.mockRejectedValue(error);
+
+      await expect(repository.exists('AMAZON', 1234567890)).rejects.toBe(error);
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to check if signal scores record exists',
+        expect.objectContaining({
+          error: '12345',
           signalType: 'AMAZON',
           timestamp: 1234567890,
         }),
@@ -267,6 +388,60 @@ describe('DynamoDBSignalScoresRepository', () => {
         'Failed to query signal scores records',
         expect.objectContaining({
           error: 'Query failed',
+          signalType: 'AMAZON',
+          start: 1234567890,
+          end: 1234567899,
+        }),
+      );
+    });
+
+    it('should use default values when start and end are not provided', async () => {
+      jest.useFakeTimers().setSystemTime(1751089342000);
+      mockSend.mockResolvedValue({ Items: [] });
+
+      await repository.query('AMAZON');
+
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          input: expect.objectContaining({
+            TableName: 'test-table',
+            KeyConditionExpression:
+              '#signalType = :signalType AND #ts BETWEEN :start AND :end',
+            ExpressionAttributeValues: {
+              ':signalType': 'AMAZON',
+              ':start': 0,
+              ':end': Math.floor(Date.now() / 1000),
+            },
+            ExpressionAttributeNames: {
+              '#signalType': 'signalType',
+              '#ts': 'timestamp',
+            },
+          }),
+        }),
+      );
+      jest.useRealTimers();
+    });
+
+    it('should return empty array when Items is undefined', async () => {
+      mockSend.mockResolvedValue({});
+
+      const result = await repository.query('AMAZON', 1234567890, 1234567899);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle non-Error exceptions in query', async () => {
+      const error = { some: 'weird object' };
+      mockSend.mockRejectedValue(error);
+
+      await expect(
+        repository.query('AMAZON', 1234567890, 1234567899),
+      ).rejects.toBe(error);
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to query signal scores records',
+        expect.objectContaining({
+          error: '[object Object]',
           signalType: 'AMAZON',
           start: 1234567890,
           end: 1234567899,

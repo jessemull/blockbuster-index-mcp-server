@@ -160,7 +160,7 @@ describe('DynamoDBAmazonSlidingWindowRepository', () => {
     it('updates aggregate with old day and includes windowStart updates', async () => {
       jest.spyOn(repository, 'getAggregate').mockResolvedValueOnce(aggregate);
       mockSend.mockResolvedValue({});
-      // This test expects #windowStart to be updated, so oldDayTimestamp must be non-zero
+
       await repository.updateAggregate('CA', 5, 2000, 1000, 5);
       const sentCommand = mockSend.mock.calls[0][0] as UpdateCommand;
       expect(sentCommand.input.UpdateExpression).toMatch(
@@ -216,6 +216,26 @@ describe('DynamoDBAmazonSlidingWindowRepository', () => {
     });
   });
 
+  describe('get', () => {
+    it('delegates to getAggregate and returns aggregate when found', async () => {
+      const spy = jest
+        .spyOn(repository, 'getAggregate')
+        .mockResolvedValueOnce(aggregate);
+      const result = await repository.get('CA');
+      expect(spy).toHaveBeenCalledWith('CA');
+      expect(result).toEqual(aggregate);
+    });
+
+    it('delegates to getAggregate and returns null when not found', async () => {
+      const spy = jest
+        .spyOn(repository, 'getAggregate')
+        .mockResolvedValueOnce(null);
+      const result = await repository.get('CA');
+      expect(spy).toHaveBeenCalledWith('CA');
+      expect(result).toBeNull();
+    });
+  });
+
   describe('error logging fallback for non-Error types', () => {
     it('logs stringified unknown error in getAggregate', async () => {
       const unknownError = 'unexpected string error';
@@ -229,7 +249,7 @@ describe('DynamoDBAmazonSlidingWindowRepository', () => {
     });
 
     it('logs stringified unknown error in saveAggregate', async () => {
-      const unknownError = 12345; // number instead of Error
+      const unknownError = 12345;
       mockSend.mockRejectedValue(unknownError);
 
       await expect(repository.saveAggregate(aggregate)).rejects.toBe(

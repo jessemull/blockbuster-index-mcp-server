@@ -214,6 +214,175 @@ describe('DynamoDBAmazonSignalRepository', () => {
     });
   });
 
+  describe('get', () => {
+    it('successfully gets a record when it exists', async () => {
+      const mockItem = {
+        state: 'CA',
+        timestamp: 1234567890,
+        jobCount: 42,
+      };
+      mockSend.mockResolvedValue({ Item: mockItem });
+
+      const result = await repository.get('CA', 1234567890);
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const call = mockSend.mock.calls[0][0];
+      expect(call).toBeInstanceOf(GetCommand);
+      expect(call.TableName).toBe(mockTableName);
+      expect(call.Key).toEqual({
+        state: 'CA',
+        timestamp: 1234567890,
+      });
+      expect(result).toEqual({
+        jobCount: 42,
+        state: 'CA',
+        timestamp: 1234567890,
+      });
+    });
+
+    it('returns null when record does not exist', async () => {
+      mockSend.mockResolvedValue({ Item: null });
+
+      const result = await repository.get('CA', 1234567890);
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const call = mockSend.mock.calls[0][0];
+      expect(call).toBeInstanceOf(GetCommand);
+      expect(call.TableName).toBe(mockTableName);
+      expect(call.Key).toEqual({
+        state: 'CA',
+        timestamp: 1234567890,
+      });
+      expect(result).toBeNull();
+    });
+
+    it('uses current timestamp when timestamp is not provided', async () => {
+      const mockItem = {
+        state: 'CA',
+        timestamp: 1751089342,
+        jobCount: 42,
+      };
+      mockSend.mockResolvedValue({ Item: mockItem });
+
+      await repository.get('CA');
+
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const call = mockSend.mock.calls[0][0];
+      expect(call.Key).toEqual({
+        state: 'CA',
+        timestamp: expect.any(Number),
+      });
+
+      const currentTime = Math.floor(Date.now() / 1000);
+      expect(call.Key.timestamp).toBeGreaterThan(currentTime - 5);
+      expect(call.Key.timestamp).toBeLessThan(currentTime + 5);
+    });
+
+    it('handles response with undefined Item', async () => {
+      mockSend.mockResolvedValue({ Item: undefined });
+
+      const result = await repository.get('CA', 1234567890);
+
+      expect(result).toBeNull();
+    });
+
+    it('throws error on get failure', async () => {
+      const error = new Error('Get failed');
+      mockSend.mockRejectedValue(error);
+
+      await expect(repository.get('CA', 1234567890)).rejects.toThrow(
+        'Get failed',
+      );
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        'Failed to get job signal record',
+        {
+          error: 'Get failed',
+          state: 'CA',
+          timestamp: 1234567890,
+        },
+      );
+    });
+
+    it('handles non-Error exceptions in get', async () => {
+      const error = 'String error';
+      mockSend.mockRejectedValue(error);
+
+      await expect(repository.get('CA', 1234567890)).rejects.toBe(
+        'String error',
+      );
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        'Failed to get job signal record',
+        {
+          error: 'String error',
+          state: 'CA',
+          timestamp: 1234567890,
+        },
+      );
+    });
+
+    it('handles null exceptions in get', async () => {
+      const error = null;
+      mockSend.mockRejectedValue(error);
+
+      await expect(repository.get('CA', 1234567890)).rejects.toBeNull();
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        'Failed to get job signal record',
+        {
+          error: 'null',
+          state: 'CA',
+          timestamp: 1234567890,
+        },
+      );
+    });
+
+    it('handles undefined exceptions in get', async () => {
+      const error = undefined;
+      mockSend.mockRejectedValue(error);
+
+      await expect(repository.get('CA', 1234567890)).rejects.toBeUndefined();
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        'Failed to get job signal record',
+        {
+          error: 'undefined',
+          state: 'CA',
+          timestamp: 1234567890,
+        },
+      );
+    });
+
+    it('handles response with missing fields gracefully', async () => {
+      const mockItem = {
+        state: 'CA',
+      };
+      mockSend.mockResolvedValue({ Item: mockItem });
+
+      const result = await repository.get('CA', 1234567890);
+
+      expect(result).toEqual({
+        jobCount: undefined,
+        state: 'CA',
+        timestamp: undefined,
+      });
+    });
+
+    it('handles response with null fields gracefully', async () => {
+      const mockItem = {
+        state: 'CA',
+        timestamp: null,
+        jobCount: null,
+      };
+      mockSend.mockResolvedValue({ Item: mockItem });
+
+      const result = await repository.get('CA', 1234567890);
+
+      expect(result).toEqual({
+        jobCount: null,
+        state: 'CA',
+        timestamp: null,
+      });
+    });
+  });
+
   describe('query', () => {
     it('successfully queries records with default time range', async () => {
       const mockItems = [
