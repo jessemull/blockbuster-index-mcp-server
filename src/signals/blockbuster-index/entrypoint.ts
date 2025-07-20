@@ -82,7 +82,8 @@ async function main() {
       },
     };
 
-    // Store blockbuster index in DynamoDB for historical tracking
+    // Store blockbuster index in DynamoDB for historical tracking...
+
     if (
       !CONFIG.IS_DEVELOPMENT &&
       process.env.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME
@@ -116,11 +117,12 @@ async function main() {
           timestamp,
         });
       } catch (dbError) {
+        // Continue with S3 upload even if DynamoDB fails...
+
         logger.error('Failed to store blockbuster index in DynamoDB', {
           error: dbError,
           table: process.env.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME,
         });
-        // Continue with S3 upload even if DynamoDB fails
       }
     }
 
