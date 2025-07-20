@@ -1,9 +1,15 @@
-import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { logger } from '../../util';
-import type { CensusSignalRecord } from '../../types/census';
+import type {
+  CensusSignalRecord,
+  CensusSignalRepository,
+} from '../../types/census';
 import { DynamoDBSignalRepository } from '../base-signal-repository';
 
-export class DynamoDBCensusSignalRepository extends DynamoDBSignalRepository<CensusSignalRecord> {
+export class DynamoDBCensusSignalRepository
+  extends DynamoDBSignalRepository<CensusSignalRecord>
+  implements CensusSignalRepository
+{
   async save(record: CensusSignalRecord): Promise<void> {
     try {
       const item = {
@@ -104,6 +110,43 @@ export class DynamoDBCensusSignalRepository extends DynamoDBSignalRepository<Cen
         error: error instanceof Error ? error.message : String(error),
         state,
         timestamp,
+      });
+      throw error;
+    }
+  }
+
+  async getLatest(state: string): Promise<CensusSignalRecord | null> {
+    try {
+      const response = await this.client.send(
+        new QueryCommand({
+          TableName: this.tableName,
+          KeyConditionExpression: '#state = :state',
+          ExpressionAttributeNames: {
+            '#state': 'state',
+          },
+          ExpressionAttributeValues: {
+            ':state': state,
+          },
+          ScanIndexForward: false, // Get most recent first
+          Limit: 1, // Only get the latest record
+        }),
+      );
+
+      if (!response.Items || response.Items.length === 0) {
+        return null;
+      }
+
+      const item = response.Items[0];
+      return {
+        retailStores: item.retailStores as number,
+        workforce: item.workforce as number,
+        state: item.state as string,
+        timestamp: item.timestamp as number,
+      };
+    } catch (error: unknown) {
+      logger.error('Failed to get latest census signal record', {
+        error: error instanceof Error ? error.message : String(error),
+        state,
       });
       throw error;
     }

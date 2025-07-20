@@ -1,6 +1,5 @@
 import { CONFIG } from '../../config';
-import { CensusSignalRecord } from '../../types/census';
-import { SignalRepository } from '../../types/amazon';
+import { CensusSignalRepository } from '../../types/census';
 import { States } from '../../types/states';
 import { logger } from '../../util';
 
@@ -9,7 +8,7 @@ const DEFAULT_CENSUS_TABLE = 'blockbuster-index-census-signals-dev';
 export const getWorkforceData = async (): Promise<Record<string, number>> => {
   logger.info('Fetching workforce data from census repository...');
 
-  let repository: SignalRepository<CensusSignalRecord> | null = null;
+  let repository: CensusSignalRepository | null = null;
 
   if (!CONFIG.IS_DEVELOPMENT || process.env.CENSUS_DYNAMODB_TABLE_NAME) {
     const { DynamoDBCensusSignalRepository } = await import(
@@ -25,39 +24,33 @@ export const getWorkforceData = async (): Promise<Record<string, number>> => {
   }
 
   const workforceData: Record<string, number> = {};
-  const currentYear = new Date().getFullYear();
+  const states = Object.values(States);
 
-  for (let yearOffset = 1; yearOffset <= 3; yearOffset++) {
-    const yearToTry = currentYear - yearOffset;
-    const timestamp = Math.floor(new Date(yearToTry, 0, 1).getTime() / 1000);
-
+  // Get the latest workforce data for each state
+  for (const state of states) {
     try {
-      const states = Object.values(States);
-
-      for (const state of states) {
-        const record = await repository.get(state, timestamp);
-        if (record && record.workforce) {
-          workforceData[state] = record.workforce;
-        }
-      }
-
-      if (Object.keys(workforceData).length > 0) {
-        logger.info(
-          `Successfully retrieved workforce data for ${Object.keys(workforceData).length} states from year ${yearToTry}`,
-        );
-        return workforceData;
+      const record = await repository.getLatest(state);
+      if (record && record.workforce) {
+        workforceData[state] = record.workforce;
       }
     } catch (error) {
       logger.warn(
-        `Failed to retrieve workforce data for year ${yearToTry}, trying previous year`,
+        `Failed to retrieve workforce data for state ${state}`,
         error,
       );
     }
   }
 
-  throw new Error(
-    `No workforce data available in census repository for years ${currentYear - 1} through ${currentYear - 3}`,
+  if (Object.keys(workforceData).length === 0) {
+    throw new Error(
+      'No workforce data available in census repository for any state',
+    );
+  }
+
+  logger.info(
+    `Successfully retrieved workforce data for ${Object.keys(workforceData).length} states from census repository`,
   );
+  return workforceData;
 };
 
 export default getWorkforceData;

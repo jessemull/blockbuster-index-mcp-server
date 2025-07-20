@@ -23,3 +23,10 @@ export interface CensusSignalRecord {
   state: string;
   timestamp: number;
 }
+
+export interface CensusSignalRepository {
+  exists(state: string, timestamp?: number): Promise<boolean>;
+  get(state: string, timestamp?: number): Promise<CensusSignalRecord | null>;
+  getLatest(state: string): Promise<CensusSignalRecord | null>;
+  save(record: CensusSignalRecord): Promise<void>;
+}

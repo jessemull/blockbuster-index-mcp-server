@@ -1,7 +1,7 @@
 import { calculateWorkforceNormalizedScores } from './calculate-workforce-normalized-scores';
 
 describe('calculateWorkforceNormalizedScores', () => {
-  it('calculates jobs per 1000 workers correctly', () => {
+  it('calculates percentage of workforce scaled by 1,000,000 correctly', () => {
     const jobCounts = {
       CA: 1000,
       NY: 500,
@@ -16,10 +16,13 @@ describe('calculateWorkforceNormalizedScores', () => {
 
     const result = calculateWorkforceNormalizedScores(jobCounts, workforceData);
 
+    // CA: (1000 / 2000000) * 100 * 1000000 = 0.05 * 1000000 = 50000
+    // NY: (500 / 1000000) * 100 * 1000000 = 0.05 * 1000000 = 50000
+    // TX: (750 / 1500000) * 100 * 1000000 = 0.05 * 1000000 = 50000
     expect(result).toEqual({
-      CA: 1,
-      NY: 1,
-      TX: 1,
+      CA: 50000,
+      NY: 50000,
+      TX: 50000,
     });
   });
 
@@ -37,7 +40,7 @@ describe('calculateWorkforceNormalizedScores', () => {
     const result = calculateWorkforceNormalizedScores(jobCounts, workforceData);
 
     expect(result).toEqual({
-      CA: 1,
+      CA: 50000,
       NY: 0,
     });
   });
@@ -55,7 +58,7 @@ describe('calculateWorkforceNormalizedScores', () => {
     const result = calculateWorkforceNormalizedScores(jobCounts, workforceData);
 
     expect(result).toEqual({
-      CA: 1,
+      CA: 50000,
       NY: 0,
     });
   });
@@ -71,8 +74,9 @@ describe('calculateWorkforceNormalizedScores', () => {
 
     const result = calculateWorkforceNormalizedScores(jobCounts, workforceData);
 
+    // (1500 / 2000000) * 100 * 1000000 = 0.075 * 1000000 = 75000
     expect(result).toEqual({
-      CA: 1,
+      CA: 75000,
     });
   });
 });
