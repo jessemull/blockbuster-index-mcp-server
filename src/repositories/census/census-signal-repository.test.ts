@@ -203,4 +203,134 @@ describe('DynamoDBCensusSignalRepository', () => {
       );
     });
   });
+
+  describe('get', () => {
+    const mockRecord = {
+      retailStores: 150,
+      state: 'TX',
+      timestamp: 1234567890,
+    };
+
+    it('returns census record when found', async () => {
+      mockSend.mockResolvedValue({ Item: mockRecord });
+
+      const result = await repository.get('TX', 1234567890);
+
+      expect(result).toEqual(mockRecord);
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          TableName: mockTableName,
+          Key: {
+            state: 'TX',
+            timestamp: 1234567890,
+          },
+        }),
+      );
+    });
+
+    it('returns null when record not found', async () => {
+      mockSend.mockResolvedValue({ Item: null });
+
+      const result = await repository.get('TX', 1234567890);
+
+      expect(result).toBeNull();
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          TableName: mockTableName,
+          Key: {
+            state: 'TX',
+            timestamp: 1234567890,
+          },
+        }),
+      );
+    });
+
+    it('returns null when response has no Item', async () => {
+      mockSend.mockResolvedValue({});
+
+      const result = await repository.get('TX', 1234567890);
+
+      expect(result).toBeNull();
+    });
+
+    it('uses current timestamp when timestamp is not provided', async () => {
+      jest.useFakeTimers().setSystemTime(1751089342000); // 2025-07-28
+      mockSend.mockResolvedValue({ Item: mockRecord });
+
+      await repository.get('TX');
+
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          TableName: mockTableName,
+          Key: {
+            state: 'TX',
+            timestamp: Math.floor(Date.now() / 1000),
+          },
+        }),
+      );
+      jest.useRealTimers();
+    });
+
+    it('logs and throws Error exceptions', async () => {
+      const error = new Error('Get failed');
+      mockSend.mockRejectedValue(error);
+
+      await expect(repository.get('TX', 1234567890)).rejects.toThrow(
+        'Get failed',
+      );
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        'Failed to get census signal record',
+        {
+          error: 'Get failed',
+          state: 'TX',
+          timestamp: 1234567890,
+        },
+      );
+    });
+
+    it('logs and throws non-Error exceptions', async () => {
+      const error = { some: 'weird object' };
+      mockSend.mockRejectedValue(error);
+
+      await expect(repository.get('TX', 1234567890)).rejects.toBe(error);
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        'Failed to get census signal record',
+        {
+          error: '[object Object]',
+          state: 'TX',
+          timestamp: 1234567890,
+        },
+      );
+    });
+
+    it('handles string exceptions', async () => {
+      const error = 'String error';
+      mockSend.mockRejectedValue(error);
+
+      await expect(repository.get('TX', 1234567890)).rejects.toBe(error);
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        'Failed to get census signal record',
+        {
+          error: 'String error',
+          state: 'TX',
+          timestamp: 1234567890,
+        },
+      );
+    });
+
+    it('handles number exceptions', async () => {
+      const error = 12345;
+      mockSend.mockRejectedValue(error);
+
+      await expect(repository.get('TX', 1234567890)).rejects.toBe(error);
+      expect(mockedLogger.error).toHaveBeenCalledWith(
+        'Failed to get census signal record',
+        {
+          error: '12345',
+          state: 'TX',
+          timestamp: 1234567890,
+        },
+      );
+    });
+  });
 });
