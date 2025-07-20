@@ -2,6 +2,7 @@ import axios from 'axios';
 import {
   fetchCensusEstablishmentData,
   fetchCensusPopulationData,
+  fetchCensusWorkforceData,
   fetchCensusData,
 } from './census-service';
 import { logger } from '../../util';
@@ -133,8 +134,73 @@ describe('CensusService', () => {
     });
   });
 
+  describe('fetchCensusWorkforceData', () => {
+    it('parses workforce data correctly', async () => {
+      mockedAxios.get.mockResolvedValueOnce({
+        data: [
+          ['NAME', 'B23025_002E', 'state'],
+          ['Oregon', '2100000', '41'],
+          ['California', '19500000', '06'],
+        ],
+      });
+
+      const result = await fetchCensusWorkforceData(2022);
+      expect(result).toEqual({ OR: 2100000, CA: 19500000 });
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Successfully'),
+      );
+    });
+
+    it('ignores unknown state codes', async () => {
+      mockedAxios.get.mockResolvedValueOnce({
+        data: [
+          ['NAME', 'B23025_002E', 'state'],
+          ['Unknown', '789000', '99'],
+        ],
+      });
+
+      const result = await fetchCensusWorkforceData(2022);
+      expect(result).toEqual({});
+    });
+
+    it('handles parseInt fallback gracefully', async () => {
+      mockedAxios.get.mockResolvedValueOnce({
+        data: [
+          ['NAME', 'B23025_002E', 'state'],
+          ['Badland', 'notanumber', '41'],
+        ],
+      });
+
+      const result = await fetchCensusWorkforceData(2022);
+      expect(result).toEqual({ OR: 0 });
+    });
+
+    it('throws and logs on axios failure', async () => {
+      mockedAxios.get.mockRejectedValueOnce(new Error('workforce API fail'));
+
+      await expect(fetchCensusWorkforceData(2022)).rejects.toThrow(
+        'Failed to fetch Census workforce data for year 2022',
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to fetch Census workforce data for year 2022: workforce API fail (code: UNKNOWN)',
+      );
+    });
+
+    it('handles non-Error objects with String() fallback', async () => {
+      const nonErrorObject = { message: 'workforce error', code: 'CUSTOMWORK' };
+      mockedAxios.get.mockRejectedValueOnce(nonErrorObject);
+
+      await expect(fetchCensusWorkforceData(2022)).rejects.toThrow(
+        'Failed to fetch Census workforce data for year 2022',
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to fetch Census workforce data for year 2022: [object Object] (code: CUSTOMWORK)',
+      );
+    });
+  });
+
   describe('fetchCensusData', () => {
-    it('combines both data sources', async () => {
+    it('combines all three data sources', async () => {
       mockedAxios.get
         .mockResolvedValueOnce({
           data: [
@@ -147,12 +213,19 @@ describe('CensusService', () => {
             ['NAME', 'B01003_001E', 'state'],
             ['Oregon', '4200000', '41'],
           ],
+        })
+        .mockResolvedValueOnce({
+          data: [
+            ['NAME', 'B23025_002E', 'state'],
+            ['Oregon', '2100000', '41'],
+          ],
         });
 
       const result = await fetchCensusData(2022);
       expect(result).toEqual({
         establishments: { OR: 10 },
         population: { OR: 4200000 },
+        workforce: { OR: 2100000 },
         year: 2022,
       });
     });

@@ -4,6 +4,7 @@ import {
   CensusData,
   CensusEstablishmentData,
   CensusPopulationData,
+  CensusWorkforceData,
 } from '../../types';
 import { logger } from '../../util';
 
@@ -133,17 +134,54 @@ export const fetchCensusPopulationData = async (
   }
 };
 
+export const fetchCensusWorkforceData = async (
+  year: number,
+): Promise<CensusWorkforceData> => {
+  logger.info(`Fetching Census workforce data for year ${year}`);
+
+  const url = `https://api.census.gov/data/${year}/acs/acs1?get=NAME,B23025_002E&for=state:*`;
+
+  try {
+    const response = await axios.get(url);
+
+    const data = response.data as [string, string, string, string][];
+
+    const workforce: CensusWorkforceData = {};
+
+    for (const [, laborForce, stateCode] of data.slice(1)) {
+      const stateAbbr = STATE_CODE_TO_ABBR[stateCode];
+      if (stateAbbr && Object.values(States).includes(stateAbbr as States)) {
+        workforce[stateAbbr] = parseInt(laborForce, 10) || 0;
+      }
+    }
+
+    logger.info(
+      `Successfully fetched workforce data for ${Object.keys(workforce).length} states`,
+    );
+    return workforce;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorCode = (error as { code: string })?.code || 'UNKNOWN';
+    logger.error(
+      `Failed to fetch Census workforce data for year ${year}: ${errorMessage} (code: ${errorCode})`,
+    );
+    throw new Error(`Failed to fetch Census workforce data for year ${year}`);
+  }
+};
+
 export const fetchCensusData = async (year: number): Promise<CensusData> => {
   logger.info(`Fetching complete Census data for year ${year}`);
 
-  const [establishments, population] = await Promise.all([
+  const [establishments, population, workforce] = await Promise.all([
     fetchCensusEstablishmentData(year),
     fetchCensusPopulationData(year),
+    fetchCensusWorkforceData(year),
   ]);
 
   return {
     establishments,
     population,
+    workforce,
     year,
   };
 };

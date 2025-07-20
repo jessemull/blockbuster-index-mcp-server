@@ -1,9 +1,10 @@
 import { CONFIG } from '../../config';
 import { SignalRepository, JobSignalRecord } from '../../types/amazon';
-import { calculateScores } from './calculate-scores';
+import { calculateWorkforceNormalizedScores } from './calculate-workforce-normalized-scores';
 import { scrapeAmazonJobs } from './scrape-amazon-jobs';
 import { logger } from '../../util';
 import { AmazonSlidingWindowService } from '../../services/amazon/amazon-sliding-window-service';
+import { getWorkforceData } from './get-workforce-data';
 
 const DEFAULT_TABLE = 'blockbuster-index-amazon-jobs-dev';
 
@@ -52,10 +53,15 @@ export const getAmazonScores = async (): Promise<Record<string, number>> => {
 
     const slidingWindowJobCounts =
       await slidingWindowService.getSlidingWindowScores();
-    const scores = calculateScores(slidingWindowJobCounts);
+
+    const workforceData = await getWorkforceData();
+    const scores = calculateWorkforceNormalizedScores(
+      slidingWindowJobCounts,
+      workforceData,
+    );
 
     logger.info(
-      'Amazon job presence calculation completed with sliding window...',
+      'Amazon job presence calculation completed with workforce normalization...',
       {
         totalStates: Object.keys(scores).length,
         totalJobs: Object.values(slidingWindowJobCounts).reduce(
@@ -68,17 +74,21 @@ export const getAmazonScores = async (): Promise<Record<string, number>> => {
 
     return scores;
   } else {
-    // Fallback to original calculation for development without DynamoDB...
+    // Fallback to workforce-normalized calculation for development without DynamoDB...
 
-    const scores = calculateScores(jobCounts);
+    const workforceData = await getWorkforceData();
+    const scores = calculateWorkforceNormalizedScores(jobCounts, workforceData);
 
-    logger.info('Amazon job presence calculation completed (fallback)...', {
-      totalStates: Object.keys(scores).length,
-      totalJobs: Object.values(jobCounts).reduce(
-        (sum, count) => sum + count,
-        0,
-      ),
-    });
+    logger.info(
+      'Amazon job presence calculation completed with workforce normalization (fallback)...',
+      {
+        totalStates: Object.keys(scores).length,
+        totalJobs: Object.values(jobCounts).reduce(
+          (sum, count) => sum + count,
+          0,
+        ),
+      },
+    );
 
     return scores;
   }

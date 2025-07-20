@@ -8,6 +8,7 @@ export class DynamoDBCensusSignalRepository extends DynamoDBSignalRepository<Cen
     try {
       const item = {
         retailStores: record.retailStores,
+        workforce: record.workforce,
         state: record.state,
         timestamp: record.timestamp,
       };
@@ -94,6 +95,7 @@ export class DynamoDBCensusSignalRepository extends DynamoDBSignalRepository<Cen
 
       return {
         retailStores: response.Item.retailStores as number,
+        workforce: response.Item.workforce as number,
         state: response.Item.state as string,
         timestamp: response.Item.timestamp as number,
       };

@@ -38,6 +38,11 @@ describe('getCensusScores', () => {
       CA: 40000000,
       TX: 30000000,
     },
+    workforce: {
+      AL: 2500000,
+      CA: 20000000,
+      TX: 15000000,
+    },
     year: 2023,
   };
 
@@ -114,6 +119,7 @@ describe('getCensusScores', () => {
       const censusDataWithFractions = {
         establishments: { CA: 1234 },
         population: { CA: 1000000 },
+        workforce: { CA: 500000 },
         year: 2023,
       };
 
@@ -128,6 +134,7 @@ describe('getCensusScores', () => {
       const censusDataWithMissingPopulation = {
         establishments: { AL: 1000, CA: 5000 },
         population: { AL: 5000000 },
+        workforce: { AL: 2500000 },
         year: 2023,
       };
 
@@ -256,7 +263,7 @@ describe('getCensusScores', () => {
       await getCensusScores();
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Stored Census data for AL: 20 establishments per 100k',
+        'Stored Census data for AL: 20 establishments per 100k, 2500000 workforce',
       );
     });
 
@@ -275,11 +282,12 @@ describe('getCensusScores', () => {
 
       expect(mockRepository.save).toHaveBeenCalledWith({
         retailStores: 20,
+        workforce: 2500000,
         state: 'AL',
         timestamp: 1704067200,
       });
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Stored Census data for AL: 20 establishments per 100k',
+        'Stored Census data for AL: 20 establishments per 100k, 2500000 workforce',
       );
     });
 
@@ -344,6 +352,7 @@ describe('getCensusScores', () => {
       mockFetchCensusData.mockResolvedValue({
         establishments: { AL: 100 },
         population: { AL: 1000 },
+        workforce: { AL: 500 },
         year: 2023,
       });
 
@@ -372,6 +381,7 @@ describe('getCensusScores', () => {
       const emptyCensusData = {
         establishments: {},
         population: {},
+        workforce: {},
         year: 2023,
       };
 

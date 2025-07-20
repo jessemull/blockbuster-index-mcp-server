@@ -71,6 +71,7 @@ describe('DynamoDBCensusSignalRepository', () => {
   describe('save', () => {
     const mockRecord = {
       retailStores: 100,
+      workforce: 2000000,
       state: 'CA',
       timestamp: 1234567890,
     };
@@ -207,6 +208,7 @@ describe('DynamoDBCensusSignalRepository', () => {
   describe('get', () => {
     const mockRecord = {
       retailStores: 150,
+      workforce: 1500000,
       state: 'TX',
       timestamp: 1234567890,
     };
