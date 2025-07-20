@@ -12,7 +12,6 @@ jest.mock('../../util', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
-    success: jest.fn(),
   },
   uploadToS3: jest.fn(),
 }));
@@ -63,7 +62,7 @@ describe('Census signal entrypoint', () => {
     expect(logger.info).toHaveBeenCalledWith('Census scores written to file', {
       filePath: '/mocked/dev/scores/census-scores.json',
     });
-    expect(logger.success).toHaveBeenCalledWith(
+    expect(logger.info).toHaveBeenCalledWith(
       'SUCCESS: Census signal task completed successfully!',
     );
   });
@@ -88,7 +87,7 @@ describe('Census signal entrypoint', () => {
       bucket: 'test-bucket',
       key: 'data/signals/census-scores.json',
     });
-    expect(logger.success).toHaveBeenCalledWith(
+    expect(logger.info).toHaveBeenCalledWith(
       'SUCCESS: Census signal task completed successfully!',
     );
   });

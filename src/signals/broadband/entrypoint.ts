@@ -67,7 +67,7 @@ async function main() {
         key: 'data/signals/broadband-scores.json',
       });
     }
-    logger.success('SUCCESS: Broadband signal task completed successfully!');
+    logger.info('SUCCESS: Broadband signal task completed successfully!');
   } catch (err) {
     logger.error('Broadband signal task failed:', err);
     process.exit(1);

@@ -12,7 +12,6 @@ jest.mock('../../util', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
-    success: jest.fn(),
   },
   uploadToS3: jest.fn(),
   downloadFromS3: jest.fn(),
@@ -90,7 +89,7 @@ describe('blockbuster index combiner entrypoint', () => {
       'Blockbuster index written to file',
       expect.any(Object),
     );
-    expect(logger.success).toHaveBeenCalledWith(
+    expect(logger.info).toHaveBeenCalledWith(
       'SUCCESS: Blockbuster index combiner completed successfully!',
     );
   });
@@ -114,7 +113,7 @@ describe('blockbuster index combiner entrypoint', () => {
       'Blockbuster index uploaded to S3',
       expect.any(Object),
     );
-    expect(logger.success).toHaveBeenCalledWith(
+    expect(logger.info).toHaveBeenCalledWith(
       'SUCCESS: Blockbuster index combiner completed successfully!',
     );
   });
@@ -152,7 +151,7 @@ describe('blockbuster index combiner entrypoint', () => {
       expect.objectContaining({ error: expect.any(Error) }),
     );
     expect(uploadToS3).toHaveBeenCalled();
-    expect(logger.success).toHaveBeenCalledWith(
+    expect(logger.info).toHaveBeenCalledWith(
       'SUCCESS: Blockbuster index combiner completed successfully!',
     );
   });

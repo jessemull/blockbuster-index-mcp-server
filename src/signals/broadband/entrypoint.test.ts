@@ -12,7 +12,6 @@ jest.mock('../../util', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
-    success: jest.fn(),
   },
   uploadToS3: jest.fn(),
 }));
@@ -66,7 +65,7 @@ describe('Broadband signal entrypoint', () => {
       'Broadband scores written to file',
       { filePath: '/mocked/dev/scores/broadband-scores.json' },
     );
-    expect(logger.success).toHaveBeenCalledWith(
+    expect(logger.info).toHaveBeenCalledWith(
       'SUCCESS: Broadband signal task completed successfully!',
     );
   });
@@ -96,7 +95,7 @@ describe('Broadband signal entrypoint', () => {
         key: 'data/signals/broadband-scores.json',
       },
     );
-    expect(logger.success).toHaveBeenCalledWith(
+    expect(logger.info).toHaveBeenCalledWith(
       'SUCCESS: Broadband signal task completed successfully!',
     );
   });
