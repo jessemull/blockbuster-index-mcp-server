@@ -272,7 +272,7 @@ describe('DynamoDBAmazonSignalRepository', () => {
         state: 'CA',
         timestamp: expect.any(Number),
       });
-      // Verify the timestamp is close to current time (within 5 seconds)
+
       const currentTime = Math.floor(Date.now() / 1000);
       expect(call.Key.timestamp).toBeGreaterThan(currentTime - 5);
       expect(call.Key.timestamp).toBeLessThan(currentTime + 5);
@@ -353,7 +353,6 @@ describe('DynamoDBAmazonSignalRepository', () => {
     it('handles response with missing fields gracefully', async () => {
       const mockItem = {
         state: 'CA',
-        // Missing timestamp and jobCount
       };
       mockSend.mockResolvedValue({ Item: mockItem });
 

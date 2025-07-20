@@ -160,7 +160,7 @@ describe('DynamoDBAmazonSlidingWindowRepository', () => {
     it('updates aggregate with old day and includes windowStart updates', async () => {
       jest.spyOn(repository, 'getAggregate').mockResolvedValueOnce(aggregate);
       mockSend.mockResolvedValue({});
-      // This test expects #windowStart to be updated, so oldDayTimestamp must be non-zero
+
       await repository.updateAggregate('CA', 5, 2000, 1000, 5);
       const sentCommand = mockSend.mock.calls[0][0] as UpdateCommand;
       expect(sentCommand.input.UpdateExpression).toMatch(
@@ -249,7 +249,7 @@ describe('DynamoDBAmazonSlidingWindowRepository', () => {
     });
 
     it('logs stringified unknown error in saveAggregate', async () => {
-      const unknownError = 12345; // number instead of Error
+      const unknownError = 12345;
       mockSend.mockRejectedValue(unknownError);
 
       await expect(repository.saveAggregate(aggregate)).rejects.toBe(

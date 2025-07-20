@@ -2,7 +2,6 @@ import { uploadToS3, logger } from '../../util';
 import fs from 'fs';
 import path from 'path';
 
-// Mock process.exit to prevent Jest from crashing
 const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
   throw new Error('process.exit called');
 });

@@ -254,7 +254,7 @@ describe('DynamoDBCensusSignalRepository', () => {
     });
 
     it('uses current timestamp when timestamp is not provided', async () => {
-      jest.useFakeTimers().setSystemTime(1751089342000); // 2025-07-28
+      jest.useFakeTimers().setSystemTime(1751089342000);
       mockSend.mockResolvedValue({ Item: mockRecord });
 
       await repository.get('TX');

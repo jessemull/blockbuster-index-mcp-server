@@ -46,7 +46,7 @@ const makeRepo = () =>
   new DynamoDBBlockbusterIndexRepository(TABLE) as RepoPriv;
 
 const sampleRecord: BlockbusterIndexRecord = {
-  timestamp: 1_720_000_000, // 2024‑06‑04T05:20:00Z
+  timestamp: 1_720_000_000,
   calculatedAt: '2025-07-20T00:00:00Z',
   version: 'Jul2025‑v1',
   totalStates: 51,
@@ -158,7 +158,7 @@ describe('DynamoDBBlockbusterIndexRepository', () => {
       jest.useFakeTimers().setSystemTime(1_800_000_000_000);
       send.mockResolvedValueOnce({ Item: null });
 
-      await repo.exists(); // no arg
+      await repo.exists();
 
       expect(mockGetCommand).toHaveBeenCalledWith({
         TableName: TABLE,
@@ -238,7 +238,7 @@ describe('DynamoDBBlockbusterIndexRepository', () => {
     });
 
     it('logs and re‑throws non‑Error rejection values', async () => {
-      const nonErrorValue = 12345; // number instead of Error
+      const nonErrorValue = 12345;
       send.mockRejectedValueOnce(nonErrorValue);
 
       await expect(repo.get(3)).rejects.toBe(nonErrorValue);
