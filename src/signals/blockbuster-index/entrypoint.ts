@@ -15,6 +15,8 @@ const SIGNALS = [
   { name: 'amazon', signal: Signal.AMAZON },
   { name: 'census', signal: Signal.CENSUS },
   { name: 'broadband', signal: Signal.BROADBAND },
+  { name: 'walmart-physical', signal: Signal.WALMART_PHYSICAL },
+  { name: 'walmart-technology', signal: Signal.WALMART_TECHNOLOGY },
 ];
 
 async function getSignalScores(
@@ -55,6 +57,10 @@ async function main() {
         [Signal.AMAZON]: signalResults[Signal.AMAZON]?.[state] ?? 0,
         [Signal.CENSUS]: signalResults[Signal.CENSUS]?.[state] ?? 0,
         [Signal.BROADBAND]: signalResults[Signal.BROADBAND]?.[state] ?? 0,
+        [Signal.WALMART_PHYSICAL]:
+          signalResults[Signal.WALMART_PHYSICAL]?.[state] ?? 0,
+        [Signal.WALMART_TECHNOLOGY]:
+          signalResults[Signal.WALMART_TECHNOLOGY]?.[state] ?? 0,
       };
       const score = Object.entries(components).reduce(
         (sum, [signal, value]) => sum + value * WEIGHTS[signal as Signal],
