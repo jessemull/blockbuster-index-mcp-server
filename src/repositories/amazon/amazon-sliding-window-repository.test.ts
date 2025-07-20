@@ -216,6 +216,26 @@ describe('DynamoDBAmazonSlidingWindowRepository', () => {
     });
   });
 
+  describe('get', () => {
+    it('delegates to getAggregate and returns aggregate when found', async () => {
+      const spy = jest
+        .spyOn(repository, 'getAggregate')
+        .mockResolvedValueOnce(aggregate);
+      const result = await repository.get('CA');
+      expect(spy).toHaveBeenCalledWith('CA');
+      expect(result).toEqual(aggregate);
+    });
+
+    it('delegates to getAggregate and returns null when not found', async () => {
+      const spy = jest
+        .spyOn(repository, 'getAggregate')
+        .mockResolvedValueOnce(null);
+      const result = await repository.get('CA');
+      expect(spy).toHaveBeenCalledWith('CA');
+      expect(result).toBeNull();
+    });
+  });
+
   describe('error logging fallback for non-Error types', () => {
     it('logs stringified unknown error in getAggregate', async () => {
       const unknownError = 'unexpected string error';

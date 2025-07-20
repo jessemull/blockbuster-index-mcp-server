@@ -177,6 +177,17 @@ describe('DynamoDBBlockbusterIndexRepository', () => {
         expect.objectContaining({ error: 'boom' }),
       );
     });
+
+    it('logs and re‑throws non‑Error rejection values', async () => {
+      const nonErrorValue = { some: 'weird object' };
+      send.mockRejectedValueOnce(nonErrorValue);
+
+      await expect(repo.exists(1)).rejects.toBe(nonErrorValue);
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to check if blockbuster index record exists',
+        expect.objectContaining({ error: '[object Object]' }),
+      );
+    });
   });
 
   describe('get', () => {
@@ -223,6 +234,17 @@ describe('DynamoDBBlockbusterIndexRepository', () => {
       expect(logger.error).toHaveBeenCalledWith(
         'Failed to get blockbuster index record',
         expect.objectContaining({ error: 'get‑fail' }),
+      );
+    });
+
+    it('logs and re‑throws non‑Error rejection values', async () => {
+      const nonErrorValue = 12345; // number instead of Error
+      send.mockRejectedValueOnce(nonErrorValue);
+
+      await expect(repo.get(3)).rejects.toBe(nonErrorValue);
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to get blockbuster index record',
+        expect.objectContaining({ error: '12345' }),
       );
     });
   });
@@ -277,6 +299,17 @@ describe('DynamoDBBlockbusterIndexRepository', () => {
       expect(logger.error).toHaveBeenCalledWith(
         'Failed to query blockbuster index records',
         expect.objectContaining({ error: 'query‑fail' }),
+      );
+    });
+
+    it('logs and re‑throws non‑Error rejection values', async () => {
+      const nonErrorValue = 'unexpected string error';
+      send.mockRejectedValueOnce(nonErrorValue);
+
+      await expect(repo.query()).rejects.toBe(nonErrorValue);
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to query blockbuster index records',
+        expect.objectContaining({ error: 'unexpected string error' }),
       );
     });
   });
