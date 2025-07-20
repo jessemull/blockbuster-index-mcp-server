@@ -148,7 +148,9 @@ async function main() {
         key: 'data/data.json',
       });
     }
-    logger.info('SUCCESS: Blockbuster index combiner completed successfully!');
+    logger.success(
+      'SUCCESS: Blockbuster index combiner completed successfully!',
+    );
   } catch (err) {
     logger.error('Blockbuster index combiner failed:', err);
     process.exit(1);
