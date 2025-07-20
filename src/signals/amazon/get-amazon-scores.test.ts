@@ -170,7 +170,6 @@ describe('getAmazonScores', () => {
     mockGetEqualScores.mockReturnValue({ CA: 0.1, TX: 0.1 });
     mockGetWorkforceData.mockResolvedValue(mockWorkforceData);
 
-    // Mock the sliding window service
     const mockUpdateSlidingWindow = jest.fn();
     const mockGetSlidingWindowScores = jest
       .fn()
@@ -194,7 +193,7 @@ describe('getAmazonScores', () => {
       mockSlidingWindowJobCounts,
       mockWorkforceData,
     );
-    expect(mockUpdateSlidingWindow).toHaveBeenCalledTimes(2); // Called for CA and TX
+    expect(mockUpdateSlidingWindow).toHaveBeenCalledTimes(2);
     expect(mockGetSlidingWindowScores).toHaveBeenCalled();
     expect(logger.info).toHaveBeenCalledWith(
       expect.stringContaining(

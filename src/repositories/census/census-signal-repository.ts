@@ -127,8 +127,8 @@ export class DynamoDBCensusSignalRepository
           ExpressionAttributeValues: {
             ':state': state,
           },
-          ScanIndexForward: false, // Get most recent first
-          Limit: 1, // Only get the latest record
+          ScanIndexForward: false,
+          Limit: 1,
         }),
       );
 

@@ -33,7 +33,6 @@ describe('getWorkforceData', () => {
       workforce: 20000000,
     };
 
-    // Mock to return data only for CA, null for all other states
     mockRepository.getLatest.mockImplementation((state: string) => {
       if (state === 'CA') {
         return Promise.resolve(mockCensusRecord);
@@ -41,7 +40,6 @@ describe('getWorkforceData', () => {
       return Promise.resolve(null);
     });
 
-    // Mock the dynamic import
     jest.doMock('../../repositories', () => ({
       DynamoDBCensusSignalRepository: jest
         .fn()
@@ -65,7 +63,6 @@ describe('getWorkforceData', () => {
       workforce: 15000000,
     };
 
-    // Mock to return data only for TX, null for all other states
     mockRepository.getLatest.mockImplementation((state: string) => {
       if (state === 'TX') {
         return Promise.resolve(mockCensusRecord);
@@ -73,7 +70,6 @@ describe('getWorkforceData', () => {
       return Promise.resolve(null);
     });
 
-    // Mock the dynamic import
     jest.doMock('../../repositories', () => ({
       DynamoDBCensusSignalRepository: jest
         .fn()
@@ -96,7 +92,6 @@ describe('getWorkforceData', () => {
       workforce: 20000000,
     };
 
-    // Mock to return data only for CA, null for all other states
     mockRepository.getLatest.mockImplementation((state: string) => {
       if (state === 'CA') {
         return Promise.resolve(mockCensusRecord);
@@ -104,7 +99,6 @@ describe('getWorkforceData', () => {
       return Promise.resolve(null);
     });
 
-    // Mock the dynamic import
     jest.doMock('../../repositories', () => ({
       DynamoDBCensusSignalRepository: jest
         .fn()
@@ -139,7 +133,6 @@ describe('getWorkforceData', () => {
       workforce: undefined,
     };
 
-    // Mock to return specific data for CA and TX, null for all other states
     mockRepository.getLatest.mockImplementation((state: string) => {
       if (state === 'CA') {
         return Promise.resolve(mockCensusRecordWithWorkforce);
@@ -150,7 +143,6 @@ describe('getWorkforceData', () => {
       return Promise.resolve(null);
     });
 
-    // Mock the dynamic import
     jest.doMock('../../repositories', () => ({
       DynamoDBCensusSignalRepository: jest
         .fn()
@@ -169,7 +161,6 @@ describe('getWorkforceData', () => {
 
     mockRepository.getLatest.mockResolvedValue(null);
 
-    // Mock the dynamic import
     jest.doMock('../../repositories', () => ({
       DynamoDBCensusSignalRepository: jest
         .fn()
@@ -194,7 +185,6 @@ describe('getWorkforceData', () => {
       workforce: 20000000,
     };
 
-    // Mock to return data only for CA, null for all other states
     mockRepository.getLatest.mockImplementation((state: string) => {
       if (state === 'CA') {
         return Promise.resolve(mockCensusRecord);
@@ -202,7 +192,6 @@ describe('getWorkforceData', () => {
       return Promise.resolve(null);
     });
 
-    // Mock the dynamic import
     jest.doMock('../../repositories', () => ({
       DynamoDBCensusSignalRepository: jest
         .fn()
@@ -225,7 +214,6 @@ describe('getWorkforceData', () => {
       workforce: 20000000,
     };
 
-    // Mock to return data only for CA, null for all other states
     mockRepository.getLatest.mockImplementation((state: string) => {
       if (state === 'CA') {
         return Promise.resolve(mockCensusRecord);
@@ -233,7 +221,6 @@ describe('getWorkforceData', () => {
       return Promise.resolve(null);
     });
 
-    // Mock the dynamic import
     jest.doMock('../../repositories', () => ({
       DynamoDBCensusSignalRepository: jest
         .fn()
@@ -251,19 +238,18 @@ describe('getWorkforceData', () => {
 
     const mockCensusRecord2023: CensusSignalRecord = {
       state: 'CA',
-      timestamp: 1672531200, // 2023
+      timestamp: 1672531200,
       retailStores: 1000,
       workforce: 20000000,
     };
 
     const mockCensusRecord2022: CensusSignalRecord = {
       state: 'TX',
-      timestamp: 1640995200, // 2022
+      timestamp: 1640995200,
       retailStores: 500,
       workforce: 15000000,
     };
 
-    // Mock to return data for different states in different years
     mockRepository.getLatest.mockImplementation((state: string) => {
       if (state === 'CA') {
         return Promise.resolve(mockCensusRecord2023);
@@ -274,7 +260,6 @@ describe('getWorkforceData', () => {
       return Promise.resolve(null);
     });
 
-    // Mock the dynamic import
     jest.doMock('../../repositories', () => ({
       DynamoDBCensusSignalRepository: jest
         .fn()
@@ -285,8 +270,8 @@ describe('getWorkforceData', () => {
     const result = await getWorkforceData();
 
     expect(result).toEqual({
-      CA: 20000000, // From 2023
-      TX: 15000000, // From 2022
+      CA: 20000000,
+      TX: 15000000,
     });
   });
 });
