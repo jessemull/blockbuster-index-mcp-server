@@ -84,6 +84,7 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
   for (const state of Object.keys(censusData.establishments)) {
     const establishmentCount = censusData.establishments[state];
     const population = censusData.population[state];
+    const workforce = censusData.workforce[state];
 
     if (population > 0) {
       const establishmentsPer100k = Math.round(
@@ -99,12 +100,13 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
         if (!exists || forceRefresh) {
           const record: CensusSignalRecord = {
             retailStores: establishmentsPer100k,
+            workforce,
             state,
             timestamp,
           };
           await repository.save(record);
           logger.info(
-            `Stored Census data for ${state}: ${establishmentsPer100k} establishments per 100k`,
+            `Stored Census data for ${state}: ${establishmentsPer100k} establishments per 100k, ${workforce} workforce`,
           );
         } else {
           logger.info(

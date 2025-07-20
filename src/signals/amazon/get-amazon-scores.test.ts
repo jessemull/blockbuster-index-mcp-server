@@ -1,14 +1,16 @@
-import { calculateScores } from './calculate-scores';
+import { calculateWorkforceNormalizedScores } from './calculate-workforce-normalized-scores';
 import { getAmazonScores } from './get-amazon-scores';
 import { getEqualScores } from './get-equal-scores';
+import { getWorkforceData } from './get-workforce-data';
 import { logger } from '../../util';
 import { scrapeAmazonJobs } from './scrape-amazon-jobs';
 import { CONFIG } from '../../config';
 import { AmazonSlidingWindowService } from '../../services/amazon/amazon-sliding-window-service';
 
 jest.mock('./scrape-amazon-jobs');
-jest.mock('./calculate-scores');
+jest.mock('./calculate-workforce-normalized-scores');
 jest.mock('./get-equal-scores');
+jest.mock('./get-workforce-data');
 jest.mock('../../services/amazon/amazon-sliding-window-service', () => ({
   AmazonSlidingWindowService: jest.fn(),
 }));
@@ -29,12 +31,17 @@ const mockScrapeAmazonJobs = scrapeAmazonJobs as jest.MockedFunction<
   typeof scrapeAmazonJobs
 >;
 
-const mockCalculateScores = calculateScores as jest.MockedFunction<
-  typeof calculateScores
->;
+const mockCalculateWorkforceNormalizedScores =
+  calculateWorkforceNormalizedScores as jest.MockedFunction<
+    typeof calculateWorkforceNormalizedScores
+  >;
 
 const mockGetEqualScores = getEqualScores as jest.MockedFunction<
   typeof getEqualScores
+>;
+
+const mockGetWorkforceData = getWorkforceData as jest.MockedFunction<
+  typeof getWorkforceData
 >;
 
 const mockCONFIG = CONFIG as jest.Mocked<typeof CONFIG>;
@@ -156,11 +163,13 @@ describe('getAmazonScores', () => {
       WY: 1,
     };
 
-    mockScrapeAmazonJobs.mockResolvedValue(mockJobCounts);
-    mockCalculateScores.mockReturnValue(mockScores);
-    mockGetEqualScores.mockReturnValue({ CA: 0.1, TX: 0.1 });
+    const mockWorkforceData = { CA: 2000000, TX: 1500000 };
 
-    // Mock the sliding window service
+    mockScrapeAmazonJobs.mockResolvedValue(mockJobCounts);
+    mockCalculateWorkforceNormalizedScores.mockReturnValue(mockScores);
+    mockGetEqualScores.mockReturnValue({ CA: 0.1, TX: 0.1 });
+    mockGetWorkforceData.mockResolvedValue(mockWorkforceData);
+
     const mockUpdateSlidingWindow = jest.fn();
     const mockGetSlidingWindowScores = jest
       .fn()
@@ -180,14 +189,15 @@ describe('getAmazonScores', () => {
 
     expect(scores).toEqual(mockScores);
     expect(mockScrapeAmazonJobs).toHaveBeenCalled();
-    expect(mockCalculateScores).toHaveBeenCalledWith(
+    expect(mockCalculateWorkforceNormalizedScores).toHaveBeenCalledWith(
       mockSlidingWindowJobCounts,
+      mockWorkforceData,
     );
-    expect(mockUpdateSlidingWindow).toHaveBeenCalledTimes(2); // Called for CA and TX
+    expect(mockUpdateSlidingWindow).toHaveBeenCalledTimes(2);
     expect(mockGetSlidingWindowScores).toHaveBeenCalled();
     expect(logger.info).toHaveBeenCalledWith(
       expect.stringContaining(
-        'Amazon job presence calculation completed with sliding window...',
+        'Amazon job presence calculation completed with workforce normalization...',
       ),
       expect.objectContaining({
         totalJobs: 15474,
@@ -211,16 +221,21 @@ describe('getAmazonScores', () => {
     delete process.env.AMAZON_DYNAMODB_TABLE_NAME;
     const mockJobCounts = { CA: 10, TX: 50 };
     const mockScores = { CA: 0.05, TX: 0.2 };
+    const mockWorkforceData = { CA: 2000000, TX: 1500000 };
 
     mockScrapeAmazonJobs.mockResolvedValue(mockJobCounts);
-    mockCalculateScores.mockReturnValue(mockScores);
+    mockCalculateWorkforceNormalizedScores.mockReturnValue(mockScores);
     mockGetEqualScores.mockReturnValue({ CA: 0.1, TX: 0.1 });
+    mockGetWorkforceData.mockResolvedValue(mockWorkforceData);
 
     const scores = await getAmazonScores();
 
     expect(scores).toEqual(mockScores);
     expect(mockScrapeAmazonJobs).toHaveBeenCalled();
-    expect(mockCalculateScores).toHaveBeenCalledWith(mockJobCounts);
+    expect(mockCalculateWorkforceNormalizedScores).toHaveBeenCalledWith(
+      mockJobCounts,
+      mockWorkforceData,
+    );
     expect(logger.info).not.toHaveBeenCalledWith(
       expect.stringContaining('Record already exists'),
     );

@@ -4,6 +4,7 @@ import {
   CensusData,
   CensusEstablishmentData,
   CensusPopulationData,
+  CensusWorkforceData,
 } from './census';
 import {
   BroadbandSignalRecord,
@@ -21,6 +22,7 @@ export {
   CensusData,
   CensusEstablishmentData,
   CensusPopulationData,
+  CensusWorkforceData,
   BroadbandSignalRecord,
   BroadbandMetrics,
   TechnologyCounts,

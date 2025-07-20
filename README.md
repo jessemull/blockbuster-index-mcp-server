@@ -98,9 +98,7 @@ The Amazon signal measures e-commerce adoption and digital retail presence by an
 - Counts total job postings per state for the current day.
 - Maintains a 90-day sliding window of job posting data in DynamoDB.
 - Calculates rolling averages to smooth out daily fluctuations and seasonal variations.
-- Normalizes by state population to account for size differences.
-- Applies logarithmic scaling to handle outliers.
-- Generates a score from 0-100 where higher scores indicate greater e-commerce activity.
+- Normalizes job counts by workforce size per state using Census Bureau labor force data.
 
 **Sliding Window Algorithm**:
 
@@ -118,6 +116,13 @@ The Amazon signal measures e-commerce adoption and digital retail presence by an
 - DynamoDB integration for sliding window data persistence.
 - Automatic window management with efficient aggregate updates.
 
+**Workforce Normalization Details**:
+
+The Amazon signal uses workforce normalization to provide fair comparisons across states of different sizes:
+
+- **Data Source**: U.S. Census Bureau American Community Survey (ACS) labor force data.
+- **Metric**: Percentage of workforce in Amazon jobs (scaled by 1,000,000).
+
 ### Census Signal
 
 The Census signal captures demographic and economic indicators that correlate with retail behavior patterns.
@@ -130,6 +135,7 @@ The Census signal captures demographic and economic indicators that correlate wi
 
 - Fetches demographic data including population density, median income, and age distribution.
 - Analyzes economic indicators such as employment rates and industry composition.
+- Fetches labor force data for workforce normalization in other signals.
 - Computes urbanization metrics and household characteristics.
 - Normalizes data across states and applies statistical weighting.
 - Generates a score from 0-100 reflecting retail market maturity.
