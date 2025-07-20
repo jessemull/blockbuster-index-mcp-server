@@ -154,6 +154,84 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
+  WalmartPhysicalJobsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'blockbuster-index-walmart-physical-jobs-${Environment}'
+      AttributeDefinitions:
+        - AttributeName: state
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: state
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: false
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  WalmartTechnologyJobsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'blockbuster-index-walmart-technology-jobs-${Environment}'
+      AttributeDefinitions:
+        - AttributeName: state
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: state
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: false
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  WalmartSlidingWindowTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'blockbuster-index-walmart-sliding-window-${Environment}'
+      AttributeDefinitions:
+        - AttributeName: state
+          AttributeType: S
+        - AttributeName: windowStart
+          AttributeType: N
+      KeySchema:
+        - AttributeName: state
+          KeyType: HASH
+        - AttributeName: windowStart
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: false
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
 Outputs:
   AmazonJobsTableArn:
     Description: 'ARN of the Amazon Jobs table'
@@ -184,4 +262,22 @@ Outputs:
     Description: 'ARN of the Blockbuster Index table'
     Value: !GetAtt BlockbusterIndexTable.Arn
     Export:
-      Name: !Sub '${Environment}-BlockbusterBlockbusterIndexTableArn' 
+      Name: !Sub '${Environment}-BlockbusterBlockbusterIndexTableArn'
+
+  WalmartPhysicalJobsTableArn:
+    Description: 'ARN of the Walmart Physical Jobs table'
+    Value: !GetAtt WalmartPhysicalJobsTable.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterWalmartPhysicalJobsTableArn'
+
+  WalmartTechnologyJobsTableArn:
+    Description: 'ARN of the Walmart Technology Jobs table'
+    Value: !GetAtt WalmartTechnologyJobsTable.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterWalmartTechnologyJobsTableArn'
+
+  WalmartSlidingWindowTableArn:
+    Description: 'ARN of the Walmart Sliding Window table'
+    Value: !GetAtt WalmartSlidingWindowTable.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterWalmartSlidingWindowTableArn' 

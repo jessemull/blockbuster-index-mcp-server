@@ -20,6 +20,7 @@ on:
           - amazon
           - census
           - broadband
+          - walmart
           - blockbuster-index
 
 jobs:

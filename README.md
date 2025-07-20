@@ -53,6 +53,7 @@ The calculation process currently includes the following signals with more signa
 - **Amazon** – E-commerce adoption and digital retail presence through job posting analysis with sliding window aggregation for improved accuracy.
 - **Census** – Demographic and economic indicators from U.S. Census Bureau data.
 - **Broadband** – Internet infrastructure and connectivity metrics.
+- **Walmart** – Physical retail presence and technology job distribution through dual-signal analysis of Walmart job postings.
 
 Each signal is weighted and combined to generate a comprehensive score that reflects the balance between digital and physical retail activity in each state.
 
@@ -72,6 +73,7 @@ The Blockbuster Index MCP Server employs a **modular microservices architecture*
 - **Amazon Signal Task**: Web scraping and job posting analysis with sliding window aggregation.
 - **Census Signal Task**: Demographic data processing and analysis.
 - **Broadband Signal Task**: Infrastructure and connectivity metrics.
+- **Walmart Signal Task**: Dual-signal job posting analysis for physical and technology roles.
 - **Blockbuster Index Task**: Signal aggregation and final index calculation.
 
 ### Data Flow
@@ -84,114 +86,7 @@ The Blockbuster Index MCP Server employs a **modular microservices architecture*
 
 ## Signal Calculations
 
-### Amazon Signal
-
-The Amazon signal measures e-commerce adoption and digital retail presence by analyzing job posting patterns across all U.S. states using a sophisticated sliding window algorithm for improved accuracy and stability.
-
-**Data Source**
-
-- Amazon job postings via web scraping.
-
-**Calculation Method**:
-
-- Scrapes job postings for each state using Puppeteer.
-- Counts total job postings per state for the current day.
-- Maintains a 90-day sliding window of job posting data in DynamoDB.
-- Calculates rolling averages to smooth out daily fluctuations and seasonal variations.
-- Normalizes job counts by workforce size per state using Census Bureau labor force data.
-
-**Sliding Window Algorithm**:
-
-- **Window Size**: 90-day rolling window for optimal balance of responsiveness and stability.
-- **Data Aggregation**: Maintains daily job counts and calculates running averages.
-- **Window Management**: Automatically removes data older than 90 days and adds new daily data.
-- **Fallback Logic**: Uses current day data for development environments without DynamoDB access.
-
-**Technical Implementation**:
-
-- Uses Puppeteer for dynamic content scraping.
-- Implements retry logic with exponential backoff.
-- Handles rate limiting and anti-bot measures.
-- Processes results in parallel for efficiency.
-- DynamoDB integration for sliding window data persistence.
-- Automatic window management with efficient aggregate updates.
-
-**Workforce Normalization Details**:
-
-The Amazon signal uses workforce normalization to provide fair comparisons across states of different sizes:
-
-- **Data Source**: U.S. Census Bureau American Community Survey (ACS) labor force data.
-- **Metric**: Percentage of workforce in Amazon jobs (scaled by 1,000,000).
-
-### Census Signal
-
-The Census signal captures demographic and economic indicators that correlate with retail behavior patterns.
-
-**Data Source**:
-
-- U.S. Census Bureau API.
-
-**Calculation Method**:
-
-- Fetches demographic data including population density, median income, and age distribution.
-- Analyzes economic indicators such as employment rates and industry composition.
-- Fetches labor force data for workforce normalization in other signals.
-- Computes urbanization metrics and household characteristics.
-- Normalizes data across states and applies statistical weighting.
-- Generates a score from 0-100 reflecting retail market maturity.
-
-**Technical Implementation**:
-
-- REST API integration with Census Bureau endpoints.
-- Statistical normalization using z-score methodology.
-- Multi-factor analysis with configurable weights.
-- Caching layer for API response optimization.
-
-### Broadband Signal
-
-The Broadband signal measures internet infrastructure quality and connectivity, which directly impacts e-commerce adoption.
-
-**Data Source**:
-
-- FCC broadband availability data.
-
-**Calculation Method**:
-
-- Analyzes broadband availability and speed metrics by state.
-- Evaluates infrastructure quality and coverage percentages.
-- Considers both fixed and mobile broadband penetration.
-- Normalizes by geographic area and population density.
-- Generates a score from 0-100 where higher scores indicate better connectivity.
-
-**Technical Implementation**:
-
-- S3-based data loading from FCC datasets.
-- Geographic data processing and aggregation.
-- Statistical analysis of coverage patterns.
-- Performance optimization for large datasets.
-
-## Blockbuster Index Calculation
-
-The Blockbuster Index combines signals using a sophisticated weighted aggregation algorithm that reflects the relative importance of each factor in determining retail behavior patterns.
-
-### Weighting System
-
-- **Amazon Signal**: 40% weight - Direct measure of e-commerce activity.
-- **Census Signal**: 30% weight - Demographic and economic foundation.
-- **Broadband Signal**: 30% weight - Infrastructure enabling factor.
-
-### Calculation Algorithm
-
-1. **Signal Normalization**: All signals are normalized to a 0-100 scale.
-2. **Weighted Aggregation**: Each signal is multiplied by its respective weight.
-3. **State-by-State Calculation**: The weighted sum is computed for each state.
-4. **Final Index**: Results in a 0-100 Blockbuster Index score per state.
-
-### Interpretation
-
-- **Higher Scores (70-100)**: States with strong digital retail adoption and modern consumer behavior.
-- **Medium Scores (30-70)**: States in transition between traditional and digital retail.
-- **Lower Scores (0-30)**: States maintaining traditional retail patterns.
+See [SIGNALS.md](SIGNALS.md) for detailed information about how each signal is calculated and how they are combined to create the Blockbuster Index.
 
 ## ECS Task Scheduling
 
@@ -445,43 +340,7 @@ The server uses **Bunyan** for structured logging with the following features:
 
 ## Environment Variables
 
-The following environment variables must be set in a `.env` file in the root of the project:
-
-### Core Configuration
-
-| Variable         | Description                                      |
-| ---------------- | ------------------------------------------------ |
-| `AWS_REGION`     | AWS region for S3 and CloudWatch operations.     |
-| `CACHE_CONTROL`  | Cache control header for S3 uploads.             |
-| `CW_LOG_GROUP`   | CloudWatch log group name.                       |
-| `CW_LOG_STREAM`  | CloudWatch log stream name.                      |
-| `LOG_LEVEL`      | Logging level (debug, info, warn, error).        |
-| `NODE_ENV`       | Environment (development, production).           |
-| `OPENAI_API_KEY` | OpenAI API key for AI-powered signal processing. |
-| `S3_BUCKET_NAME` | S3 bucket name for data uploads.                 |
-
-### AWS Infrastructure
-
-| Variable                                | Description                                           |
-| --------------------------------------- | ----------------------------------------------------- |
-| `AWS_TASK_ID`                           | ECS task ID for CloudWatch log stream naming.         |
-| `BROADBAND_S3_BUCKET`                   | S3 bucket for broadband data storage.                 |
-| `BROADBAND_DYNAMODB_TABLE_NAME`         | DynamoDB table for broadband signal data.             |
-| `CENSUS_DYNAMODB_TABLE_NAME`            | DynamoDB table for census signal data.                |
-| `AMAZON_DYNAMODB_TABLE_NAME`            | DynamoDB table for Amazon signal data.                |
-| `AMAZON_SLIDING_WINDOW_TABLE_NAME`      | DynamoDB table for Amazon sliding window aggregates.  |
-| `SIGNAL_SCORES_DYNAMODB_TABLE_NAME`     | DynamoDB table for historical signal scores.          |
-| `BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME` | DynamoDB table for historical blockbuster index data. |
-
-### Signal Processing
-
-| Variable                    | Description                                                           |
-| --------------------------- | --------------------------------------------------------------------- |
-| `SIGNAL_TYPE`               | Type of signal to run (amazon, census, broadband, blockbuster-index). |
-| `FORCE_REFRESH`             | Force refresh flag for census data (true/false).                      |
-| `MAX_RETRIES`               | Maximum retry attempts for API calls (default: 3).                    |
-| `RETRY_DELAY`               | Delay between retry attempts in milliseconds (default: 1000).         |
-| `PUPPETEER_EXECUTABLE_PATH` | Path to Puppeteer executable for web scraping.                        |
+See [ENVIRONMENT.md](ENVIRONMENT.md) for a complete list of all environment variables used by the blockbuster index MCP server, organized by signal type and functionality.
 
 ## Build & Deployment
 
