@@ -6,10 +6,4 @@ const mainLogger = bunyan.createLogger({
   level: CONFIG.LOG_LEVEL as bunyan.LogLevel,
 });
 
-// Extend logger with success method that always logs...
-
-export const logger = Object.assign(mainLogger, {
-  success: (msg: string) => {
-    console.log(`SUCCESS: ${msg}`);
-  },
-});
+export const logger = mainLogger;

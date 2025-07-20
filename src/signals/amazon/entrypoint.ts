@@ -67,7 +67,7 @@ async function main() {
         key: 'data/signals/amazon-scores.json',
       });
     }
-    logger.success('SUCCESS: Amazon signal task completed successfully!');
+    logger.info('SUCCESS: Amazon signal task completed successfully!');
   } catch (err) {
     logger.error('Amazon signal task failed:', err);
     process.exit(1);

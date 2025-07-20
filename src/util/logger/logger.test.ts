@@ -76,18 +76,4 @@ describe('Logger', () => {
     expect(() => logger.info('test', { key: 'value' })).not.toThrow();
     expect(() => logger.error('test', { error: 'message' })).not.toThrow();
   });
-
-  it('should have success method', () => {
-    expect(logger.success).toBeDefined();
-    expect(typeof logger.success).toBe('function');
-  });
-
-  it('should log success messages with SUCCESS prefix', () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    logger.success('Operation completed successfully');
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'SUCCESS: Operation completed successfully',
-    );
-    consoleSpy.mockRestore();
-  });
 });
