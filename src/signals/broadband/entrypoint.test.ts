@@ -2,12 +2,18 @@ import { uploadToS3 } from '../../util';
 import fs from 'fs';
 import path from 'path';
 
+// Mock process.exit to prevent Jest from crashing
+const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
+  throw new Error('process.exit called');
+});
+
 jest.mock('fs');
 jest.mock('path');
 jest.mock('../../util', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
+    success: jest.fn(),
   },
   uploadToS3: jest.fn(),
 }));
@@ -27,6 +33,10 @@ describe('Broadband signal entrypoint', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.NODE_ENV = 'development';
+  });
+
+  afterAll(() => {
+    mockExit.mockRestore();
   });
 
   it('writes Broadband scores to file in development', async () => {
