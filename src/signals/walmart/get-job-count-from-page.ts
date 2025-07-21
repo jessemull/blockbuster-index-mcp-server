@@ -1,41 +1,27 @@
 import { Page } from 'puppeteer';
 import { logger } from '../../util';
 import { WALMART_JOB_COUNT_SELECTOR } from '../../constants/walmart';
-import type { BrowserDocument } from '../../types/browser';
 
 export async function getJobCountFromPage(page: Page): Promise<number> {
   try {
-    const jobCount = await page.evaluate(() => {
-      const document = (globalThis as unknown as { document: BrowserDocument })
-        .document;
+    // Wait for dynamic content to load
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
-      const jobCountElement = document.querySelector(
-        WALMART_JOB_COUNT_SELECTOR,
-      );
-
-      if (!jobCountElement) {
-        return 0;
+    // Get job count using the selector from constants
+    const jobCount = await page.evaluate((selector) => {
+      // @ts-expect-error - document is available in browser context
+      const element = document.querySelector(selector);
+      if (element) {
+        const text = element.textContent || '';
+        const count = parseInt(text.replace(/\D/g, ''), 10);
+        return isNaN(count) ? 0 : count;
       }
+      return 0;
+    }, WALMART_JOB_COUNT_SELECTOR);
 
-      // Handle the nested querySelector structure...
-
-      const textElement = jobCountElement.querySelector('span');
-      if (!textElement) {
-        return 0;
-      }
-
-      const jobCountText = textElement.textContent || '';
-      const count = parseInt(jobCountText, 10);
-
-      return isNaN(count) ? 0 : count;
-    });
-
-    logger.info(`Extracted job count: ${jobCount}`);
     return jobCount;
   } catch (error: unknown) {
-    logger.error('Failed to extract job count from page', {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    throw error;
+    logger.error('Failed to get job count from page', { error });
+    return 0;
   }
 }

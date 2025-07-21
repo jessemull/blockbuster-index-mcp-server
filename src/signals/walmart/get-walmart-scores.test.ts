@@ -1,8 +1,6 @@
 import 'jest';
 
 jest.mock('./scrape-walmart-jobs');
-jest.mock('./calculate-inverted-scores');
-jest.mock('./calculate-positive-scores');
 jest.mock('../../services/walmart/walmart-sliding-window-service', () => ({
   WalmartSlidingWindowService: jest.fn(),
 }));
@@ -18,8 +16,6 @@ jest.mock('../../repositories', () => ({
 }));
 
 import { scrapeWalmartJobs } from './scrape-walmart-jobs';
-import { calculateInvertedScores } from './calculate-inverted-scores';
-import { calculatePositiveScores } from './calculate-positive-scores';
 import { WalmartSlidingWindowService } from '../../services/walmart/walmart-sliding-window-service';
 import { CONFIG } from '../../config';
 import { logger } from '../../util';
@@ -27,12 +23,6 @@ import { getWalmartScores } from './get-walmart-scores';
 
 const mockScrapeWalmartJobs = scrapeWalmartJobs as jest.MockedFunction<
   typeof scrapeWalmartJobs
->;
-const mockCalcInv = calculateInvertedScores as jest.MockedFunction<
-  typeof calculateInvertedScores
->;
-const mockCalcPos = calculatePositiveScores as jest.MockedFunction<
-  typeof calculatePositiveScores
 >;
 const MockWindowService = WalmartSlidingWindowService as jest.MockedClass<
   typeof WalmartSlidingWindowService
@@ -70,9 +60,6 @@ describe('getWalmartScores()', () => {
         }) as any,
     );
 
-    mockCalcInv.mockImplementationOnce(() => ({ CA: 0.9, TX: 0.8 }));
-    mockCalcPos.mockImplementationOnce(() => ({ CA: 0.05, TX: 0.2 }));
-
     const result = await getWalmartScores();
 
     expect(result).toEqual({
@@ -101,9 +88,6 @@ describe('getWalmartScores()', () => {
     );
     expect(getSlidingScores).toHaveBeenCalled();
 
-    expect(mockCalcInv).toHaveBeenCalledWith(slidingCounts);
-    expect(mockCalcPos).toHaveBeenCalledWith(technologyJobs);
-
     expect(mockLogger.info).toHaveBeenCalledWith(
       expect.stringContaining(
         'Walmart job presence calculation completed with sliding window...',
@@ -119,8 +103,6 @@ describe('getWalmartScores()', () => {
     const technologyJobs = { OR: 1, WA: 0 };
 
     mockScrapeWalmartJobs.mockResolvedValue({ physicalJobs, technologyJobs });
-    mockCalcInv.mockImplementationOnce(() => ({ OR: 0.2, WA: 0.05 }));
-    mockCalcPos.mockImplementationOnce(() => ({ OR: 0.2, WA: 0.05 }));
 
     const res = await getWalmartScores();
 
@@ -153,9 +135,6 @@ describe('getWalmartScores()', () => {
           getSlidingWindowScores: getSlidingScores,
         }) as any,
     );
-
-    mockCalcInv.mockImplementationOnce(() => ({ OR: 0.2, WA: 0.05 }));
-    mockCalcPos.mockImplementationOnce(() => ({ OR: 0.2, WA: 0.05 }));
 
     const res = await getWalmartScores();
     expect(res).toEqual({

@@ -19,6 +19,7 @@ export interface WalmartSignalRepository<T> {
 
 export interface WalmartSlidingWindowAggregate {
   state: string;
+  jobType: string;
   windowStart: number;
   windowEnd: number;
   totalJobCount: number;
@@ -28,10 +29,17 @@ export interface WalmartSlidingWindowAggregate {
 }
 
 export interface WalmartSlidingWindowRepository {
-  getAggregate(state: string): Promise<WalmartSlidingWindowAggregate | null>;
-  saveAggregate(aggregate: WalmartSlidingWindowAggregate): Promise<void>;
+  getAggregate(
+    state: string,
+    jobType: string,
+  ): Promise<WalmartSlidingWindowAggregate | null>;
+  saveAggregate(
+    aggregate: WalmartSlidingWindowAggregate,
+    jobType: string,
+  ): Promise<void>;
   updateAggregate(
     state: string,
+    jobType: string,
     newDayJobCount: number,
     newDayTimestamp: number,
     oldDayTimestamp?: number,

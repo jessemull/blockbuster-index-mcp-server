@@ -21,17 +21,22 @@ export class WalmartSlidingWindowService {
 
   async updateSlidingWindow(
     state: string,
+    jobType: string,
     newDayJobCount: number,
     newDayTimestamp: number,
   ): Promise<void> {
     try {
-      const currentAggregate = await this.repository.getAggregate(state);
+      const currentAggregate = await this.repository.getAggregate(
+        state,
+        jobType,
+      );
 
       if (!currentAggregate) {
         // First time creating aggregate...
 
         const newAggregate: WalmartSlidingWindowAggregate = {
           state,
+          jobType,
           windowStart: newDayTimestamp,
           windowEnd: newDayTimestamp,
           totalJobCount: newDayJobCount,
@@ -40,7 +45,7 @@ export class WalmartSlidingWindowService {
           lastUpdated: Date.now(),
         };
 
-        await this.repository.saveAggregate(newAggregate);
+        await this.repository.saveAggregate(newAggregate, jobType);
         return;
       }
 
@@ -61,6 +66,7 @@ export class WalmartSlidingWindowService {
         const oldDayTimestamp = currentAggregate.windowStart;
         const oldDayJobCount = await this.getOldDayJobCount(
           state,
+          jobType,
           oldDayTimestamp,
         );
 
@@ -78,18 +84,24 @@ export class WalmartSlidingWindowService {
 
       await this.repository.updateAggregate(
         state,
+        jobType,
         newDayJobCount,
         newDayTimestamp,
         newWindowStart !== currentAggregate.windowStart
           ? currentAggregate.windowStart
           : undefined,
         newWindowStart !== currentAggregate.windowStart
-          ? await this.getOldDayJobCount(state, currentAggregate.windowStart)
+          ? await this.getOldDayJobCount(
+              state,
+              jobType,
+              currentAggregate.windowStart,
+            )
           : undefined,
       );
 
       logger.info('Successfully updated Walmart sliding window:', {
         state,
+        jobType,
         newDayCount,
         newAverageJobCount,
         oldDayRemoved: newWindowStart !== currentAggregate.windowStart,
@@ -98,6 +110,7 @@ export class WalmartSlidingWindowService {
       logger.error('Failed to update Walmart sliding window', {
         error: error instanceof Error ? error.message : String(error),
         state,
+        jobType,
         newDayJobCount,
         newDayTimestamp,
       });
@@ -105,12 +118,14 @@ export class WalmartSlidingWindowService {
     }
   }
 
-  async getSlidingWindowScores(): Promise<Record<string, number>> {
+  async getSlidingWindowScores(
+    jobType: string,
+  ): Promise<Record<string, number>> {
     try {
       const scores: Record<string, number> = {};
 
       for (const state of Object.values(States)) {
-        const aggregate = await this.repository.getAggregate(state);
+        const aggregate = await this.repository.getAggregate(state, jobType);
 
         if (aggregate) {
           scores[state] = Math.round(aggregate.averageJobCount);
@@ -123,6 +138,7 @@ export class WalmartSlidingWindowService {
     } catch (error: unknown) {
       logger.error('Failed to get Walmart sliding window scores', {
         error: error instanceof Error ? error.message : String(error),
+        jobType,
       });
       throw error;
     }
@@ -130,6 +146,7 @@ export class WalmartSlidingWindowService {
 
   private async getOldDayJobCount(
     state: string,
+    jobType: string,
     timestamp: number,
   ): Promise<number | undefined> {
     try {
@@ -140,6 +157,7 @@ export class WalmartSlidingWindowService {
       logger.warn('Failed to get old day job count', {
         error: error instanceof Error ? error.message : String(error),
         state,
+        jobType,
         timestamp,
       });
       return undefined;

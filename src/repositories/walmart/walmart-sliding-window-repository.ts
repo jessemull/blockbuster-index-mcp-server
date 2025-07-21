@@ -1,17 +1,30 @@
 import { GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { logger } from '../../util';
 import type {
   WalmartSlidingWindowAggregate,
   WalmartSlidingWindowRepository,
 } from '../../types/walmart';
-import { DynamoDBSignalRepository } from '../base-signal-repository';
+// import { DynamoDBSignalRepository } from '../base-signal-repository';
 
 export class DynamoDBWalmartSlidingWindowRepository
-  extends DynamoDBSignalRepository<WalmartSlidingWindowAggregate>
   implements WalmartSlidingWindowRepository
 {
+  protected client;
+  protected tableName: string;
+
+  constructor(tableName: string, region?: string) {
+    const dynamoClient = new DynamoDBClient({ region: region || 'us-west-2' });
+    this.client = DynamoDBDocumentClient.from(dynamoClient);
+    // Use v2 table for dev
+    this.tableName =
+      tableName || 'blockbuster-index-walmart-sliding-window-dev';
+  }
+
   async getAggregate(
     state: string,
+    jobType: string,
   ): Promise<WalmartSlidingWindowAggregate | null> {
     try {
       const response = await this.client.send(
@@ -19,7 +32,7 @@ export class DynamoDBWalmartSlidingWindowRepository
           TableName: this.tableName,
           Key: {
             state,
-            windowStart: 0,
+            jobType,
           },
         }),
       );
@@ -33,16 +46,21 @@ export class DynamoDBWalmartSlidingWindowRepository
       logger.error('Failed to get Walmart sliding window aggregate', {
         error: error instanceof Error ? error.message : String(error),
         state,
+        jobType,
       });
       throw error;
     }
   }
 
-  async saveAggregate(aggregate: WalmartSlidingWindowAggregate): Promise<void> {
+  async saveAggregate(
+    aggregate: WalmartSlidingWindowAggregate,
+    jobType: string,
+  ): Promise<void> {
     try {
       const item = {
         state: aggregate.state,
-        windowStart: 0,
+        jobType,
+        windowStart: aggregate.windowStart,
         windowEnd: aggregate.windowEnd,
         totalJobCount: aggregate.totalJobCount,
         dayCount: aggregate.dayCount,
@@ -52,19 +70,14 @@ export class DynamoDBWalmartSlidingWindowRepository
 
       await this.client.send(
         new PutCommand({
-          Item: item,
           TableName: this.tableName,
-          ConditionExpression:
-            'attribute_not_exists(#state) AND attribute_not_exists(#windowStart)',
-          ExpressionAttributeNames: {
-            '#state': 'state',
-            '#windowStart': 'windowStart',
-          },
+          Item: item,
         }),
       );
 
       logger.info('Successfully saved Walmart sliding window aggregate', {
         state: aggregate.state,
+        jobType,
         dayCount: aggregate.dayCount,
         averageJobCount: aggregate.averageJobCount,
       });
@@ -77,6 +90,7 @@ export class DynamoDBWalmartSlidingWindowRepository
           'Walmart sliding window aggregate already exists, skipping duplicate',
           {
             state: aggregate.state,
+            jobType,
           },
         );
         return;
@@ -85,6 +99,7 @@ export class DynamoDBWalmartSlidingWindowRepository
       logger.error('Failed to save Walmart sliding window aggregate', {
         error: error instanceof Error ? error.message : String(error),
         state: aggregate.state,
+        jobType,
       });
       throw error;
     }
@@ -92,13 +107,14 @@ export class DynamoDBWalmartSlidingWindowRepository
 
   async updateAggregate(
     state: string,
+    jobType: string,
     newDayJobCount: number,
     newDayTimestamp: number,
     oldDayTimestamp?: number,
     oldDayJobCount?: number,
   ): Promise<void> {
     try {
-      const currentAggregate = await this.getAggregate(state);
+      const currentAggregate = await this.getAggregate(state, jobType);
       const now = Date.now();
 
       if (!currentAggregate) {
@@ -106,6 +122,7 @@ export class DynamoDBWalmartSlidingWindowRepository
 
         const newAggregate: WalmartSlidingWindowAggregate = {
           state,
+          jobType,
           windowStart: newDayTimestamp,
           windowEnd: newDayTimestamp,
           totalJobCount: newDayJobCount,
@@ -114,7 +131,7 @@ export class DynamoDBWalmartSlidingWindowRepository
           lastUpdated: now,
         };
 
-        await this.saveAggregate(newAggregate);
+        await this.saveAggregate(newAggregate, jobType);
         return;
       }
 
@@ -176,7 +193,7 @@ export class DynamoDBWalmartSlidingWindowRepository
           TableName: this.tableName,
           Key: {
             state,
-            windowStart: 0,
+            jobType,
           },
           UpdateExpression: updateExpression.join(', '),
           ExpressionAttributeNames: expressionAttributeNames,
@@ -186,6 +203,7 @@ export class DynamoDBWalmartSlidingWindowRepository
 
       logger.info('Successfully updated Walmart sliding window aggregate', {
         state,
+        jobType,
         newDayCount,
         newAverageJobCount,
         oldDayRemoved: oldDayTimestamp !== undefined,
@@ -194,23 +212,11 @@ export class DynamoDBWalmartSlidingWindowRepository
       logger.error('Failed to update Walmart sliding window aggregate', {
         error: error instanceof Error ? error.message : String(error),
         state,
+        jobType,
         newDayJobCount,
         newDayTimestamp,
       });
       throw error;
     }
-  }
-
-  async save(record: WalmartSlidingWindowAggregate): Promise<void> {
-    await this.saveAggregate(record);
-  }
-
-  async exists(state: string): Promise<boolean> {
-    const aggregate = await this.getAggregate(state);
-    return aggregate !== null;
-  }
-
-  async get(state: string): Promise<WalmartSlidingWindowAggregate | null> {
-    return this.getAggregate(state);
   }
 }

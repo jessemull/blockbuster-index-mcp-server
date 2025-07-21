@@ -4,8 +4,9 @@ import {
   WalmartPhysicalJobRecord,
   WalmartTechnologyJobRecord,
 } from '../../types/walmart';
-import { calculateInvertedScores } from './calculate-inverted-scores';
-import { calculatePositiveScores } from './calculate-positive-scores';
+import { calculateWorkforceNormalizedInvertedScores } from './calculate-workforce-normalized-inverted-scores';
+import { calculateWorkforceNormalizedPositiveScores } from './calculate-workforce-normalized-positive-scores';
+import { getWorkforceData } from '../amazon/get-workforce-data';
 import { scrapeWalmartJobs } from './scrape-walmart-jobs';
 import { logger } from '../../util';
 import { WalmartSlidingWindowService } from '../../services/walmart/walmart-sliding-window-service';
@@ -68,34 +69,56 @@ export const getWalmartScores = async (): Promise<{
   // Update sliding window aggregates with new data...
 
   if (slidingWindowService) {
+    // Update physical sliding window
     for (const [state, jobCount] of Object.entries(physicalJobs)) {
       await slidingWindowService.updateSlidingWindow(
         state,
+        'physical',
         jobCount,
         timestamp * 1000, // Convert seconds to milliseconds.
       );
     }
 
-    // Get scores from sliding window aggregates...
+    // Update technology sliding window
+    for (const [state, jobCount] of Object.entries(technologyJobs)) {
+      await slidingWindowService.updateSlidingWindow(
+        state,
+        'technology',
+        jobCount,
+        timestamp * 1000, // Convert seconds to milliseconds.
+      );
+    }
 
-    const slidingWindowJobCounts =
-      await slidingWindowService.getSlidingWindowScores();
+    // Get workforce data for normalization
+    const workforceData = await getWorkforceData();
 
-    const physicalScores = calculateInvertedScores(slidingWindowJobCounts);
-    const technologyScores = calculatePositiveScores(technologyJobs); // Technology jobs get positive scoring
+    // Get scores from sliding window aggregates with workforce normalization...
+
+    const physicalSlidingWindowJobCounts =
+      await slidingWindowService.getSlidingWindowScores('physical');
+    const technologySlidingWindowJobCounts =
+      await slidingWindowService.getSlidingWindowScores('technology');
+
+    const physicalScores = calculateWorkforceNormalizedInvertedScores(
+      physicalSlidingWindowJobCounts,
+      workforceData,
+    );
+    const technologyScores = calculateWorkforceNormalizedPositiveScores(
+      technologySlidingWindowJobCounts,
+      workforceData,
+    ); // Technology jobs get positive scoring
 
     logger.info(
-      'Walmart job presence calculation completed with sliding window...',
+      'Walmart job presence calculation completed with sliding window and workforce normalization...',
       {
         totalStates: Object.keys(physicalScores).length,
-        totalPhysicalJobs: Object.values(slidingWindowJobCounts).reduce(
+        totalPhysicalJobs: Object.values(physicalSlidingWindowJobCounts).reduce(
           (sum, count) => sum + count,
           0,
         ),
-        totalTechnologyJobs: Object.values(technologyJobs).reduce(
-          (sum, count) => sum + count,
-          0,
-        ),
+        totalTechnologyJobs: Object.values(
+          technologySlidingWindowJobCounts,
+        ).reduce((sum, count) => sum + count, 0),
         windowDays: 90,
       },
     );
@@ -105,22 +128,32 @@ export const getWalmartScores = async (): Promise<{
       technologyScores,
     };
   } else {
-    // Fallback to direct calculation for development without DynamoDB...
+    // Fallback to workforce-normalized calculation for development without DynamoDB...
 
-    const physicalScores = calculateInvertedScores(physicalJobs);
-    const technologyScores = calculatePositiveScores(technologyJobs);
+    const workforceData = await getWorkforceData();
+    const physicalScores = calculateWorkforceNormalizedInvertedScores(
+      physicalJobs,
+      workforceData,
+    );
+    const technologyScores = calculateWorkforceNormalizedPositiveScores(
+      technologyJobs,
+      workforceData,
+    );
 
-    logger.info('Walmart job presence calculation completed (fallback)...', {
-      totalStates: Object.keys(physicalScores).length,
-      totalPhysicalJobs: Object.values(physicalJobs).reduce(
-        (sum, count) => sum + count,
-        0,
-      ),
-      totalTechnologyJobs: Object.values(technologyJobs).reduce(
-        (sum, count) => sum + count,
-        0,
-      ),
-    });
+    logger.info(
+      'Walmart job presence calculation completed with workforce normalization (fallback)...',
+      {
+        totalStates: Object.keys(physicalScores).length,
+        totalPhysicalJobs: Object.values(physicalJobs).reduce(
+          (sum, count) => sum + count,
+          0,
+        ),
+        totalTechnologyJobs: Object.values(technologyJobs).reduce(
+          (sum, count) => sum + count,
+          0,
+        ),
+      },
+    );
 
     return {
       physicalScores,

@@ -206,7 +206,9 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
-  WalmartSlidingWindowTable:
+
+
+  WalmartSlidingWindowV2Table:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
@@ -215,12 +217,12 @@ Resources:
       AttributeDefinitions:
         - AttributeName: state
           AttributeType: S
-        - AttributeName: windowStart
-          AttributeType: N
+        - AttributeName: jobType
+          AttributeType: S
       KeySchema:
         - AttributeName: state
           KeyType: HASH
-        - AttributeName: windowStart
+        - AttributeName: jobType
           KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
       TimeToLiveSpecification:
@@ -276,8 +278,10 @@ Outputs:
     Export:
       Name: !Sub '${Environment}-BlockbusterWalmartTechnologyJobsTableArn'
 
-  WalmartSlidingWindowTableArn:
-    Description: 'ARN of the Walmart Sliding Window table'
-    Value: !GetAtt WalmartSlidingWindowTable.Arn
+
+
+  WalmartSlidingWindowV2TableArn:
+    Description: 'ARN of the Walmart Sliding Window V2 table'
+    Value: !GetAtt WalmartSlidingWindowV2Table.Arn
     Export:
       Name: !Sub '${Environment}-BlockbusterWalmartSlidingWindowTableArn' 

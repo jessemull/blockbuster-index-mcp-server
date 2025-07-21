@@ -34,7 +34,6 @@ export async function scrapeWalmartJobs(
     }
 
     // Query job data per state, checking for existing data first...
-
     for (const state of Object.values(States)) {
       logger.info(`Processing Walmart jobs for ${state}`);
 
