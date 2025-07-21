@@ -134,6 +134,7 @@ export class WalmartSlidingWindowService {
   ): Promise<number | undefined> {
     try {
       // This would need to query the daily job records. For now, we'll return undefined to indicate no old data...
+
       return undefined;
     } catch (error: unknown) {
       logger.warn('Failed to get old day job count', {

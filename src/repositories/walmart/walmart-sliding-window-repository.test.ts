@@ -149,8 +149,8 @@ describe('DynamoDBWalmartSlidingWindowRepository', () => {
     };
 
     it('should create new aggregate when none exists', async () => {
-      mockSend.mockResolvedValueOnce({ Item: null }); // getAggregate returns null
-      mockSend.mockResolvedValueOnce({}); // saveAggregate succeeds
+      mockSend.mockResolvedValueOnce({ Item: null });
+      mockSend.mockResolvedValueOnce({});
 
       await repository.updateAggregate('CA', 200, 1234567891);
 
@@ -158,8 +158,8 @@ describe('DynamoDBWalmartSlidingWindowRepository', () => {
     });
 
     it('should update existing aggregate', async () => {
-      mockSend.mockResolvedValueOnce({ Item: existingAggregate }); // getAggregate
-      mockSend.mockResolvedValueOnce({}); // updateAggregate
+      mockSend.mockResolvedValueOnce({ Item: existingAggregate });
+      mockSend.mockResolvedValueOnce({});
 
       await repository.updateAggregate('CA', 200, 1234567891);
 
@@ -170,13 +170,13 @@ describe('DynamoDBWalmartSlidingWindowRepository', () => {
     });
 
     it('should handle sliding window removal', async () => {
-      const oldTimestamp = 1234567890 - 90 * 24 * 60 * 60 * 1000; // 90 days ago
+      const oldTimestamp = 1234567890 - 90 * 24 * 60 * 60 * 1000;
       const oldAggregate: WalmartSlidingWindowAggregate = {
         ...existingAggregate,
         windowStart: oldTimestamp,
       };
-      mockSend.mockResolvedValueOnce({ Item: oldAggregate }); // getAggregate
-      mockSend.mockResolvedValueOnce({}); // updateAggregate
+      mockSend.mockResolvedValueOnce({ Item: oldAggregate });
+      mockSend.mockResolvedValueOnce({});
 
       await repository.updateAggregate(
         'CA',

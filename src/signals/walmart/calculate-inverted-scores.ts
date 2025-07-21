@@ -12,7 +12,8 @@ export function calculateInvertedScores(
       continue;
     }
 
-    // Invert the score: higher job count = lower digital adoption score
+    // Invert the score: higher job count = lower digital adoption score...
+
     const normalizedScore =
       ((maxJobs - jobCount) / (maxJobs - minJobs)) * 0.15 + 0.05;
 

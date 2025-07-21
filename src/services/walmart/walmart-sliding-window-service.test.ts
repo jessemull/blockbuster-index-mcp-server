@@ -2,7 +2,6 @@ import { WalmartSlidingWindowService } from './walmart-sliding-window-service';
 import { DynamoDBWalmartSlidingWindowRepository } from '../../repositories/walmart/walmart-sliding-window-repository';
 import type { WalmartSlidingWindowAggregate } from '../../types/walmart';
 
-// Mock the repository
 jest.mock('../../repositories/walmart/walmart-sliding-window-repository');
 
 const mockGetAggregate = jest.fn();
@@ -25,7 +24,7 @@ describe('WalmartSlidingWindowService', () => {
   });
 
   describe('updateSlidingWindow', () => {
-    const timestamp = 1234567890 * 1000; // Convert to milliseconds
+    const timestamp = 1234567890 * 1000;
 
     it('should create new aggregate when none exists', async () => {
       mockGetAggregate.mockResolvedValueOnce(null);
@@ -49,7 +48,7 @@ describe('WalmartSlidingWindowService', () => {
     it('should update existing aggregate', async () => {
       const existingAggregate: WalmartSlidingWindowAggregate = {
         state: 'CA',
-        windowStart: timestamp - 86400000, // 1 day ago
+        windowStart: timestamp - 86400000,
         windowEnd: timestamp - 86400000,
         totalJobCount: 1000,
         dayCount: 5,
@@ -71,7 +70,7 @@ describe('WalmartSlidingWindowService', () => {
     });
 
     it('should handle sliding window removal when old data exists', async () => {
-      const oldTimestamp = timestamp - 90 * 24 * 60 * 60 * 1000; // 90 days ago
+      const oldTimestamp = timestamp - 90 * 24 * 60 * 60 * 1000;
       const existingAggregate: WalmartSlidingWindowAggregate = {
         state: 'CA',
         windowStart: oldTimestamp,
@@ -86,14 +85,12 @@ describe('WalmartSlidingWindowService', () => {
 
       await service.updateSlidingWindow('CA', 300, timestamp);
 
-      // Since getOldDayJobCount returns undefined, newWindowStart never changes
-      // so the old window start is not passed to updateAggregate
       expect(mockUpdateAggregate).toHaveBeenCalledWith(
         'CA',
         300,
         timestamp,
-        undefined, // old window start (undefined because newWindowStart === currentAggregate.windowStart)
-        undefined, // old day job count (undefined because getOldDayJobCount returns undefined)
+        undefined,
+        undefined,
       );
     });
   });

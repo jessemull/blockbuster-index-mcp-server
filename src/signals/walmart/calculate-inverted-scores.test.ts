@@ -11,7 +11,6 @@ describe('calculateInvertedScores', () => {
 
     const result = calculateInvertedScores(jobCounts);
 
-    // Higher job count should result in lower score (inverted)
     expect(result.CA).toBeGreaterThan(result.TX);
     expect(result.NY).toBeGreaterThan(result.FL);
     expect(result.NY).toBeGreaterThan(result.CA);
@@ -51,7 +50,6 @@ describe('calculateInvertedScores', () => {
 
     const result = calculateInvertedScores(jobCounts);
 
-    // All scores should be between 0.05 and 0.2
     Object.values(result).forEach((score) => {
       expect(score).toBeGreaterThanOrEqual(0.05);
       expect(score).toBeLessThanOrEqual(0.2);
@@ -67,7 +65,6 @@ describe('calculateInvertedScores', () => {
 
     const result = calculateInvertedScores(jobCounts);
 
-    // State with 0 jobs should get the highest score
     expect(result.CA).toBeGreaterThan(result.TX);
     expect(result.CA).toBeGreaterThan(result.NY);
   });
@@ -80,7 +77,6 @@ describe('calculateInvertedScores', () => {
 
     const result = calculateInvertedScores(jobCounts);
 
-    // Check that scores are properly formatted with 10 decimal places
     Object.values(result).forEach((score) => {
       const decimalPlaces = score.toString().split('.')[1]?.length || 0;
       expect(decimalPlaces).toBeLessThanOrEqual(10);
