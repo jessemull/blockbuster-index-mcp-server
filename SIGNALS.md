@@ -13,7 +13,7 @@ The Amazon signal measures e-commerce adoption and digital retail presence by an
 **Calculation Method**:
 
 - Scrapes job postings for each state using Puppeteer.
-- Counts total job postings per state for the current day.
+- Counts total job postings per state for the cuxrrent day.
 - Maintains a 90-day sliding window of job posting data in DynamoDB.
 - Calculates rolling averages to smooth out daily fluctuations and seasonal variations.
 - Normalizes job counts by workforce size per state using Census Bureau labor force data.
@@ -39,54 +39,48 @@ The Amazon signal measures e-commerce adoption and digital retail presence by an
 The Amazon signal uses workforce normalization to provide fair comparisons across states of different sizes:
 
 - **Data Source**: U.S. Census Bureau American Community Survey (ACS) labor force data.
-- **Metric**: Percentage of workforce in Amazon jobs (scaled by 1,000,000).
+- **Metric**: Amazon jobs per million workforce (Amazon jobs / total workforce × 1,000,000).
 
 ## Census Signal
 
-The Census signal captures demographic and economic indicators that correlate with retail behavior patterns.
+**Data Source:**
 
-**Data Source**:
+- U.S. Census Bureau API
 
-- U.S. Census Bureau API.
+**Technical Implementation:**
 
-**Calculation Method**:
+- REST API integration with Census Bureau endpoints
+- Fetches demographic data, including:
+  - Retail establishment counts (NAICS 44-45)
+  - State population
+  - Workforce size (used for normalization in other signals)
 
-- Fetches demographic data including population density, median income, and age distribution.
-- Analyzes economic indicators such as employment rates and industry composition.
-- Fetches labor force data for workforce normalization in other signals.
-- Computes urbanization metrics and household characteristics.
-- Normalizes data across states and applies statistical weighting.
-- Generates a score from 0-100 reflecting retail market maturity.
+**Calculation Method:**
 
-**Technical Implementation**:
-
-- REST API integration with Census Bureau endpoints.
-- Statistical normalization using z-score methodology.
-- Multi-factor analysis with configurable weights.
-- Caching layer for API response optimization.
+- Calculates retail establishments per 100,000 population (establishment count / population × 100,000)
+- No other subfactors or weights are currently used in the Census signal calculation
 
 ## Broadband Signal
 
-The Broadband signal measures internet infrastructure quality and connectivity, which directly impacts e-commerce adoption.
+**Coverage Measurement:**
 
-**Data Source**:
+- Coverage is measured as the percentage of census blocks (not population or land area) with broadband service.
+- A census block is the smallest geographic unit used by the U.S. Census Bureau, typically containing a few dozen to a few hundred people.
 
-- FCC broadband availability data.
+**Score Calculation:**
 
-**Calculation Method**:
+- The broadband score is a weighted sum of:
+  - 30%: Basic broadband availability (percent of blocks with any broadband)
+  - 40%: High-speed availability (percent of blocks with 25+ Mbps)
+  - 20%: Gigabit availability (percent of blocks with gigabit)
+  - 10%: Technology diversity (fraction of 5 tech types present)
+- **Formula:**
+  Broadband Score = 0.3 × Basic + 0.4 × High-Speed + 0.2 × Gigabit + 0.1 × Diversity
 
-- Analyzes broadband availability and speed metrics by state.
-- Evaluates infrastructure quality and coverage percentages.
-- Considers both fixed and mobile broadband penetration.
-- Normalizes by geographic area and population density.
-- Generates a score from 0-100 where higher scores indicate better connectivity.
+**Weighting Rationale:**
 
-**Technical Implementation**:
-
-- S3-based data loading from FCC datasets.
-- Geographic data processing and aggregation.
-- Statistical analysis of coverage patterns.
-- Performance optimization for large datasets.
+- The weights were chosen to emphasize high-speed access and future-ready infrastructure, while still rewarding basic coverage and technology diversity.
+- These weights are based on domain knowledge and the desire to balance quality, reach, and resilience in broadband infrastructure.
 
 ## Walmart Signal
 
@@ -122,6 +116,15 @@ The Walmart signal provides a dual-perspective analysis of retail employment pat
 - Sliding window aggregation for both signal types.
 - Inverted scoring algorithm for physical jobs.
 - Workforce normalization using Census data.
+
+**Walmart Signal Sub-Signals and Index Integration**
+
+The Walmart signal is split into two sub-signals:
+
+- **Physical Jobs:** Normalized to a 0–100 scale and inverted so that higher = more digital (i.e., fewer physical jobs means a higher score).
+- **Technology Jobs:** Normalized to a 0–100 scale so that higher = more digital (i.e., more technology jobs means a higher score).
+
+Both sub-signals are used as separate components in the Blockbuster Index, each with their own weight (see WEIGHTS in the codebase). There is currently no single combined "Walmart Score"; instead, both normalized sub-signals are incorporated independently into the overall index.
 
 ## Blockbuster Index Calculation
 

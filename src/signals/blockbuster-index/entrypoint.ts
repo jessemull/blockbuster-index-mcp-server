@@ -10,6 +10,7 @@ import {
 import { logger, uploadToS3, downloadFromS3 } from '../../util';
 import fs from 'fs';
 import path from 'path';
+import { normalizeScores } from '../../util/helpers/normalize-signal-scores';
 
 const SIGNALS = [
   { name: 'amazon', signal: Signal.AMAZON },
@@ -51,16 +52,41 @@ async function main() {
     for (const { name, signal } of SIGNALS) {
       signalResults[signal] = await getSignalScores(name);
     }
+
+    // Normalize all signals to 0-100...
+
+    const normalizedSignals: Record<
+      Signal,
+      Record<string, number>
+    > = {} as Record<Signal, Record<string, number>>;
+    for (const signal of Object.values(Signal)) {
+      const rawScores = signalResults[signal];
+      if (!rawScores) continue;
+      const normalized = normalizeScores(rawScores);
+      // Invert physical jobs so higher = more digital...
+
+      if (signal === Signal.WALMART_PHYSICAL) {
+        normalizedSignals[signal] = Object.fromEntries(
+          Object.entries(normalized).map(([state, value]) => [
+            state,
+            100 - value,
+          ]),
+        );
+      } else {
+        normalizedSignals[signal] = normalized;
+      }
+    }
+
     const states: Record<string, StateScore> = {};
     for (const state of Object.values(States)) {
       const components = {
-        [Signal.AMAZON]: signalResults[Signal.AMAZON]?.[state] ?? 0,
-        [Signal.CENSUS]: signalResults[Signal.CENSUS]?.[state] ?? 0,
-        [Signal.BROADBAND]: signalResults[Signal.BROADBAND]?.[state] ?? 0,
+        [Signal.AMAZON]: normalizedSignals[Signal.AMAZON]?.[state] ?? 0,
+        [Signal.CENSUS]: normalizedSignals[Signal.CENSUS]?.[state] ?? 0,
+        [Signal.BROADBAND]: normalizedSignals[Signal.BROADBAND]?.[state] ?? 0,
         [Signal.WALMART_PHYSICAL]:
-          signalResults[Signal.WALMART_PHYSICAL]?.[state] ?? 0,
+          normalizedSignals[Signal.WALMART_PHYSICAL]?.[state] ?? 0,
         [Signal.WALMART_TECHNOLOGY]:
-          signalResults[Signal.WALMART_TECHNOLOGY]?.[state] ?? 0,
+          normalizedSignals[Signal.WALMART_TECHNOLOGY]?.[state] ?? 0,
       };
       const score = Object.entries(components).reduce(
         (sum, [signal, value]) => sum + value * WEIGHTS[signal as Signal],
