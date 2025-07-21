@@ -46,6 +46,7 @@ Resources:
       ClusterName: !Sub 'blockbuster-index-${Environment}'
 
   # Individual log groups for each signal
+  
   AmazonLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
@@ -78,6 +79,14 @@ Resources:
       LogGroupName: !Sub '/ecs/blockbuster-index-blockbuster-index-${Environment}'
       RetentionInDays: 14
 
+  WalmartLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: !Sub '/ecs/blockbuster-index-walmart-${Environment}'
+      RetentionInDays: 14
+
   ECSTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -106,6 +115,7 @@ Resources:
                   - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-census-${Environment}:*'
                   - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-broadband-${Environment}:*'
                   - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-blockbuster-index-${Environment}:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-walmart-${Environment}:*'
 
   ECSTaskRole:
     Type: AWS::IAM::Role
@@ -225,6 +235,46 @@ Resources:
                   - dynamodb:DescribeTable
                 Resource: !ImportValue
                   Fn::Sub: '${Environment}-BlockbusterBlockbusterIndexTableArn'
+        - PolicyName: 'DynamoDBWalmartPhysicalJobsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterWalmartPhysicalJobsTableArn'
+        - PolicyName: 'DynamoDBWalmartTechnologyJobsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterWalmartTechnologyJobsTableArn'
+        - PolicyName: 'DynamoDBWalmartSlidingWindowAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:UpdateItem
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterWalmartSlidingWindowTableArn'
 
   EventBridgeInvokeRole:
     Type: AWS::IAM::Role
@@ -293,6 +343,11 @@ Outputs:
     Value: !Ref BlockbusterIndexLogGroup
     Export:
       Name: !Sub '${Environment}-BlockbusterBlockbusterIndexLogGroupName'
+  WalmartLogGroupName:
+    Description: 'Walmart signal log group name'
+    Value: !Ref WalmartLogGroup
+    Export:
+      Name: !Sub '${Environment}-BlockbusterWalmartLogGroupName'
   ExecutionRoleArn:
     Description: 'ECS Execution Role ARN'
     Value: !GetAtt ECSTaskExecutionRole.Arn

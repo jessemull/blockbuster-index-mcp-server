@@ -18,9 +18,10 @@ on:
         type: choice
         options:
           - amazon
-          - census
-          - broadband
           - blockbuster-index
+          - broadband
+          - census
+          - walmart
 
 jobs:
   run-task:
