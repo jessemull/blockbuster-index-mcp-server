@@ -19,11 +19,7 @@ export function calculateWorkforceNormalizedInvertedScores(
 
       const percentageOfWorkforce = (jobCount / workforceSize) * 100;
       const scaledScore = Math.round(percentageOfWorkforce * 1000000);
-
-      // Invert the score: higher physical job percentage = lower digital adoption score
-      // We'll use a simple inversion: max possible score - current score
-      // Assuming max percentage is around 10% of workforce (1,000,000 * 10 = 10,000,000)
-      const maxPossibleScore = 10000000; // 10% of workforce scaled by 1M
+      const maxPossibleScore = 10000000;
       const invertedScore = Math.max(0, maxPossibleScore - scaledScore);
 
       scores[state] = invertedScore;

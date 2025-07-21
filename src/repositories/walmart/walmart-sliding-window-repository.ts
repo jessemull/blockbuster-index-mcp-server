@@ -6,7 +6,6 @@ import type {
   WalmartSlidingWindowAggregate,
   WalmartSlidingWindowRepository,
 } from '../../types/walmart';
-// import { DynamoDBSignalRepository } from '../base-signal-repository';
 
 export class DynamoDBWalmartSlidingWindowRepository
   implements WalmartSlidingWindowRepository
@@ -17,7 +16,6 @@ export class DynamoDBWalmartSlidingWindowRepository
   constructor(tableName: string, region?: string) {
     const dynamoClient = new DynamoDBClient({ region: region || 'us-west-2' });
     this.client = DynamoDBDocumentClient.from(dynamoClient);
-    // Use v2 table for dev
     this.tableName =
       tableName || 'blockbuster-index-walmart-sliding-window-dev';
   }

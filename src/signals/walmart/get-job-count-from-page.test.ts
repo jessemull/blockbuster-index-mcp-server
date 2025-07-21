@@ -19,7 +19,10 @@ describe('getJobCountFromPage', () => {
     const result = await getJobCountFromPage(mockPage);
 
     expect(result).toBe(150);
-    expect(mockEvaluate).toHaveBeenCalledWith(expect.any(Function));
+    expect(mockEvaluate).toHaveBeenCalledWith(
+      expect.any(Function),
+      '#count_totalResults',
+    );
   });
 
   it('should return 0 when job count element is not found', async () => {
@@ -42,19 +45,14 @@ describe('getJobCountFromPage', () => {
     const error = new Error('DOM evaluation error');
     mockEvaluate.mockRejectedValueOnce(error);
 
-    await expect(getJobCountFromPage(mockPage)).rejects.toThrow(
-      'DOM evaluation error',
-    );
+    const result = await getJobCountFromPage(mockPage);
+    expect(result).toBe(0);
   });
 
   it('should handle page evaluation function', async () => {
-    mockEvaluate.mockImplementationOnce((fn) => {
-      const mockTextElement = {
-        textContent: '150',
-      };
-
+    mockEvaluate.mockImplementationOnce((fn, selector) => {
       const mockJobCountElement = {
-        querySelector: jest.fn().mockReturnValue(mockTextElement),
+        textContent: '150',
       };
 
       const mockDocument = {
@@ -65,7 +63,7 @@ describe('getJobCountFromPage', () => {
       (globalThis as any).document = mockDocument;
 
       try {
-        return fn();
+        return fn(selector);
       } finally {
         (globalThis as any).document = originalDocument;
       }
@@ -77,20 +75,16 @@ describe('getJobCountFromPage', () => {
   });
 
   it('should handle missing span element', async () => {
-    mockEvaluate.mockImplementationOnce((fn) => {
-      const mockJobCountElement = {
-        querySelector: jest.fn().mockReturnValue(null),
-      };
-
+    mockEvaluate.mockImplementationOnce((fn, selector) => {
       const mockDocument = {
-        querySelector: jest.fn().mockReturnValue(mockJobCountElement),
+        querySelector: jest.fn().mockReturnValue(null),
       };
 
       const originalDocument = (globalThis as any).document;
       (globalThis as any).document = mockDocument;
 
       try {
-        return fn();
+        return fn(selector);
       } finally {
         (globalThis as any).document = originalDocument;
       }
@@ -102,13 +96,9 @@ describe('getJobCountFromPage', () => {
   });
 
   it('should handle non-numeric text content', async () => {
-    mockEvaluate.mockImplementationOnce((fn) => {
-      const mockTextElement = {
-        textContent: 'No jobs found',
-      };
-
+    mockEvaluate.mockImplementationOnce((fn, selector) => {
       const mockJobCountElement = {
-        querySelector: jest.fn().mockReturnValue(mockTextElement),
+        textContent: 'No jobs found',
       };
 
       const mockDocument = {
@@ -119,7 +109,7 @@ describe('getJobCountFromPage', () => {
       (globalThis as any).document = mockDocument;
 
       try {
-        return fn();
+        return fn(selector);
       } finally {
         (globalThis as any).document = originalDocument;
       }

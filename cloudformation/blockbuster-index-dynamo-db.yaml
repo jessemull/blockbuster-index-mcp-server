@@ -278,8 +278,6 @@ Outputs:
     Export:
       Name: !Sub '${Environment}-BlockbusterWalmartTechnologyJobsTableArn'
 
-
-
   WalmartSlidingWindowV2TableArn:
     Description: 'ARN of the Walmart Sliding Window V2 table'
     Value: !GetAtt WalmartSlidingWindowV2Table.Arn

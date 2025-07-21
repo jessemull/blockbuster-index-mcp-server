@@ -14,12 +14,16 @@ jest.mock('../../repositories', () => ({
   DynamoDBWalmartPhysicalRepository: jest.fn(),
   DynamoDBWalmartTechnologyRepository: jest.fn(),
 }));
+jest.mock('../amazon/get-workforce-data', () => ({
+  getWorkforceData: jest.fn(),
+}));
 
 import { scrapeWalmartJobs } from './scrape-walmart-jobs';
 import { WalmartSlidingWindowService } from '../../services/walmart/walmart-sliding-window-service';
 import { CONFIG } from '../../config';
 import { logger } from '../../util';
 import { getWalmartScores } from './get-walmart-scores';
+import { getWorkforceData } from '../amazon/get-workforce-data';
 
 const mockScrapeWalmartJobs = scrapeWalmartJobs as jest.MockedFunction<
   typeof scrapeWalmartJobs
@@ -32,6 +36,9 @@ const mockLogger = logger as unknown as {
   warn: jest.Mock;
   error: jest.Mock;
 };
+const mockGetWorkforceData = getWorkforceData as jest.MockedFunction<
+  typeof getWorkforceData
+>;
 
 describe('getWalmartScores()', () => {
   const DFLT_PHYS = 'blockbuster-index-walmart-physical-jobs-dev';
@@ -42,6 +49,14 @@ describe('getWalmartScores()', () => {
     delete process.env.WALMART_PHYSICAL_DYNAMODB_TABLE_NAME;
     delete process.env.WALMART_TECHNOLOGY_DYNAMODB_TABLE_NAME;
     CONFIG.IS_DEVELOPMENT = false;
+
+    // Mock workforce data
+    mockGetWorkforceData.mockResolvedValue({
+      CA: 2000000,
+      TX: 1500000,
+      OR: 1000000,
+      WA: 1200000,
+    });
   });
 
   it('computes scores through the sliding‑window path (prod / no env vars)', async () => {
@@ -49,22 +64,26 @@ describe('getWalmartScores()', () => {
     const technologyJobs = { CA: 5, TX: 15 };
     mockScrapeWalmartJobs.mockResolvedValue({ physicalJobs, technologyJobs });
 
-    const slidingCounts = { CA: 100, TX: 200 };
+    const physicalSlidingCounts = { CA: 100, TX: 200 };
+    const technologySlidingCounts = { CA: 50, TX: 100 };
     const updateSlidingWindow = jest.fn();
-    const getSlidingScores = jest.fn().mockResolvedValue(slidingCounts);
+    const getSlidingWindowScores = jest
+      .fn()
+      .mockResolvedValueOnce(physicalSlidingCounts)
+      .mockResolvedValueOnce(technologySlidingCounts);
     MockWindowService.mockImplementation(
       () =>
         ({
           updateSlidingWindow,
-          getSlidingWindowScores: getSlidingScores,
+          getSlidingWindowScores,
         }) as any,
     );
 
     const result = await getWalmartScores();
 
     expect(result).toEqual({
-      physicalScores: { CA: 0.9, TX: 0.8 },
-      technologyScores: { CA: 0.05, TX: 0.2 },
+      physicalScores: { CA: 9995000, TX: 9986667 },
+      technologyScores: { CA: 2500, TX: 6667 },
     });
 
     const {
@@ -75,22 +94,37 @@ describe('getWalmartScores()', () => {
     expect(DynamoDBWalmartTechnologyRepository).toHaveBeenCalledWith(DFLT_TECH);
     expect(MockWindowService).toHaveBeenCalledTimes(1);
 
-    expect(updateSlidingWindow).toHaveBeenCalledTimes(2);
+    expect(updateSlidingWindow).toHaveBeenCalledTimes(4);
     expect(updateSlidingWindow).toHaveBeenCalledWith(
       'CA',
+      'physical',
       10,
       expect.any(Number),
     );
     expect(updateSlidingWindow).toHaveBeenCalledWith(
       'TX',
+      'physical',
       20,
       expect.any(Number),
     );
-    expect(getSlidingScores).toHaveBeenCalled();
+    expect(updateSlidingWindow).toHaveBeenCalledWith(
+      'CA',
+      'technology',
+      5,
+      expect.any(Number),
+    );
+    expect(updateSlidingWindow).toHaveBeenCalledWith(
+      'TX',
+      'technology',
+      15,
+      expect.any(Number),
+    );
+    expect(getSlidingWindowScores).toHaveBeenCalledWith('physical');
+    expect(getSlidingWindowScores).toHaveBeenCalledWith('technology');
 
     expect(mockLogger.info).toHaveBeenCalledWith(
       expect.stringContaining(
-        'Walmart job presence calculation completed with sliding window...',
+        'Walmart job presence calculation completed with sliding window and workforce normalization...',
       ),
       expect.objectContaining({ totalStates: 2, windowDays: 90 }),
     );
@@ -107,8 +141,8 @@ describe('getWalmartScores()', () => {
     const res = await getWalmartScores();
 
     expect(res).toEqual({
-      physicalScores: { OR: 0.2, WA: 0.05 },
-      technologyScores: { OR: 0.2, WA: 0.05 },
+      physicalScores: { OR: 9999700, WA: 9999667 },
+      technologyScores: { OR: 100, WA: 0 },
     });
 
     expect(MockWindowService).not.toHaveBeenCalled();
@@ -127,19 +161,22 @@ describe('getWalmartScores()', () => {
     mockScrapeWalmartJobs.mockResolvedValue({ physicalJobs, technologyJobs });
 
     const updateSlidingWindow = jest.fn();
-    const getSlidingScores = jest.fn().mockResolvedValue({});
+    const getSlidingWindowScores = jest
+      .fn()
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({});
     MockWindowService.mockImplementation(
       () =>
         ({
           updateSlidingWindow,
-          getSlidingWindowScores: getSlidingScores,
+          getSlidingWindowScores,
         }) as any,
     );
 
     const res = await getWalmartScores();
     expect(res).toEqual({
-      physicalScores: { OR: 0.2, WA: 0.05 },
-      technologyScores: { OR: 0.2, WA: 0.05 },
+      physicalScores: {},
+      technologyScores: {},
     });
 
     const {
@@ -149,8 +186,9 @@ describe('getWalmartScores()', () => {
     expect(DynamoDBWalmartPhysicalRepository).toHaveBeenCalledWith('my‑phys');
     expect(DynamoDBWalmartTechnologyRepository).toHaveBeenCalledWith('my‑tech');
 
-    expect(updateSlidingWindow).toHaveBeenCalledTimes(2);
-    expect(getSlidingScores).toHaveBeenCalled();
+    expect(updateSlidingWindow).toHaveBeenCalledTimes(4);
+    expect(getSlidingWindowScores).toHaveBeenCalledWith('physical');
+    expect(getSlidingWindowScores).toHaveBeenCalledWith('technology');
   });
 
   it('propagates errors from scrapeWalmartJobs()', async () => {
