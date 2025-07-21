@@ -55,11 +55,13 @@ export async function scrapeWalmartJobs(
           );
 
           if (physicalExists && technologyExists) {
-            // Use existing data, don't scrape
+            // Use existing data, don't scrape...
+
             const existingPhysicalRecord = await physicalRepository.get(
               state,
               timestamp,
             );
+
             const existingTechnologyRecord = await technologyRepository.get(
               state,
               timestamp,
@@ -68,6 +70,7 @@ export async function scrapeWalmartJobs(
             if (existingPhysicalRecord) {
               statePhysicalJobCount = existingPhysicalRecord.jobCount;
             }
+
             if (existingTechnologyRecord) {
               stateTechnologyJobCount = existingTechnologyRecord.jobCount;
             }
@@ -82,7 +85,8 @@ export async function scrapeWalmartJobs(
               },
             );
           } else {
-            // Data doesn't exist, scrape and store
+            // Data doesn't exist, scrape and store...
+
             logger.info(`No existing data found for ${state}, scraping...`);
 
             statePhysicalJobCount = await searchWalmartJobsInState(
@@ -124,7 +128,8 @@ export async function scrapeWalmartJobs(
             error: storageError,
             timestamp,
           });
-          // Fallback to scraping if storage operations fail
+          // Fallback to scraping if storage operations fail...
+
           logger.info(`Falling back to scraping for ${state}`);
           statePhysicalJobCount = await searchWalmartJobsInState(
             browser,
@@ -138,7 +143,8 @@ export async function scrapeWalmartJobs(
           );
         }
       } else {
-        // No repository available, scrape directly
+        // No repository available, scrape directly...
+
         logger.info(`No repository available, scraping ${state}`);
         statePhysicalJobCount = await searchWalmartJobsInState(
           browser,

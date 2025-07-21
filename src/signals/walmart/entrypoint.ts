@@ -25,7 +25,8 @@ async function main() {
           process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
         );
 
-        // Store physical scores
+        // Store physical scores..
+
         await signalScoresRepository.save({
           signalType: 'walmart-physical',
           timestamp,
@@ -33,7 +34,8 @@ async function main() {
           scores: physicalScores,
         });
 
-        // Store technology scores
+        // Store technology scores...
+
         await signalScoresRepository.save({
           signalType: 'walmart-technology',
           timestamp,
@@ -58,7 +60,8 @@ async function main() {
     if (CONFIG.IS_DEVELOPMENT) {
       const scoresDir = path.resolve(__dirname, '../../../dev/scores');
 
-      // Write physical scores
+      // Write physical scores...
+
       const physicalFilePath = path.join(
         scoresDir,
         'walmart-physical-scores.json',
@@ -72,7 +75,8 @@ async function main() {
         filePath: physicalFilePath,
       });
 
-      // Write technology scores
+      // Write technology scores...
+
       const technologyFilePath = path.join(
         scoresDir,
         'walmart-technology-scores.json',
@@ -85,7 +89,8 @@ async function main() {
         filePath: technologyFilePath,
       });
     } else {
-      // Upload physical scores to S3
+      // Upload physical scores to S3...
+
       await uploadToS3({
         bucket: CONFIG.S3_BUCKET_NAME!,
         key: 'data/signals/walmart-physical-scores.json',
@@ -97,7 +102,8 @@ async function main() {
         key: 'data/signals/walmart-physical-scores.json',
       });
 
-      // Upload technology scores to S3
+      // Upload technology scores to S3...
+
       await uploadToS3({
         bucket: CONFIG.S3_BUCKET_NAME!,
         key: 'data/signals/walmart-technology-scores.json',

@@ -2,6 +2,7 @@ import 'jest';
 
 jest.mock('./scrape-walmart-jobs');
 jest.mock('./calculate-inverted-scores');
+jest.mock('./calculate-positive-scores');
 jest.mock('../../services/walmart/walmart-sliding-window-service', () => ({
   WalmartSlidingWindowService: jest.fn(),
 }));
@@ -18,6 +19,7 @@ jest.mock('../../repositories', () => ({
 
 import { scrapeWalmartJobs } from './scrape-walmart-jobs';
 import { calculateInvertedScores } from './calculate-inverted-scores';
+import { calculatePositiveScores } from './calculate-positive-scores';
 import { WalmartSlidingWindowService } from '../../services/walmart/walmart-sliding-window-service';
 import { CONFIG } from '../../config';
 import { logger } from '../../util';
@@ -28,6 +30,9 @@ const mockScrapeWalmartJobs = scrapeWalmartJobs as jest.MockedFunction<
 >;
 const mockCalcInv = calculateInvertedScores as jest.MockedFunction<
   typeof calculateInvertedScores
+>;
+const mockCalcPos = calculatePositiveScores as jest.MockedFunction<
+  typeof calculatePositiveScores
 >;
 const MockWindowService = WalmartSlidingWindowService as jest.MockedClass<
   typeof WalmartSlidingWindowService
@@ -65,15 +70,14 @@ describe('getWalmartScores()', () => {
         }) as any,
     );
 
-    mockCalcInv
-      .mockImplementationOnce(() => ({ CA: 0.9, TX: 0.8 }))
-      .mockImplementationOnce(() => ({ CA: 0.7, TX: 0.6 }));
+    mockCalcInv.mockImplementationOnce(() => ({ CA: 0.9, TX: 0.8 }));
+    mockCalcPos.mockImplementationOnce(() => ({ CA: 0.05, TX: 0.2 }));
 
     const result = await getWalmartScores();
 
     expect(result).toEqual({
       physicalScores: { CA: 0.9, TX: 0.8 },
-      technologyScores: { CA: 0.7, TX: 0.6 },
+      technologyScores: { CA: 0.05, TX: 0.2 },
     });
 
     const {
@@ -97,8 +101,8 @@ describe('getWalmartScores()', () => {
     );
     expect(getSlidingScores).toHaveBeenCalled();
 
-    expect(mockCalcInv).toHaveBeenNthCalledWith(1, slidingCounts);
-    expect(mockCalcInv).toHaveBeenNthCalledWith(2, technologyJobs);
+    expect(mockCalcInv).toHaveBeenCalledWith(slidingCounts);
+    expect(mockCalcPos).toHaveBeenCalledWith(technologyJobs);
 
     expect(mockLogger.info).toHaveBeenCalledWith(
       expect.stringContaining(
@@ -115,15 +119,14 @@ describe('getWalmartScores()', () => {
     const technologyJobs = { OR: 1, WA: 0 };
 
     mockScrapeWalmartJobs.mockResolvedValue({ physicalJobs, technologyJobs });
-    mockCalcInv
-      .mockImplementationOnce(() => ({ OR: 0.33, WA: 0.66 }))
-      .mockImplementationOnce(() => ({ OR: 1, WA: 0 }));
+    mockCalcInv.mockImplementationOnce(() => ({ OR: 0.2, WA: 0.05 }));
+    mockCalcPos.mockImplementationOnce(() => ({ OR: 0.2, WA: 0.05 }));
 
     const res = await getWalmartScores();
 
     expect(res).toEqual({
-      physicalScores: { OR: 0.33, WA: 0.66 },
-      technologyScores: { OR: 1, WA: 0 },
+      physicalScores: { OR: 0.2, WA: 0.05 },
+      technologyScores: { OR: 0.2, WA: 0.05 },
     });
 
     expect(MockWindowService).not.toHaveBeenCalled();
@@ -137,8 +140,8 @@ describe('getWalmartScores()', () => {
     process.env.WALMART_PHYSICAL_DYNAMODB_TABLE_NAME = 'my‑phys';
     process.env.WALMART_TECHNOLOGY_DYNAMODB_TABLE_NAME = 'my‑tech';
 
-    const physicalJobs = {};
-    const technologyJobs = {};
+    const physicalJobs = { OR: 3, WA: 4 };
+    const technologyJobs = { OR: 1, WA: 0 };
     mockScrapeWalmartJobs.mockResolvedValue({ physicalJobs, technologyJobs });
 
     const updateSlidingWindow = jest.fn();
@@ -151,10 +154,14 @@ describe('getWalmartScores()', () => {
         }) as any,
     );
 
-    mockCalcInv.mockImplementation(() => ({}));
+    mockCalcInv.mockImplementationOnce(() => ({ OR: 0.2, WA: 0.05 }));
+    mockCalcPos.mockImplementationOnce(() => ({ OR: 0.2, WA: 0.05 }));
 
     const res = await getWalmartScores();
-    expect(res).toEqual({ physicalScores: {}, technologyScores: {} });
+    expect(res).toEqual({
+      physicalScores: { OR: 0.2, WA: 0.05 },
+      technologyScores: { OR: 0.2, WA: 0.05 },
+    });
 
     const {
       DynamoDBWalmartPhysicalRepository,
@@ -163,7 +170,7 @@ describe('getWalmartScores()', () => {
     expect(DynamoDBWalmartPhysicalRepository).toHaveBeenCalledWith('my‑phys');
     expect(DynamoDBWalmartTechnologyRepository).toHaveBeenCalledWith('my‑tech');
 
-    expect(updateSlidingWindow).not.toHaveBeenCalled();
+    expect(updateSlidingWindow).toHaveBeenCalledTimes(2);
     expect(getSlidingScores).toHaveBeenCalled();
   });
 

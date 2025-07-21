@@ -27,7 +27,8 @@ export async function searchWalmartJobsInState(
 
     await page.goto(searchUrl, { waitUntil: 'networkidle2' });
 
-    // Wait for the job count element to appear
+    // Wait for the job count element to appear...
+
     await page
       .waitForSelector('#count_totalResults', {
         timeout: 10000,

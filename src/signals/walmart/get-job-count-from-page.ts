@@ -17,7 +17,8 @@ export async function getJobCountFromPage(page: Page): Promise<number> {
         return 0;
       }
 
-      // Handle the nested querySelector structure
+      // Handle the nested querySelector structure...
+
       const textElement = jobCountElement.querySelector('span');
       if (!textElement) {
         return 0;

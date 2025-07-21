@@ -1,7 +1,6 @@
 import { getJobCountFromPage } from './get-job-count-from-page';
 import { Page } from 'puppeteer';
 
-// Mock puppeteer
 jest.mock('puppeteer');
 
 const mockEvaluate = jest.fn();
@@ -50,7 +49,6 @@ describe('getJobCountFromPage', () => {
 
   it('should handle page evaluation function', async () => {
     mockEvaluate.mockImplementationOnce((fn) => {
-      // Simulate the page evaluation function with proper globalThis structure
       const mockTextElement = {
         textContent: '150',
       };
@@ -63,14 +61,12 @@ describe('getJobCountFromPage', () => {
         querySelector: jest.fn().mockReturnValue(mockJobCountElement),
       };
 
-      // Set up globalThis properly for the function context
       const originalDocument = (globalThis as any).document;
       (globalThis as any).document = mockDocument;
 
       try {
         return fn();
       } finally {
-        // Restore original globalThis
         (globalThis as any).document = originalDocument;
       }
     });
@@ -83,21 +79,19 @@ describe('getJobCountFromPage', () => {
   it('should handle missing span element', async () => {
     mockEvaluate.mockImplementationOnce((fn) => {
       const mockJobCountElement = {
-        querySelector: jest.fn().mockReturnValue(null), // No span found
+        querySelector: jest.fn().mockReturnValue(null),
       };
 
       const mockDocument = {
         querySelector: jest.fn().mockReturnValue(mockJobCountElement),
       };
 
-      // Set up globalThis properly for the function context
       const originalDocument = (globalThis as any).document;
       (globalThis as any).document = mockDocument;
 
       try {
         return fn();
       } finally {
-        // Restore original globalThis
         (globalThis as any).document = originalDocument;
       }
     });
@@ -121,14 +115,12 @@ describe('getJobCountFromPage', () => {
         querySelector: jest.fn().mockReturnValue(mockJobCountElement),
       };
 
-      // Set up globalThis properly for the function context
       const originalDocument = (globalThis as any).document;
       (globalThis as any).document = mockDocument;
 
       try {
         return fn();
       } finally {
-        // Restore original globalThis
         (globalThis as any).document = originalDocument;
       }
     });

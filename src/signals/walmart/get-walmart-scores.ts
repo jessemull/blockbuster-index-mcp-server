@@ -5,6 +5,7 @@ import {
   WalmartTechnologyJobRecord,
 } from '../../types/walmart';
 import { calculateInvertedScores } from './calculate-inverted-scores';
+import { calculatePositiveScores } from './calculate-positive-scores';
 import { scrapeWalmartJobs } from './scrape-walmart-jobs';
 import { logger } from '../../util';
 import { WalmartSlidingWindowService } from '../../services/walmart/walmart-sliding-window-service';
@@ -81,7 +82,7 @@ export const getWalmartScores = async (): Promise<{
       await slidingWindowService.getSlidingWindowScores();
 
     const physicalScores = calculateInvertedScores(slidingWindowJobCounts);
-    const technologyScores = calculateInvertedScores(technologyJobs); // Technology jobs get positive scoring
+    const technologyScores = calculatePositiveScores(technologyJobs); // Technology jobs get positive scoring
 
     logger.info(
       'Walmart job presence calculation completed with sliding window...',
@@ -107,7 +108,7 @@ export const getWalmartScores = async (): Promise<{
     // Fallback to direct calculation for development without DynamoDB...
 
     const physicalScores = calculateInvertedScores(physicalJobs);
-    const technologyScores = calculateInvertedScores(technologyJobs);
+    const technologyScores = calculatePositiveScores(technologyJobs);
 
     logger.info('Walmart job presence calculation completed (fallback)...', {
       totalStates: Object.keys(physicalScores).length,
