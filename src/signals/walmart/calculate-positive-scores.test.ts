@@ -30,7 +30,6 @@ describe('calculatePositiveScores', () => {
 
     const scores = calculatePositiveScores(jobCounts);
 
-    // When all job counts are equal, all scores should be 0.1
     Object.values(scores).forEach((score) => {
       expect(score).toBe(0.1);
     });

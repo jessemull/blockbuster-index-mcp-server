@@ -44,7 +44,7 @@ describe('scrapeWalmartJobs', () => {
   it('scrapes directly when no repository or timestamp is provided', async () => {
     const result = await scrapeWalmartJobs();
     expect(puppeteer.launch).toHaveBeenCalled();
-    expect(mockSearch).toHaveBeenCalledTimes(4); // 2 states * 2 job types
+    expect(mockSearch).toHaveBeenCalledTimes(4);
     expect(result).toEqual({
       physicalJobs: { CA: 5, TX: 5 },
       technologyJobs: { CA: 5, TX: 5 },
