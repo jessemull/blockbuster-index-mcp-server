@@ -235,7 +235,7 @@ Resources:
                   - dynamodb:DescribeTable
                 Resource: !ImportValue
                   Fn::Sub: '${Environment}-BlockbusterBlockbusterIndexTableArn'
-        - PolicyName: 'DynamoDBWalmartPhysicalJobsAccess'
+        - PolicyName: 'DynamoDBWalmartJobsAccess'
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -247,20 +247,7 @@ Resources:
                   - dynamodb:GetItem
                   - dynamodb:DescribeTable
                 Resource: !ImportValue
-                  Fn::Sub: '${Environment}-BlockbusterWalmartPhysicalJobsTableArn'
-        - PolicyName: 'DynamoDBWalmartTechnologyJobsAccess'
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - dynamodb:PutItem
-                  - dynamodb:BatchWriteItem
-                  - dynamodb:Query
-                  - dynamodb:GetItem
-                  - dynamodb:DescribeTable
-                Resource: !ImportValue
-                  Fn::Sub: '${Environment}-BlockbusterWalmartTechnologyJobsTableArn'
+                  Fn::Sub: '${Environment}-BlockbusterWalmartJobsTableArn'
         - PolicyName: 'DynamoDBWalmartSlidingWindowAccess'
           PolicyDocument:
             Version: '2012-10-17'

@@ -55,11 +55,7 @@ export async function scrapeWalmartJobs(
           } else {
             // Data doesn't exist, scrape and store...
             logger.info(`No existing data found for ${state}, scraping...`);
-            stateJobCount = await searchWalmartJobsInState(
-              browser,
-              state,
-              'physical',
-            );
+            stateJobCount = await searchWalmartJobsInState(browser, state);
             const record: WalmartJobRecord = {
               state,
               timestamp,
@@ -80,19 +76,11 @@ export async function scrapeWalmartJobs(
           });
           // Fallback to scraping if storage operations fail...
           logger.info(`Falling back to scraping for ${state}`);
-          stateJobCount = await searchWalmartJobsInState(
-            browser,
-            state,
-            'physical',
-          );
+          stateJobCount = await searchWalmartJobsInState(browser, state);
         }
       } else {
         // No repository, just scrape...
-        stateJobCount = await searchWalmartJobsInState(
-          browser,
-          state,
-          'physical',
-        );
+        stateJobCount = await searchWalmartJobsInState(browser, state);
       }
       walmartJobCounts[state] = stateJobCount;
     }
