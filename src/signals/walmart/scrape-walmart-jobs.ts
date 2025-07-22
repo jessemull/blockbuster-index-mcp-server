@@ -23,20 +23,24 @@ export async function scrapeWalmartJobs(
     const walmartJobCounts: Record<string, number> = {};
 
     // Initialize job count for all states...
+
     for (const state of Object.values(States)) {
       walmartJobCounts[state] = 0;
     }
 
     // Query job data per state, checking for existing data first...
+
     for (const state of Object.values(States)) {
       logger.info(`Processing Walmart jobs for ${state}`);
       let stateJobCount = 0;
       // Check if data already exists for today before scraping...
+
       if (walmartRepository && timestamp) {
         try {
           const exists = await walmartRepository.exists(state, timestamp);
           if (exists) {
             // Use existing data, don't scrape...
+
             const existingRecord = await walmartRepository.get(
               state,
               timestamp,
@@ -54,6 +58,7 @@ export async function scrapeWalmartJobs(
             );
           } else {
             // Data doesn't exist, scrape and store...
+
             logger.info(`No existing data found for ${state}, scraping...`);
             stateJobCount = await searchWalmartJobsInState(browser, state);
             const record: WalmartJobRecord = {
@@ -75,11 +80,13 @@ export async function scrapeWalmartJobs(
             timestamp,
           });
           // Fallback to scraping if storage operations fail...
+
           logger.info(`Falling back to scraping for ${state}`);
           stateJobCount = await searchWalmartJobsInState(browser, state);
         }
       } else {
         // No repository, just scrape...
+
         stateJobCount = await searchWalmartJobsInState(browser, state);
       }
       walmartJobCounts[state] = stateJobCount;
