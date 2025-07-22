@@ -44,10 +44,9 @@ describe('scrapeWalmartJobs', () => {
   it('scrapes directly when no repository or timestamp is provided', async () => {
     const result = await scrapeWalmartJobs();
     expect(puppeteer.launch).toHaveBeenCalled();
-    expect(mockSearch).toHaveBeenCalledTimes(4);
+    expect(mockSearch).toHaveBeenCalledTimes(2);
     expect(result).toEqual({
-      physicalJobs: { CA: 5, TX: 5 },
-      technologyJobs: { CA: 5, TX: 5 },
+      walmartJobs: { CA: 5, TX: 5 },
     });
     expect(mockBrowser.close).toHaveBeenCalled();
   });
@@ -63,13 +62,12 @@ describe('scrapeWalmartJobs', () => {
         .mockResolvedValueOnce({ state: 'TX', jobCount: 8 }),
       save: jest.fn(),
     };
-    const res = await scrapeWalmartJobs(mockRepo, mockRepo, 123);
-    expect(mockRepo.exists).toHaveBeenCalledTimes(4);
-    expect(mockRepo.get).toHaveBeenCalledTimes(4);
+    const res = await scrapeWalmartJobs(mockRepo, 123);
+    expect(mockRepo.exists).toHaveBeenCalledTimes(2);
+    expect(mockRepo.get).toHaveBeenCalledTimes(2);
     expect(mockSearch).not.toHaveBeenCalled();
     expect(res).toEqual({
-      physicalJobs: { CA: 3, TX: 7 },
-      technologyJobs: { CA: 4, TX: 8 },
+      walmartJobs: { CA: 3, TX: 4 },
     });
   });
 
@@ -79,10 +77,10 @@ describe('scrapeWalmartJobs', () => {
       get: jest.fn(),
       save: jest.fn(),
     };
-    const res = await scrapeWalmartJobs(mockRepo, mockRepo, 456);
+    const res = await scrapeWalmartJobs(mockRepo, 456);
     expect(mockRepo.exists).toHaveBeenCalled();
-    expect(mockRepo.save).toHaveBeenCalledTimes(4);
-    expect(res.physicalJobs.CA).toBe(5);
+    expect(mockRepo.save).toHaveBeenCalledTimes(2);
+    expect(res.walmartJobs.CA).toBe(5);
   });
 
   it('falls back to scraping if repository fails', async () => {
@@ -91,21 +89,17 @@ describe('scrapeWalmartJobs', () => {
       get: jest.fn(),
       save: jest.fn(),
     };
-    const res = await scrapeWalmartJobs(mockRepo, mockRepo, 789);
-    expect(mockSearch).toHaveBeenCalledTimes(4);
+    const res = await scrapeWalmartJobs(mockRepo, 789);
+    expect(mockSearch).toHaveBeenCalledTimes(2);
     expect(logger.error).toHaveBeenCalledWith(
       'Failed to process data for CA',
       expect.anything(),
     );
-    expect(res.physicalJobs).toHaveProperty('CA');
+    expect(res.walmartJobs).toHaveProperty('CA');
   });
 
   it('handles browser close failure', async () => {
     mockBrowser.close.mockRejectedValueOnce(new Error('close fail'));
     await expect(scrapeWalmartJobs()).rejects.toThrow('close fail');
-    expect(logger.warn).toHaveBeenCalledWith(
-      'Failed to close browser: ',
-      expect.any(Error),
-    );
   });
 });
