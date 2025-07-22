@@ -1,5 +1,4 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Stable ECS infrastructure: cluster, roles, log groups.'
 
 Parameters:
   DefaultVPC:

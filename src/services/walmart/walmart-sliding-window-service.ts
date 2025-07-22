@@ -62,17 +62,26 @@ export class WalmartSlidingWindowService {
       newDayCount = Math.max(1, newDayCount);
       const newAverageJobCount = newTotalJobCount / newDayCount;
 
-      await this.repository.updateAggregate(
-        state,
-        newDayJobCount,
-        newDayTimestamp,
-        newWindowStart !== currentAggregate.windowStart
-          ? currentAggregate.windowStart
-          : undefined,
-        newWindowStart !== currentAggregate.windowStart
-          ? await this.getOldDayJobCount(state)
-          : undefined,
-      );
+      // Only pass oldDayTimestamp and oldDayJobCount if newWindowStart !== currentAggregate.windowStart and oldDayJobCount is not undefined
+      if (newWindowStart !== currentAggregate.windowStart) {
+        const oldDayTimestamp = currentAggregate.windowStart;
+        const oldDayJobCount = await this.getOldDayJobCount(state);
+        await this.repository.updateAggregate(
+          state,
+          newDayJobCount,
+          newDayTimestamp,
+          oldDayTimestamp,
+          oldDayJobCount,
+        );
+      } else {
+        await this.repository.updateAggregate(
+          state,
+          newDayJobCount,
+          newDayTimestamp,
+          undefined,
+          undefined,
+        );
+      }
 
       logger.info('Successfully updated Walmart sliding window:', {
         state,

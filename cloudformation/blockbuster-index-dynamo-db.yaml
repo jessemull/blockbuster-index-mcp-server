@@ -180,7 +180,7 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
-  WalmartSlidingWindowTable:
+  WalmartSlidingWindowV2Table:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
@@ -244,6 +244,6 @@ Outputs:
       Name: !Sub '${Environment}-BlockbusterWalmartJobsTableArn'
   WalmartSlidingWindowTableArn:
     Description: 'ARN of the Walmart Sliding Window table'
-    Value: !GetAtt WalmartSlidingWindowTable.Arn
+    Value: !GetAtt WalmartSlidingWindowV2Table.Arn
     Export:
       Name: !Sub '${Environment}-BlockbusterWalmartSlidingWindowTableArn' 

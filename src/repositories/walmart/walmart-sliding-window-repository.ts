@@ -1,4 +1,4 @@
-import { GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { PutCommand, UpdateCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { logger } from '../../util';
@@ -26,20 +26,25 @@ export class DynamoDBWalmartSlidingWindowRepository
     try {
       // Query for the most recent aggregate for the state
       const response = await this.client.send(
-        new GetCommand({
+        new QueryCommand({
           TableName: this.tableName,
-          Key: {
-            state,
-            // windowStart: should be determined or queried for the latest, but interface only allows state
+          KeyConditionExpression: '#state = :state',
+          ExpressionAttributeNames: {
+            '#state': 'state',
           },
+          ExpressionAttributeValues: {
+            ':state': state,
+          },
+          ScanIndexForward: false, // descending order
+          Limit: 1,
         }),
       );
 
-      if (!response.Item) {
+      if (!response.Items || response.Items.length === 0) {
         return null;
       }
 
-      return response.Item as WalmartSlidingWindowAggregate;
+      return response.Items[0] as WalmartSlidingWindowAggregate;
     } catch (error: unknown) {
       logger.error('Failed to get Walmart sliding window aggregate', {
         error: error instanceof Error ? error.message : String(error),
@@ -100,7 +105,6 @@ export class DynamoDBWalmartSlidingWindowRepository
 
   async updateAggregate(
     state: string,
-    windowStart: number,
     newDayJobCount: number,
     newDayTimestamp: number,
     oldDayTimestamp?: number,
@@ -185,7 +189,7 @@ export class DynamoDBWalmartSlidingWindowRepository
           TableName: this.tableName,
           Key: {
             state,
-            windowStart,
+            windowStart: currentAggregate.windowStart, // Always use the current aggregate's windowStart as the key
           },
           UpdateExpression: updateExpression.join(', '),
           ExpressionAttributeNames: expressionAttributeNames,
@@ -195,7 +199,7 @@ export class DynamoDBWalmartSlidingWindowRepository
 
       logger.info('Successfully updated Walmart sliding window aggregate', {
         state,
-        windowStart,
+        windowStart: currentAggregate.windowStart, // Keep original windowStart for log
         newDayCount,
         newAverageJobCount,
         oldDayRemoved: oldDayTimestamp !== undefined,
@@ -204,7 +208,6 @@ export class DynamoDBWalmartSlidingWindowRepository
       logger.error('Failed to update Walmart sliding window aggregate', {
         error: error instanceof Error ? error.message : String(error),
         state,
-        windowStart,
         newDayJobCount,
         newDayTimestamp,
       });
