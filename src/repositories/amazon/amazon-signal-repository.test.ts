@@ -96,7 +96,7 @@ describe('DynamoDBAmazonSignalRepository', () => {
       expect(call.TableName).toBe(mockTableName);
       expect(call.Item).toEqual(mockRecord);
       expect(mockedLogger.info).toHaveBeenCalledWith(
-        'Successfully saved job signal record',
+        'Successfully saved job record',
         {
           state: 'CA',
           timestamp: 1234567890,
@@ -128,7 +128,7 @@ describe('DynamoDBAmazonSignalRepository', () => {
         'DynamoDB error',
       );
       expect(mockedLogger.error).toHaveBeenCalledWith(
-        'Failed to save job signal record',
+        'Failed to save job record',
         {
           error: 'DynamoDB error',
           state: 'CA',
@@ -143,7 +143,7 @@ describe('DynamoDBAmazonSignalRepository', () => {
 
       await expect(repository.save(mockRecord)).rejects.toBe('String error');
       expect(mockedLogger.error).toHaveBeenCalledWith(
-        'Failed to save job signal record',
+        'Failed to save job record',
         {
           error: 'String error',
           state: 'CA',
@@ -187,7 +187,7 @@ describe('DynamoDBAmazonSignalRepository', () => {
         'Get failed',
       );
       expect(mockedLogger.error).toHaveBeenCalledWith(
-        'Failed to check if record exists',
+        'Failed to check if job record exists',
         {
           error: 'Get failed',
           state: 'CA',
@@ -204,7 +204,7 @@ describe('DynamoDBAmazonSignalRepository', () => {
         'String error',
       );
       expect(mockedLogger.error).toHaveBeenCalledWith(
-        'Failed to check if record exists',
+        'Failed to check if job record exists',
         {
           error: 'String error',
           state: 'CA',
@@ -294,7 +294,7 @@ describe('DynamoDBAmazonSignalRepository', () => {
         'Get failed',
       );
       expect(mockedLogger.error).toHaveBeenCalledWith(
-        'Failed to get job signal record',
+        'Failed to get job record',
         {
           error: 'Get failed',
           state: 'CA',
@@ -311,7 +311,7 @@ describe('DynamoDBAmazonSignalRepository', () => {
         'String error',
       );
       expect(mockedLogger.error).toHaveBeenCalledWith(
-        'Failed to get job signal record',
+        'Failed to get job record',
         {
           error: 'String error',
           state: 'CA',
@@ -326,7 +326,7 @@ describe('DynamoDBAmazonSignalRepository', () => {
 
       await expect(repository.get('CA', 1234567890)).rejects.toBeNull();
       expect(mockedLogger.error).toHaveBeenCalledWith(
-        'Failed to get job signal record',
+        'Failed to get job record',
         {
           error: 'null',
           state: 'CA',
@@ -341,7 +341,7 @@ describe('DynamoDBAmazonSignalRepository', () => {
 
       await expect(repository.get('CA', 1234567890)).rejects.toBeUndefined();
       expect(mockedLogger.error).toHaveBeenCalledWith(
-        'Failed to get job signal record',
+        'Failed to get job record',
         {
           error: 'undefined',
           state: 'CA',
@@ -442,7 +442,7 @@ describe('DynamoDBAmazonSignalRepository', () => {
 
       await expect(repository.query('CA')).rejects.toThrow('Query failed');
       expect(mockedLogger.error).toHaveBeenCalledWith(
-        'Failed to query job signal records',
+        'Failed to query job records',
         {
           error: 'Query failed',
           state: 'CA',
@@ -458,7 +458,7 @@ describe('DynamoDBAmazonSignalRepository', () => {
 
       await expect(repository.query('CA')).rejects.toBe('String error');
       expect(mockedLogger.error).toHaveBeenCalledWith(
-        'Failed to query job signal records',
+        'Failed to query job records',
         {
           error: 'String error',
           state: 'CA',

@@ -7,33 +7,51 @@ import { SlidingWindowAggregate } from '../../types/amazon';
 export class AmazonSlidingWindowService {
   service: SlidingWindowService<SlidingWindowAggregate>;
 
-  constructor() {
+  constructor({
+    windowRepository,
+    jobRepository,
+    getOldDayJobCount,
+    states,
+  }: {
+    windowRepository?: import('../../types/amazon').SlidingWindowRepository;
+    jobRepository?: import('../../types/amazon').SignalRepository<
+      import('../../types/amazon').JobSignalRecord
+    >;
+    getOldDayJobCount?: (
+      state: string,
+      timestamp: number,
+    ) => Promise<number | undefined>;
+    states?: string[];
+  } = {}) {
     const region = process.env.AWS_REGION || 'us-west-2';
-    const windowRepository = new DynamoDBAmazonSlidingWindowRepository(
+    const defaultWindowRepository = new DynamoDBAmazonSlidingWindowRepository(
       process.env.AMAZON_SLIDING_WINDOW_TABLE_NAME ||
         'blockbuster-index-amazon-sliding-window-dev',
       region,
     );
-    const jobRepository = new DynamoDBAmazonSignalRepository(
+    const defaultJobRepository = new DynamoDBAmazonSignalRepository(
       process.env.AMAZON_DYNAMODB_TABLE_NAME ||
         'blockbuster-index-amazon-jobs-dev',
       region,
     );
-    const getOldDayJobCount = async (
+    const defaultGetOldDayJobCount = async (
       state: string,
       timestamp: number,
     ): Promise<number | undefined> => {
-      const records = await jobRepository.query(state, timestamp, timestamp);
-      if (records && records.length > 0) {
-        return records[0].jobCount;
+      const repo = jobRepository || defaultJobRepository;
+      if (repo.query) {
+        const records = await repo.query(state, timestamp, timestamp);
+        if (records && records.length > 0) {
+          return records[0].jobCount;
+        }
       }
       return undefined;
     };
     this.service = new SlidingWindowService<SlidingWindowAggregate>({
-      windowRepository,
-      jobRepository,
-      getOldDayJobCount,
-      states: Object.values(States),
+      windowRepository: windowRepository || defaultWindowRepository,
+      jobRepository: jobRepository || defaultJobRepository,
+      getOldDayJobCount: getOldDayJobCount || defaultGetOldDayJobCount,
+      states: states || Object.values(States),
     });
   }
 

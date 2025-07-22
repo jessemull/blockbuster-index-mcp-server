@@ -77,7 +77,7 @@ describe('getWalmartScores()', () => {
     const result = await getWalmartScores();
 
     expect(result).toEqual({
-      scores: { CA: 5000, TX: 13333 },
+      scores: { CA: 100, TX: 200 },
     });
 
     expect(MockWindowService).toHaveBeenCalledTimes(1);
@@ -97,10 +97,11 @@ describe('getWalmartScores()', () => {
     expect(getSlidingWindowScores).toHaveBeenCalledWith();
 
     expect(mockLogger.info).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'Walmart job presence calculation completed with sliding window and workforce normalization...',
-      ),
-      expect.objectContaining({ totalStates: 2, windowDays: 90 }),
+      'Signal calculation completed with workforce normalization...',
+      {
+        normalizedScores: { CA: 500, TX: 1333 },
+        slidingWindowScores: { CA: 100, TX: 200 },
+      },
     );
   });
 
