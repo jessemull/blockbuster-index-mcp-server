@@ -63,23 +63,13 @@ async function runWalmartTest() {
 
     fs.mkdirSync(scoresDir, { recursive: true });
 
-    const physicalScoresData = {
-      scores: scores.physicalScores,
-      calculatedAt: new Date().toISOString(),
-    };
-
-    const technologyScoresData = {
-      scores: scores.technologyScores,
-      calculatedAt: new Date().toISOString(),
-    };
-
     fs.writeFileSync(
       physicalFilePath,
-      JSON.stringify(physicalScoresData, null, 2),
+      JSON.stringify(scores.physicalScores, null, 2),
     );
     fs.writeFileSync(
       technologyFilePath,
-      JSON.stringify(technologyScoresData, null, 2),
+      JSON.stringify(scores.technologyScores, null, 2),
     );
 
     logger.info('Walmart physical scores written to file:', {

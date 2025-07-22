@@ -51,11 +51,14 @@ This project calculates the **Blockbuster Index** by aggregating distinct retail
 The calculation process currently includes the following signals with more signals on the way:
 
 - **Amazon** – E-commerce adoption and digital retail presence through job posting analysis with sliding window aggregation for improved accuracy.
-- **Census** – Demographic and economic indicators from U.S. Census Bureau data.
-- **Broadband** – Internet infrastructure and connectivity metrics.
+- **Census** – Retail market maturity using U.S. Census Bureau data: retail establishments per 100,000 population (establishment count / population × 100,000). Data is fetched via REST API integration, including establishment counts (NAICS 44-45), state population, and workforce size (used for normalization in other signals).
+- **Broadband** – Internet infrastructure and connectivity metrics. Coverage is measured as the percentage of census blocks (not population or land area) with broadband service. The broadband score is a weighted sum: 30% basic broadband availability, 40% high-speed (25+ Mbps), 20% gigabit, 10% technology diversity. Weights emphasize high-speed and future-ready access while rewarding basic coverage and diversity.
 - **Walmart** – Physical retail presence and technology job distribution through dual-signal analysis of Walmart job postings.
 
 Each signal is weighted and combined to generate a comprehensive score that reflects the balance between digital and physical retail activity in each state.
+
+**Signal Inversion:**
+Some signals (such as retail establishment count and physical job counts) are inverted after normalization so that higher scores always indicate greater digital adoption. This inversion is managed by a configuration array (`INVERTED_SIGNALS`) in the codebase, making it easy to add or remove inverted signals as needed.
 
 ## Architecture Overview
 
