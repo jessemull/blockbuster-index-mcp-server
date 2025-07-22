@@ -24,7 +24,8 @@ export class DynamoDBWalmartSlidingWindowRepository
     state: string,
   ): Promise<WalmartSlidingWindowAggregate | null> {
     try {
-      // Query for the most recent aggregate for the state
+      // Query for the most recent aggregate for the state...
+
       const response = await this.client.send(
         new QueryCommand({
           TableName: this.tableName,
@@ -35,7 +36,7 @@ export class DynamoDBWalmartSlidingWindowRepository
           ExpressionAttributeValues: {
             ':state': state,
           },
-          ScanIndexForward: false, // descending order
+          ScanIndexForward: false,
           Limit: 1,
         }),
       );
@@ -189,7 +190,7 @@ export class DynamoDBWalmartSlidingWindowRepository
           TableName: this.tableName,
           Key: {
             state,
-            windowStart: currentAggregate.windowStart, // Always use the current aggregate's windowStart as the key
+            windowStart: currentAggregate.windowStart, // Always use the current aggregate's windowStart as the key.
           },
           UpdateExpression: updateExpression.join(', '),
           ExpressionAttributeNames: expressionAttributeNames,
@@ -199,7 +200,7 @@ export class DynamoDBWalmartSlidingWindowRepository
 
       logger.info('Successfully updated Walmart sliding window aggregate', {
         state,
-        windowStart: currentAggregate.windowStart, // Keep original windowStart for log
+        windowStart: currentAggregate.windowStart, // Keep original windowStart for log.
         newDayCount,
         newAverageJobCount,
         oldDayRemoved: oldDayTimestamp !== undefined,

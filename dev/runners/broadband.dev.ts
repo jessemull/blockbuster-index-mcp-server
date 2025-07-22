@@ -19,22 +19,6 @@ async function runBroadbandTest() {
 
     const scores = await getBroadbandScores();
 
-    logger.info('Broadband signal results:', {
-      totalStates: Object.keys(scores).length,
-      statesWithData: Object.values(scores).filter((score) => score > 0).length,
-      sampleScores: Object.entries(scores)
-        .filter(([, score]) => score > 0)
-        .slice(0, 5)
-        .reduce((acc, [state, score]) => ({ ...acc, [state]: score }), {}),
-      averageScore:
-        Object.values(scores).filter((score) => score > 0).length > 0
-          ? Object.values(scores)
-              .filter((score) => score > 0)
-              .reduce((sum, score) => sum + score, 0) /
-            Object.values(scores).filter((score) => score > 0).length
-          : 0,
-    });
-
     // Write scores to dev/scores/broadband-scores.json...
 
     const scoresDir = path.resolve(__dirname, '../scores');
