@@ -1,10 +1,4 @@
-export interface WalmartPhysicalJobRecord {
-  jobCount: number;
-  state: string;
-  timestamp: number;
-}
-
-export interface WalmartTechnologyJobRecord {
+export interface WalmartJobRecord {
   jobCount: number;
   state: string;
   timestamp: number;

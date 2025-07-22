@@ -1,16 +1,16 @@
 import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { logger } from '../../util';
 import type {
-  WalmartPhysicalJobRecord,
+  WalmartJobRecord,
   WalmartSignalRepository,
 } from '../../types/walmart';
 import { DynamoDBSignalRepository } from '../base-signal-repository';
 
-export class DynamoDBWalmartPhysicalRepository
-  extends DynamoDBSignalRepository<WalmartPhysicalJobRecord>
-  implements WalmartSignalRepository<WalmartPhysicalJobRecord>
+export class DynamoDBWalmartJobRepository
+  extends DynamoDBSignalRepository<WalmartJobRecord>
+  implements WalmartSignalRepository<WalmartJobRecord>
 {
-  async save(record: WalmartPhysicalJobRecord): Promise<void> {
+  async save(record: WalmartJobRecord): Promise<void> {
     try {
       const item = {
         jobCount: record.jobCount,
@@ -31,7 +31,7 @@ export class DynamoDBWalmartPhysicalRepository
         }),
       );
 
-      logger.info('Successfully saved Walmart physical job record', {
+      logger.info('Successfully saved Walmart job record', {
         state: record.state,
         timestamp: record.timestamp,
       });
@@ -47,7 +47,7 @@ export class DynamoDBWalmartPhysicalRepository
         return;
       }
 
-      logger.error('Failed to save Walmart physical job record', {
+      logger.error('Failed to save Walmart job record', {
         error: error instanceof Error ? error.message : String(error),
         state: record.state,
         timestamp: record.timestamp,
@@ -70,7 +70,7 @@ export class DynamoDBWalmartPhysicalRepository
 
       return !!response.Item;
     } catch (error: unknown) {
-      logger.error('Failed to check if Walmart physical job record exists', {
+      logger.error('Failed to check if Walmart job record exists', {
         error: error instanceof Error ? error.message : String(error),
         state,
         timestamp,
@@ -82,7 +82,7 @@ export class DynamoDBWalmartPhysicalRepository
   async get(
     state: string,
     timestamp?: number,
-  ): Promise<WalmartPhysicalJobRecord | null> {
+  ): Promise<WalmartJobRecord | null> {
     try {
       const response = await this.client.send(
         new GetCommand({
@@ -104,7 +104,7 @@ export class DynamoDBWalmartPhysicalRepository
         timestamp: response.Item.timestamp as number,
       };
     } catch (error: unknown) {
-      logger.error('Failed to get Walmart physical job record', {
+      logger.error('Failed to get Walmart job record', {
         error: error instanceof Error ? error.message : String(error),
         state,
         timestamp,
@@ -117,7 +117,7 @@ export class DynamoDBWalmartPhysicalRepository
     state: string,
     start?: number,
     end?: number,
-  ): Promise<WalmartPhysicalJobRecord[]> {
+  ): Promise<WalmartJobRecord[]> {
     try {
       const response = await this.client.send(
         new QueryCommand({
@@ -142,7 +142,7 @@ export class DynamoDBWalmartPhysicalRepository
         timestamp: item.timestamp as number,
       }));
     } catch (error: unknown) {
-      logger.error('Failed to query Walmart physical job records', {
+      logger.error('Failed to query Walmart job records', {
         end,
         error: error instanceof Error ? error.message : String(error),
         start,

@@ -96,7 +96,7 @@ Measures the quality and reach of broadband infrastructure, a key enabler of dig
 ## Walmart Signal
 
 **Purpose:**
-Provides a dual-perspective analysis of retail employment patterns by separately tracking physical retail jobs and technology jobs, offering insights into the balance between traditional and digital retail infrastructure.
+Provides a perspective on traditional retail employment patterns by tracking Walmart jobs, offering insights into the balance between traditional and digital retail infrastructure.
 
 **Data Source:**
 
@@ -104,29 +104,25 @@ Provides a dual-perspective analysis of retail employment patterns by separately
 
 **Calculation Method:**
 
-- **Physical Jobs Signal:** Scrapes Walmart store and Sam's Club job postings across all states.
+- Scrapes Walmart store and Sam's Club job postings across all states.
   - Reflects traditional retail presence and employment patterns.
-- **Technology Jobs Signal:** Scrapes technology and digital job postings across all states.
-  - Includes software engineering, data science, and digital transformation roles.
-  - Reflects digital infrastructure and technology investment.
 
 **Normalization & Inversion:**
 
-- Both sub-signals are normalized to a 0–100 scale.
-- **Physical Jobs:** Inverted after normalization (higher = more digital; fewer physical jobs means a higher score).
-- **Technology Jobs:** Not inverted (higher = more digital; more technology jobs means a higher score).
+- Scores are normalized to a 0–100 scale.
+- Inverted after normalization (higher = more digital; fewer Walmart jobs means a higher score).
 
 **Technical Implementation:**
 
 - Puppeteer-based web scraping with anti-detection measures.
-- Dual job category filtering and classification.
-- Sliding window aggregation for both signal types.
+- Job category filtering and classification.
+- Sliding window aggregation for the signal.
 - Workforce normalization using Census data.
 - Data stored in DynamoDB for historical tracking.
 
 **Special Notes:**
 
-- Both sub-signals are used as separate components in the Blockbuster Index, each with their own weight (see WEIGHTS in the codebase). There is currently no single combined "Walmart Score"; instead, both normalized sub-signals are incorporated independently into the overall index.
+- The Walmart signal is used as a component in the Blockbuster Index with its own weight (see WEIGHTS in the codebase). There is currently no single combined "Walmart Score"; only the normalized Walmart signal is incorporated into the overall index.
 
 ---
 
