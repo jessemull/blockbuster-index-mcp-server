@@ -118,7 +118,7 @@ describe('DynamoDBAmazonSlidingWindowRepository', () => {
       await repository.saveAggregate(aggregate);
       expect(mockedLogger.info).toHaveBeenCalledWith(
         'Sliding window aggregate already exists, skipping duplicate',
-        { state: 'CA' },
+        { state: 'CA', windowStart: 0 },
       );
     });
 
