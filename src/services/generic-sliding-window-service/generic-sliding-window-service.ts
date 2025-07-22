@@ -66,6 +66,7 @@ export class SlidingWindowService<
   ): Promise<void> {
     try {
       const currentAggregate = await this.windowRepository.getAggregate(state);
+
       if (!currentAggregate) {
         const newAggregate = {
           state,
@@ -76,36 +77,45 @@ export class SlidingWindowService<
           averageJobCount: newDayJobCount,
           lastUpdated: Date.now(),
         } as TAggregate;
+
         await this.windowRepository.saveAggregate(newAggregate);
+
         return;
       }
       let newTotalJobCount = currentAggregate.totalJobCount + newDayJobCount;
       let newDayCount = currentAggregate.dayCount + 1;
       let newWindowStart = currentAggregate.windowStart;
+
       const WINDOW_SIZE_DAYS = 90;
       const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
       const windowStartTime =
         newDayTimestamp - WINDOW_SIZE_DAYS * MILLISECONDS_PER_DAY;
+
       if (currentAggregate.windowStart < windowStartTime) {
         const oldDayTimestamp = currentAggregate.windowStart;
         const oldDayJobCount = await this.getOldDayJobCount(
           state,
           oldDayTimestamp,
         );
+
         if (oldDayJobCount !== undefined) {
           newTotalJobCount -= oldDayJobCount;
           newDayCount -= 1;
           newWindowStart = oldDayTimestamp + MILLISECONDS_PER_DAY;
         }
       }
+
       newDayCount = Math.max(1, newDayCount);
+
       const newAverageJobCount = newTotalJobCount / newDayCount;
+
       if (newWindowStart !== currentAggregate.windowStart) {
         const oldDayTimestamp = currentAggregate.windowStart;
         const oldDayJobCount = await this.getOldDayJobCount(
           state,
           oldDayTimestamp,
         );
+
         await this.windowRepository.updateAggregate(
           state,
           newDayJobCount,
@@ -122,6 +132,7 @@ export class SlidingWindowService<
           undefined,
         );
       }
+
       logger.info('Successfully updated sliding window:', {
         state,
         newDayCount,
@@ -136,6 +147,7 @@ export class SlidingWindowService<
         newDayJobCount,
         newDayTimestamp,
       });
+
       throw error;
     }
   }
@@ -143,6 +155,7 @@ export class SlidingWindowService<
   async getSlidingWindowScores(): Promise<Record<string, number>> {
     try {
       const scores: Record<string, number> = {};
+
       for (const state of this.states) {
         const aggregate = await this.windowRepository.getAggregate(state);
         if (aggregate) {
@@ -151,12 +164,14 @@ export class SlidingWindowService<
           scores[state] = 0;
         }
       }
+
       return scores;
     } catch (error: unknown) {
       logger.error('Failed to get sliding window scores', {
         error:
           error instanceof Error ? (error as Error).message : String(error),
       });
+
       throw error;
     }
   }

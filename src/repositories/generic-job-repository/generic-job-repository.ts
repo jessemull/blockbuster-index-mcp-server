@@ -43,6 +43,7 @@ export class DynamoDBJobRepository<
           state: record.state,
           timestamp: record.timestamp,
         });
+
         return;
       }
 
@@ -51,6 +52,7 @@ export class DynamoDBJobRepository<
         state: record.state,
         timestamp: record.timestamp,
       });
+
       throw error;
     }
   }
@@ -74,6 +76,7 @@ export class DynamoDBJobRepository<
         state,
         timestamp,
       });
+
       throw error;
     }
   }
@@ -105,6 +108,7 @@ export class DynamoDBJobRepository<
         state,
         timestamp,
       });
+
       throw error;
     }
   }
@@ -140,6 +144,7 @@ export class DynamoDBJobRepository<
         start,
         state,
       });
+
       throw error;
     }
   }

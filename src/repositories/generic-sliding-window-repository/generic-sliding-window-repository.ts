@@ -43,16 +43,18 @@ export class DynamoDBSlidingWindowRepository<
         state,
         this.tableName,
       );
-      // TypeScript workaround: cast to unknown then to expected type
+
       const response = await this.client.send(
-        command as unknown as Parameters<typeof this.client.send>[0],
+        command as unknown as Parameters<typeof this.client.send>[0], // TypeScript workaround: cast to unknown then to expected type.
       );
+
       return this.keyStrategy.extractAggregate(response);
     } catch (error: unknown) {
       logger.error('Failed to get sliding window aggregate', {
         error: error instanceof Error ? error.message : String(error),
         state,
       });
+
       throw error;
     }
   }
@@ -60,12 +62,14 @@ export class DynamoDBSlidingWindowRepository<
   async saveAggregate(aggregate: TAggregate): Promise<void> {
     try {
       const item = { ...aggregate };
+
       await this.client.send(
         new PutCommand({
           TableName: this.tableName,
           Item: item,
         }),
       );
+
       logger.info('Successfully saved sliding window aggregate', {
         state: aggregate.state,
         windowStart: aggregate.windowStart,
@@ -82,13 +86,16 @@ export class DynamoDBSlidingWindowRepository<
             windowStart: aggregate.windowStart,
           },
         );
+
         return;
       }
+
       logger.error('Failed to save sliding window aggregate', {
         error: error instanceof Error ? error.message : String(error),
         state: aggregate.state,
         windowStart: aggregate.windowStart,
       });
+
       throw error;
     }
   }
@@ -102,7 +109,9 @@ export class DynamoDBSlidingWindowRepository<
   ): Promise<void> {
     try {
       const currentAggregate = await this.getAggregate(state);
+
       const now = Date.now();
+
       if (!currentAggregate) {
         const newAggregate = {
           state,
@@ -113,19 +122,25 @@ export class DynamoDBSlidingWindowRepository<
           averageJobCount: newDayJobCount,
           lastUpdated: now,
         } as TAggregate;
+
         await this.saveAggregate(newAggregate);
+
         return;
       }
+
       let newTotalJobCount = currentAggregate.totalJobCount + newDayJobCount;
       let newDayCount = currentAggregate.dayCount + 1;
       let newWindowStart = currentAggregate.windowStart;
       let newWindowEnd = newDayTimestamp;
+
       if (oldDayTimestamp !== undefined && oldDayJobCount !== undefined) {
         newTotalJobCount -= oldDayJobCount;
         newDayCount -= 1;
         newWindowStart = oldDayTimestamp + 86400000;
       }
+
       newDayCount = Math.max(1, newDayCount);
+
       const newAverageJobCount = newTotalJobCount / newDayCount;
       const updateExpression = [
         'SET #windowEnd = :windowEnd',
@@ -134,9 +149,11 @@ export class DynamoDBSlidingWindowRepository<
         '#averageJobCount = :averageJobCount',
         '#lastUpdated = :lastUpdated',
       ];
+
       if (oldDayTimestamp !== undefined && oldDayJobCount !== undefined) {
         updateExpression.push('#windowStart = :windowStart');
       }
+
       const expressionAttributeNames: Record<string, string> = {
         '#windowEnd': 'windowEnd',
         '#totalJobCount': 'totalJobCount',
@@ -144,6 +161,7 @@ export class DynamoDBSlidingWindowRepository<
         '#averageJobCount': 'averageJobCount',
         '#lastUpdated': 'lastUpdated',
       };
+
       const expressionAttributeValues: Record<string, unknown> = {
         ':windowEnd': newWindowEnd,
         ':totalJobCount': newTotalJobCount,
@@ -151,10 +169,12 @@ export class DynamoDBSlidingWindowRepository<
         ':averageJobCount': newAverageJobCount,
         ':lastUpdated': now,
       };
+
       if (oldDayTimestamp !== undefined && oldDayJobCount !== undefined) {
         expressionAttributeNames['#windowStart'] = 'windowStart';
         expressionAttributeValues[':windowStart'] = newWindowStart;
       }
+
       await this.client.send(
         new UpdateCommand({
           TableName: this.tableName,
@@ -167,6 +187,7 @@ export class DynamoDBSlidingWindowRepository<
           ExpressionAttributeValues: expressionAttributeValues,
         }),
       );
+
       logger.info('Successfully updated sliding window aggregate', {
         state,
         windowStart: currentAggregate.windowStart,
@@ -181,18 +202,22 @@ export class DynamoDBSlidingWindowRepository<
         newDayJobCount,
         newDayTimestamp,
       });
+
       throw error;
     }
   }
 
-  // Implement abstract methods from base class as thin wrappers
+  // Implement abstract methods from base class as thin wrappers...
+
   async save(record: TAggregate): Promise<void> {
     return this.saveAggregate(record);
   }
+
   async exists(state: string): Promise<boolean> {
     const aggregate = await this.getAggregate(state);
     return aggregate !== null;
   }
+
   async get(state: string): Promise<TAggregate | null> {
     return this.getAggregate(state);
   }
