@@ -16,10 +16,19 @@ const walmartKeyStrategy: SlidingWindowKeyStrategy<WalmartSlidingWindowAggregate
         ScanIndexForward: false,
         Limit: 1,
       }),
-    extractAggregate: (response) =>
-      response.Items && response.Items.length > 0
-        ? (response.Items[0] as WalmartSlidingWindowAggregate)
-        : null,
+    extractAggregate: (response) => {
+      if (
+        typeof response === 'object' &&
+        response !== null &&
+        'Items' in response
+      ) {
+        const items = (response as { Items?: unknown[] }).Items;
+        if (Array.isArray(items) && items.length > 0) {
+          return items[0] as WalmartSlidingWindowAggregate;
+        }
+      }
+      return null;
+    },
   };
 
 export class DynamoDBWalmartSlidingWindowRepository extends DynamoDBSlidingWindowRepository<WalmartSlidingWindowAggregate> {

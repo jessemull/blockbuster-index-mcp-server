@@ -8,13 +8,16 @@ export class WalmartSlidingWindowService {
   service: SlidingWindowService<WalmartSlidingWindowAggregate>;
 
   constructor() {
+    const region = process.env.AWS_REGION || 'us-west-2';
     const windowRepository = new DynamoDBWalmartSlidingWindowRepository(
       process.env.WALMART_SLIDING_WINDOW_DYNAMODB_TABLE_NAME ||
         'blockbuster-index-walmart-sliding-window-dev',
+      region,
     );
     const jobRepository = new DynamoDBWalmartJobRepository(
       process.env.WALMART_DYNAMODB_TABLE_NAME ||
         'blockbuster-index-walmart-jobs-dev',
+      region,
     );
     const getOldDayJobCount = async (
       state: string,

@@ -11,8 +11,19 @@ const amazonKeyStrategy: SlidingWindowKeyStrategy<SlidingWindowAggregate> = {
       TableName: tableName,
       Key: { state, windowStart: 0 },
     }),
-  extractAggregate: (response) =>
-    response.Item ? (response.Item as SlidingWindowAggregate) : null,
+  extractAggregate: (response) => {
+    if (
+      typeof response === 'object' &&
+      response !== null &&
+      'Item' in response
+    ) {
+      return (response as { Item?: unknown }).Item
+        ? ((response as { Item: SlidingWindowAggregate })
+            .Item as SlidingWindowAggregate)
+        : null;
+    }
+    return null;
+  },
 };
 
 export class DynamoDBAmazonSlidingWindowRepository extends DynamoDBSlidingWindowRepository<SlidingWindowAggregate> {

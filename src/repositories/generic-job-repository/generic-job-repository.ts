@@ -1,10 +1,14 @@
 import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
-import { logger } from '../util';
-import { DynamoDBSignalRepository } from './base-signal-repository';
+import { logger } from '../../util';
+import { DynamoDBSignalRepository } from '../base-signal-repository';
 
 export class DynamoDBJobRepository<
   T extends { state: string; timestamp: number; jobCount: number },
 > extends DynamoDBSignalRepository<T> {
+  constructor(tableName: string, region?: string) {
+    super(tableName, region);
+  }
+
   async save(record: T): Promise<void> {
     try {
       const item = {

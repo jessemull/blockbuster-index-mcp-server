@@ -8,13 +8,16 @@ export class AmazonSlidingWindowService {
   service: SlidingWindowService<SlidingWindowAggregate>;
 
   constructor() {
+    const region = process.env.AWS_REGION || 'us-west-2';
     const windowRepository = new DynamoDBAmazonSlidingWindowRepository(
       process.env.AMAZON_SLIDING_WINDOW_TABLE_NAME ||
         'blockbuster-index-amazon-sliding-window-dev',
+      region,
     );
     const jobRepository = new DynamoDBAmazonSignalRepository(
       process.env.AMAZON_DYNAMODB_TABLE_NAME ||
         'blockbuster-index-amazon-jobs-dev',
+      region,
     );
     const getOldDayJobCount = async (
       state: string,
