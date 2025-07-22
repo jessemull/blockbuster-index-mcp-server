@@ -1,24 +1,10 @@
 import { CONFIG } from '../../config';
-import { WEIGHTS } from '../../constants';
-import {
-  States,
-  Signal,
-  StateScore,
-  BlockbusterIndexResponse,
-  BlockbusterIndexRecord,
-} from '../../types';
+import { SIGNALS } from '../../constants/signals';
+import { Signal, BlockbusterIndexRecord } from '../../types';
 import { logger, uploadToS3, downloadFromS3 } from '../../util';
 import fs from 'fs';
 import path from 'path';
-import { normalizeScores } from '../../util/helpers/normalize-signal-scores';
-
-const SIGNALS = [
-  { name: 'amazon', signal: Signal.AMAZON },
-  { name: 'census', signal: Signal.CENSUS },
-  { name: 'broadband', signal: Signal.BROADBAND },
-  { name: 'walmart-physical', signal: Signal.WALMART_PHYSICAL },
-  { name: 'walmart-technology', signal: Signal.WALMART_TECHNOLOGY },
-];
+import { calculateBlockbusterIndex } from './calculate';
 
 async function getSignalScores(
   signalName: string,
@@ -53,66 +39,7 @@ async function main() {
       signalResults[signal] = await getSignalScores(name);
     }
 
-    // Normalize all signals to 0-100...
-
-    const normalizedSignals: Record<
-      Signal,
-      Record<string, number>
-    > = {} as Record<Signal, Record<string, number>>;
-    for (const signal of Object.values(Signal)) {
-      const rawScores = signalResults[signal];
-      if (!rawScores) continue;
-      const normalized = normalizeScores(rawScores);
-      // Invert physical jobs so higher = more digital...
-
-      if (signal === Signal.WALMART_PHYSICAL) {
-        normalizedSignals[signal] = Object.fromEntries(
-          Object.entries(normalized).map(([state, value]) => [
-            state,
-            100 - value,
-          ]),
-        );
-      } else {
-        normalizedSignals[signal] = normalized;
-      }
-    }
-
-    const states: Record<string, StateScore> = {};
-    for (const state of Object.values(States)) {
-      const components = {
-        [Signal.AMAZON]: normalizedSignals[Signal.AMAZON]?.[state] ?? 0,
-        [Signal.CENSUS]: normalizedSignals[Signal.CENSUS]?.[state] ?? 0,
-        [Signal.BROADBAND]: normalizedSignals[Signal.BROADBAND]?.[state] ?? 0,
-        [Signal.WALMART_PHYSICAL]:
-          normalizedSignals[Signal.WALMART_PHYSICAL]?.[state] ?? 0,
-        [Signal.WALMART_TECHNOLOGY]:
-          normalizedSignals[Signal.WALMART_TECHNOLOGY]?.[state] ?? 0,
-      };
-      const score = Object.entries(components).reduce(
-        (sum, [signal, value]) => sum + value * WEIGHTS[signal as Signal],
-        0,
-      );
-      states[state] = {
-        score: parseFloat(score.toFixed(2)),
-        components,
-      };
-    }
-    const calculatedAt = new Date().toISOString();
-    const timestamp = Math.floor(Date.now() / 1000);
-
-    const response: BlockbusterIndexResponse = {
-      states,
-      metadata: {
-        calculatedAt,
-        version: CONFIG.VERSION,
-        totalStates: Object.keys(states).length,
-        signalStatus: {
-          total: SIGNALS.length,
-          successful: SIGNALS.length,
-          failed: 0,
-        },
-      },
-    };
+    const response = calculateBlockbusterIndex(signalResults, CONFIG.VERSION);
 
     // Store blockbuster index in DynamoDB for historical tracking...
 
@@ -130,11 +57,11 @@ async function main() {
           );
 
         const blockbusterRecord: BlockbusterIndexRecord = {
-          timestamp,
-          calculatedAt,
+          timestamp: Math.floor(Date.now() / 1000),
+          calculatedAt: response.metadata.calculatedAt,
           version: CONFIG.VERSION,
-          totalStates: Object.keys(states).length,
-          states,
+          totalStates: Object.keys(response.states).length,
+          states: response.states,
           signalStatus: {
             total: SIGNALS.length,
             successful: SIGNALS.length,
@@ -146,7 +73,7 @@ async function main() {
 
         logger.info('Blockbuster index stored in DynamoDB', {
           table: process.env.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME,
-          timestamp,
+          timestamp: blockbusterRecord.timestamp,
         });
       } catch (dbError) {
         // Continue with S3 upload even if DynamoDB fails...

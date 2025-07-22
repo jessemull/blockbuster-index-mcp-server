@@ -2,74 +2,78 @@
 
 This document describes how each signal is calculated and how they are combined to create the Blockbuster Index.
 
+---
+
 ## Amazon Signal
 
-The Amazon signal measures e-commerce adoption and digital retail presence by analyzing job posting patterns across all U.S. states using a sophisticated sliding window algorithm for improved accuracy and stability.
+**Purpose:**
+Measures e-commerce adoption and digital retail presence by analyzing Amazon job posting patterns across all U.S. states.
 
-**Data Source**
+**Data Source:**
 
 - Amazon job postings via web scraping.
 
-**Calculation Method**:
+**Calculation Method:**
 
 - Scrapes job postings for each state using Puppeteer.
-- Counts total job postings per state for the cuxrrent day.
+- Counts total job postings per state for the current day.
 - Maintains a 90-day sliding window of job posting data in DynamoDB.
 - Calculates rolling averages to smooth out daily fluctuations and seasonal variations.
 - Normalizes job counts by workforce size per state using Census Bureau labor force data.
 
-**Sliding Window Algorithm**:
+**Normalization & Inversion:**
 
-- **Window Size**: 90-day rolling window for optimal balance of responsiveness and stability.
-- **Data Aggregation**: Maintains daily job counts and calculates running averages.
-- **Window Management**: Automatically removes data older than 90 days and adds new daily data.
-- **Fallback Logic**: Uses current day data for development environments without DynamoDB access.
-
-**Technical Implementation**:
-
-- Uses Puppeteer for dynamic content scraping.
-- Implements retry logic with exponential backoff.
-- Handles rate limiting and anti-bot measures.
-- Processes results in parallel for efficiency.
-- DynamoDB integration for sliding window data persistence.
-- Automatic window management with efficient aggregate updates.
-
-**Workforce Normalization Details**:
-
-The Amazon signal uses workforce normalization to provide fair comparisons across states of different sizes:
-
-- **Data Source**: U.S. Census Bureau American Community Survey (ACS) labor force data.
-- **Metric**: Amazon jobs per million workforce (Amazon jobs / total workforce × 1,000,000).
-
-## Census Signal
-
-**Data Source:**
-
-- U.S. Census Bureau API
+- Scores are normalized to a 0–100 scale (higher = more digital adoption).
+- No inversion is applied to this signal.
 
 **Technical Implementation:**
 
-- REST API integration with Census Bureau endpoints
-- Fetches demographic data, including:
-  - Retail establishment counts (NAICS 44-45)
-  - State population
-  - Workforce size (used for normalization in other signals)
+- Puppeteer for dynamic content scraping.
+- Retry logic with exponential backoff.
+- Handles rate limiting and anti-bot measures.
+- Processes results in parallel for efficiency.
+- DynamoDB integration for sliding window data persistence and automatic window management.
+
+---
+
+## Census Signal
+
+**Purpose:**
+Provides a measure of physical retail market maturity using U.S. Census Bureau data on retail establishments.
+
+**Data Source:**
+
+- U.S. Census Bureau API (retail establishment counts, population, workforce size).
 
 **Calculation Method:**
 
-- Calculates retail establishments per 100,000 population (establishment count / population × 100,000)
-- No other subfactors or weights are currently used in the Census signal calculation
+- Calculates retail establishments per 100,000 population (establishment count / population × 100,000).
+
+**Normalization & Inversion:**
+
+- Scores are normalized to a 0–100 scale.
+- **After normalization, this score is inverted** (higher retail presence = lower digital score) to align with the Blockbuster Index's focus on digital adoption.
+
+**Technical Implementation:**
+
+- REST API integration with Census Bureau endpoints.
+- Fetches and processes demographic data.
+- Data is stored in DynamoDB for historical tracking.
+
+---
 
 ## Broadband Signal
 
-**Coverage Measurement:**
+**Purpose:**
+Measures the quality and reach of broadband infrastructure, a key enabler of digital commerce.
 
-- Coverage is measured as the percentage of census blocks (not population or land area) with broadband service.
-- A census block is the smallest geographic unit used by the U.S. Census Bureau, typically containing a few dozen to a few hundred people.
+**Data Source:**
 
-**Score Calculation:**
+- Broadband coverage data (percent of census blocks with broadband, high-speed, gigabit, and technology diversity).
 
-- The broadband score is a weighted sum of:
+**Calculation Method:**
+
+- Weighted sum of:
   - 30%: Basic broadband availability (percent of blocks with any broadband)
   - 40%: High-speed availability (percent of blocks with 25+ Mbps)
   - 20%: Gigabit availability (percent of blocks with gigabit)
@@ -77,54 +81,60 @@ The Amazon signal uses workforce normalization to provide fair comparisons acros
 - **Formula:**
   Broadband Score = 0.3 × Basic + 0.4 × High-Speed + 0.2 × Gigabit + 0.1 × Diversity
 
-**Weighting Rationale:**
+**Normalization & Inversion:**
 
-- The weights were chosen to emphasize high-speed access and future-ready infrastructure, while still rewarding basic coverage and technology diversity.
-- These weights are based on domain knowledge and the desire to balance quality, reach, and resilience in broadband infrastructure.
+- Scores are normalized to a 0–100 scale (higher = better broadband, more digital adoption).
+- No inversion is applied to this signal.
+
+**Technical Implementation:**
+
+- Data aggregation and processing from S3 and/or DynamoDB.
+- Weighted calculation logic as described above.
+
+---
 
 ## Walmart Signal
 
-The Walmart signal provides a dual-perspective analysis of retail employment patterns by separately tracking physical retail jobs and technology jobs, offering insights into the balance between traditional and digital retail infrastructure.
+**Purpose:**
+Provides a dual-perspective analysis of retail employment patterns by separately tracking physical retail jobs and technology jobs, offering insights into the balance between traditional and digital retail infrastructure.
 
-**Data Source**:
+**Data Source:**
 
 - Walmart Careers job board via web scraping.
 
-**Calculation Method**:
+**Calculation Method:**
 
-- **Physical Jobs Signal**: Scrapes Walmart store and Sam's Club job postings across all states.
-
-  - Uses inverted scoring where higher physical job counts result in lower digital adoption scores.
-  - Implements 90-day sliding window aggregation for stability.
+- **Physical Jobs Signal:** Scrapes Walmart store and Sam's Club job postings across all states.
   - Reflects traditional retail presence and employment patterns.
-
-- **Technology Jobs Signal**: Scrapes technology and digital job postings across all states.
-  - Uses positive scoring where higher technology job counts result in higher digital adoption scores.
+- **Technology Jobs Signal:** Scrapes technology and digital job postings across all states.
   - Includes software engineering, data science, and digital transformation roles.
   - Reflects digital infrastructure and technology investment.
 
-**Dual-Signal Approach**:
+**Normalization & Inversion:**
 
-- **Physical Retail Jobs**: Measures traditional brick-and-mortar retail presence.
-- **Technology Jobs**: Measures digital transformation and e-commerce infrastructure.
-- **Combined Analysis**: Provides comprehensive view of retail employment evolution.
+- Both sub-signals are normalized to a 0–100 scale.
+- **Physical Jobs:** Inverted after normalization (higher = more digital; fewer physical jobs means a higher score).
+- **Technology Jobs:** Not inverted (higher = more digital; more technology jobs means a higher score).
 
-**Technical Implementation**:
+**Technical Implementation:**
 
 - Puppeteer-based web scraping with anti-detection measures.
 - Dual job category filtering and classification.
 - Sliding window aggregation for both signal types.
-- Inverted scoring algorithm for physical jobs.
 - Workforce normalization using Census data.
+- Data stored in DynamoDB for historical tracking.
 
-**Walmart Signal Sub-Signals and Index Integration**
+**Special Notes:**
 
-The Walmart signal is split into two sub-signals:
+- Both sub-signals are used as separate components in the Blockbuster Index, each with their own weight (see WEIGHTS in the codebase). There is currently no single combined "Walmart Score"; instead, both normalized sub-signals are incorporated independently into the overall index.
 
-- **Physical Jobs:** Normalized to a 0–100 scale and inverted so that higher = more digital (i.e., fewer physical jobs means a higher score).
-- **Technology Jobs:** Normalized to a 0–100 scale so that higher = more digital (i.e., more technology jobs means a higher score).
+---
 
-Both sub-signals are used as separate components in the Blockbuster Index, each with their own weight (see WEIGHTS in the codebase). There is currently no single combined "Walmart Score"; instead, both normalized sub-signals are incorporated independently into the overall index.
+## Signal Inversion Logic
+
+Some signals represent physical presence (e.g., retail establishments, physical jobs) and must be inverted after normalization so that higher values indicate lower digital adoption. The Blockbuster Index uses a configuration-driven approach to manage which signals are inverted. This is controlled by an `INVERTED_SIGNALS` array in the codebase, making it easy to add or remove inverted signals as needed. All signals listed in this array are automatically inverted after normalization during index calculation.
+
+---
 
 ## Blockbuster Index Calculation
 

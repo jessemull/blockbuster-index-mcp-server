@@ -57,6 +57,9 @@ The calculation process currently includes the following signals with more signa
 
 Each signal is weighted and combined to generate a comprehensive score that reflects the balance between digital and physical retail activity in each state.
 
+**Signal Inversion:**
+Some signals (such as retail establishment count and physical job counts) are inverted after normalization so that higher scores always indicate greater digital adoption. This inversion is managed by a configuration array (`INVERTED_SIGNALS`) in the codebase, making it easy to add or remove inverted signals as needed.
+
 ## Architecture Overview
 
 The Blockbuster Index MCP Server employs a **modular microservices architecture** where each signal runs as an independent ECS Fargate task. This design provides several key advantages:
