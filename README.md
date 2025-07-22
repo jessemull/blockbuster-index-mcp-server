@@ -51,14 +51,14 @@ This project calculates the **Blockbuster Index** by aggregating distinct retail
 The calculation process currently includes the following signals with more signals on the way:
 
 - **Amazon** – E-commerce adoption and digital retail presence through job posting analysis with sliding window aggregation for improved accuracy.
-- **Census** – Retail market maturity using U.S. Census Bureau data: retail establishments per 100,000 population (establishment count / population × 100,000). Data is fetched via REST API integration, including establishment counts (NAICS 44-45), state population, and workforce size (used for normalization in other signals).
-- **Broadband** – Internet infrastructure and connectivity metrics. Coverage is measured as the percentage of census blocks (not population or land area) with broadband service. The broadband score is a weighted sum: 30% basic broadband availability, 40% high-speed (25+ Mbps), 20% gigabit, 10% technology diversity. Weights emphasize high-speed and future-ready access while rewarding basic coverage and diversity.
+- **Census** – Retail market maturity using U.S. Census Bureau data: retail establishments per 100,000 people.
+- **Broadband** – Internet infrastructure and connectivity metrics.
 - **Walmart** – Physical retail presence and technology job distribution through dual-signal analysis of Walmart job postings.
 
 Each signal is weighted and combined to generate a comprehensive score that reflects the balance between digital and physical retail activity in each state.
 
 **Signal Inversion:**
-Some signals (such as retail establishment count and physical job counts) are inverted after normalization so that higher scores always indicate greater digital adoption. This inversion is managed by a configuration array (`INVERTED_SIGNALS`) in the codebase, making it easy to add or remove inverted signals as needed.
+Some signals are inverted after normalization so that higher scores always indicate greater digital adoption.
 
 ## Architecture Overview
 
@@ -76,16 +76,16 @@ The Blockbuster Index MCP Server employs a **modular microservices architecture*
 - **Amazon Signal Task**: Web scraping and job posting analysis with sliding window aggregation.
 - **Census Signal Task**: Demographic data processing and analysis.
 - **Broadband Signal Task**: Infrastructure and connectivity metrics.
-- **Walmart Signal Task**: Dual-signal job posting analysis for physical and technology roles.
+- **Walmart Signal Task**: Web scraping and job posting analysis with sliding window aggregation.
 - **Blockbuster Index Task**: Signal aggregation and final index calculation.
 
 ### Data Flow
 
 1. **Signal Collection**: Each signal task fetches and processes its respective data.
-2. **Data Persistence**: Signal-specific data is stored in DynamoDB tables (e.g., Amazon job data, sliding window aggregates).
-3. **S3 Storage**: Individual signal results are uploaded to S3 with versioned filenames.
+2. **Data Persistence**: Signal-specific data is stored in DynamoDB tables.
+3. **S3 Storage**: Individual signal results are uploaded to S3 with versioned filenames for use by the **Blockbuster Index** website.
 4. **Index Calculation**: The blockbuster index task downloads all signal results and computes the final index.
-5. **Result Publication**: Final index is uploaded to S3 for consumption by the website.
+5. **Result Publication**: Final index is uploaded to S3 for consumption by the website and stored in DynamoDB tables.
 
 ## Signal Calculations
 
@@ -105,14 +105,13 @@ The system employs a sophisticated scheduling architecture using AWS EventBridge
 The scheduling system ensures proper execution order:
 
 1. All signal tasks run independently and in parallel.
-2. Each signal uploads its results to S3 upon completion.
+2. Each signal uploads its results to DynamoDB tables and S3 upon completion.
 3. The blockbuster index task waits for all signal results before executing.
-4. Final index is published to S3 for website consumption.
+4. Final index is published to S3 for website consumption and DynamoDB tables for historical trends.
 
 ### Error Handling
 
 - **Retry Logic**: Failed tasks are automatically retried with exponential backoff.
-- **Dead Letter Queues**: Failed executions are captured for manual review.
 - **Monitoring**: CloudWatch alarms trigger on task failures.
 - **Rollback Capability**: Previous versions can be quickly restored.
 
@@ -225,7 +224,7 @@ The **Blockbuster Index MCP Server** follows a structured development workflow t
 1. **Feature Development**: Create feature branches from main for new functionality
 2. **Local Testing**: Run signals locally using the provided npm scripts
 3. **Code Quality**: Ensure all linting and formatting standards are met
-4. **Unit Testing**: Write and run comprehensive unit tests with 92% coverage
+4. **Unit Testing**: Write and run comprehensive unit tests with 80% coverage
 5. **Pull Request**: Submit PR with proper commitizen-formatted commits
 6. **CI/CD Pipeline**: Automated testing and quality checks via GitHub Actions
 7. **Deployment**: Use GitHub workflows for targeted signal deployment
@@ -241,11 +240,11 @@ When developing new signals or modifying existing ones:
 
 ### Code Standards
 
-- **TypeScript**: All code must be written in TypeScript with proper type definitions
-- **ESLint**: Code must pass all linting rules without warnings
-- **Prettier**: Code must be properly formatted using Prettier
-- **Jest**: All new code must include comprehensive unit tests
-- **Coverage**: Maintain 92% minimum code coverage across all metrics
+- **TypeScript**: All code must be written in TypeScript with proper type definitions.
+- **ESLint**: Code must pass all linting rules without warnings.
+- **Prettier**: Code must be properly formatted using Prettier.
+- **Jest**: All new code must include comprehensive unit tests.
+- **Coverage**: Maintain > 80% minimum code coverage across all metrics.
 
 ## Commits & Commitizen
 
@@ -299,7 +298,7 @@ npm run format:check
 
 ### Unit Tests
 
-This project uses **Jest** for testing. Code coverage is enforced during every CI/CD pipeline. The build will fail if any tests fail or coverage drops below **92%**.
+This project uses **Jest** for testing. Code coverage is enforced during every CI/CD pipeline. The build will fail if any tests fail or coverage drops below **80%**.
 
 Run tests:
 
@@ -321,7 +320,7 @@ npm run coverage:open
 
 ### Code Coverage
 
-Coverage thresholds are enforced at **92%** for all metrics. The build will fail if coverage drops below this threshold.
+Coverage thresholds are enforced at **80%** for all metrics. The build will fail if coverage drops below this threshold.
 
 ## Error & Performance Monitoring
 
@@ -376,7 +375,7 @@ Deploy individual signals to ECS Fargate with full CI/CD pipeline. Triggered man
 
 **Process**:
 
-1. **Code Quality Checks**: Runs linting and unit tests with 92% coverage threshold.
+1. **Code Quality Checks**: Runs linting and unit tests with 80% coverage threshold.
 2. **Docker Build**: Creates signal-specific container image with versioned tag.
 3. **ECR Push**: Uploads image to AWS ECR with environment-specific repository.
 4. **CloudFormation Deployment**: Updates ECS task definition with new container image.
@@ -409,7 +408,7 @@ Automated quality gates for all pull requests. Automatically triggered on all pu
 1. **Build Verification**: Ensures code compiles correctly.
 2. **Linting**: Enforces code style and quality standards.
 3. **Unit Testing**: Runs comprehensive test suite with coverage reporting.
-4. **Coverage Threshold**: Enforces 92% minimum coverage requirement.
+4. **Coverage Threshold**: Enforces 80% minimum coverage requirement.
 
 ### Infrastructure
 
@@ -426,10 +425,11 @@ Infrastructure is managed using AWS CloudFormation templates with environment-sp
 
 Each signal has its own ECS task definition with optimized resource allocation and environment-specific configurations:
 
-- **Amazon Task**: Higher CPU allocation for web scraping operations with Puppeteer
-- **Census Task**: Balanced CPU/memory for API processing and data analysis
-- **Broadband Task**: Optimized for large dataset processing with S3 integration
-- **Blockbuster Index Task**: Lightweight aggregation and calculation with minimal resource requirements
+- **Amazon Task**: Higher CPU allocation for web scraping operations with Puppeteer.
+- **Census Task**: Balanced CPU/memory for API processing and data analysis.
+- **Broadband Task**: Optimized for large dataset processing with S3 integration.
+- **Blockbuster Index Task**: Lightweight aggregation and calculation with minimal resource requirements.
+- **Walmart Task**: Higher CPU allocation for web scraping operations with Puppeteer.
 
 #### Environment Parameterization
 

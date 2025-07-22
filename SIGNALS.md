@@ -128,7 +128,7 @@ Provides a perspective on traditional retail employment patterns by tracking Wal
 
 ## Signal Inversion Logic
 
-Some signals represent physical presence (e.g., retail establishments, physical jobs) and must be inverted after normalization so that higher values indicate lower digital adoption. The Blockbuster Index uses a configuration-driven approach to manage which signals are inverted. This is controlled by an `INVERTED_SIGNALS` array in the codebase, making it easy to add or remove inverted signals as needed. All signals listed in this array are automatically inverted after normalization during index calculation.
+Some signals represent physical presence (e.g., retail establishments, physical jobs) and must be inverted after normalization so that higher values indicate lower digital adoption.
 
 ---
 
@@ -142,17 +142,17 @@ Each signal is assigned a weight based on its relevance to the overall retail tr
 
 | Signal    | Weight | Rationale                                                            |
 | --------- | ------ | -------------------------------------------------------------------- |
-| Amazon    | 0.35   | Primary indicator of e-commerce adoption and digital retail presence |
+| Amazon    | 0.25   | Primary indicator of e-commerce adoption and digital retail presence |
 | Walmart   | 0.25   | Dual-perspective analysis of retail employment evolution             |
-| Census    | 0.20   | Demographic and economic context for retail behavior                 |
-| Broadband | 0.20   | Infrastructure foundation for digital commerce                       |
+| Census    | 0.25   | Demographic and economic context for retail behavior                 |
+| Broadband | 0.25   | Infrastructure foundation for digital commerce                       |
 
 ### Calculation Formula
 
 The Blockbuster Index for each state is calculated using the following formula:
 
 ```
-Blockbuster Index = (Amazon Score × 0.35) + (Walmart Score × 0.25) + (Census Score × 0.20) + (Broadband Score × 0.20)
+Blockbuster Index = (Amazon Score × 0.25) + (Walmart Score × 0.25) + (Census Score × 0.25) + (Broadband Score × 0.25)
 ```
 
 ### Score Normalization
