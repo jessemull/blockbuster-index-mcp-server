@@ -278,6 +278,8 @@ Resources:
               Value: !Sub 'blockbuster-index-walmart-jobs-${Environment}'
             - Name: WALMART_SLIDING_WINDOW_DYNAMODB_TABLE_NAME
               Value: !Sub 'blockbuster-index-walmart-sliding-window-${Environment}'
+            - Name: CENSUS_DYNAMODB_TABLE_NAME
+              Value: !Sub 'blockbuster-index-census-signals-${Environment}'
             - Name: SIGNAL_SCORES_DYNAMODB_TABLE_NAME
               Value: !Sub 'blockbuster-index-signal-scores-${Environment}'
             - Name: AWS_REGION
