@@ -17,7 +17,8 @@ export function normalizeScores(
   const min = minOverride !== undefined ? minOverride : Math.min(...values);
   const max = maxOverride !== undefined ? maxOverride : Math.max(...values);
 
-  // Avoid division by zero
+  // Avoid division by zero...
+
   if (max === min) {
     return Object.fromEntries(Object.keys(scores).map((k) => [k, 100]));
   }
