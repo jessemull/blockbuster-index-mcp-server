@@ -101,6 +101,8 @@ Resources:
               Value: !Sub 'blockbuster-index-amazon-jobs-${Environment}'
             - Name: AMAZON_SLIDING_WINDOW_TABLE_NAME
               Value: !Sub 'blockbuster-index-amazon-sliding-window-${Environment}'
+            - Name: CENSUS_DYNAMODB_TABLE_NAME
+              Value: !Sub 'blockbuster-index-census-signals-${Environment}'
             - Name: SIGNAL_SCORES_DYNAMODB_TABLE_NAME
               Value: !Sub 'blockbuster-index-signal-scores-${Environment}'
             - Name: AWS_REGION
