@@ -1,6 +1,3 @@
-import { WalmartSlidingWindowService } from './walmart-sliding-window-service';
-import { logger } from '../../util';
-
 jest.mock('../../util', () => ({
   logger: {
     info: jest.fn(),
@@ -12,6 +9,7 @@ jest.mock('../../util', () => ({
 const mockGetAggregate = jest.fn();
 const mockUpdateAggregate = jest.fn();
 const mockSaveAggregate = jest.fn();
+const mockJobGet = jest.fn();
 
 jest.mock('../../repositories/walmart', () => ({
   DynamoDBWalmartSlidingWindowRepository: jest.fn().mockImplementation(() => ({
@@ -21,13 +19,21 @@ jest.mock('../../repositories/walmart', () => ({
   })),
 }));
 
+jest.mock('../../repositories/walmart/walmart-physical-repository', () => ({
+  DynamoDBWalmartJobRepository: jest.fn().mockImplementation(() => ({
+    get: mockJobGet,
+  })),
+}));
+
+import { WalmartSlidingWindowService } from './walmart-sliding-window-service';
+import { logger } from '../../util';
+
 describe('WalmartSlidingWindowService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers().setSystemTime(new Date('2023-01-01T00:00:00Z'));
   });
 
-  const service = new WalmartSlidingWindowService();
   const baseTimestamp = 1700000000000;
   const oldTimestamp = baseTimestamp - 91 * 24 * 60 * 60 * 1000;
 
@@ -35,38 +41,34 @@ describe('WalmartSlidingWindowService', () => {
     it('creates a new aggregate if none exists', async () => {
       mockGetAggregate.mockResolvedValueOnce(undefined);
 
-      await service.updateSlidingWindow('CA', 'retail', 50, baseTimestamp);
+      const service = new WalmartSlidingWindowService();
+      await service.updateSlidingWindow('CA', 50, baseTimestamp);
 
-      expect(mockSaveAggregate).toHaveBeenCalledWith(
-        {
-          state: 'CA',
-          jobType: 'retail',
-          windowStart: baseTimestamp,
-          windowEnd: baseTimestamp,
-          totalJobCount: 50,
-          dayCount: 1,
-          averageJobCount: 50,
-          lastUpdated: expect.any(Number),
-        },
-        'retail',
-      );
+      expect(mockSaveAggregate).toHaveBeenCalledWith({
+        state: 'CA',
+        windowStart: baseTimestamp,
+        windowEnd: baseTimestamp,
+        totalJobCount: 50,
+        dayCount: 1,
+        averageJobCount: 50,
+        lastUpdated: expect.any(Number),
+      });
     });
 
     it('updates an existing aggregate without needing to slide window', async () => {
       mockGetAggregate.mockResolvedValueOnce({
         state: 'CA',
-        jobType: 'retail',
         windowStart: baseTimestamp,
         totalJobCount: 100,
         dayCount: 2,
         averageJobCount: 50,
       });
 
-      await service.updateSlidingWindow('CA', 'retail', 50, baseTimestamp);
+      const service = new WalmartSlidingWindowService();
+      await service.updateSlidingWindow('CA', 50, baseTimestamp);
 
       expect(mockUpdateAggregate).toHaveBeenCalledWith(
         'CA',
-        'retail',
         50,
         baseTimestamp,
         undefined,
@@ -77,7 +79,6 @@ describe('WalmartSlidingWindowService', () => {
         'Successfully updated Walmart sliding window:',
         expect.objectContaining({
           state: 'CA',
-          jobType: 'retail',
           newDayCount: 3,
           newAverageJobCount: 50,
           oldDayRemoved: false,
@@ -88,20 +89,24 @@ describe('WalmartSlidingWindowService', () => {
     it('removes old day if windowStart is before threshold', async () => {
       mockGetAggregate.mockResolvedValueOnce({
         state: 'CA',
-        jobType: 'retail',
         windowStart: oldTimestamp,
         totalJobCount: 200,
         dayCount: 4,
         averageJobCount: 50,
       });
 
-      jest.spyOn(service as any, 'getOldDayJobCount').mockResolvedValue(25); // Applies to both calls
+      jest
+        .spyOn(
+          WalmartSlidingWindowService.prototype as any,
+          'getOldDayJobCount',
+        )
+        .mockResolvedValue(25); // Applies to both calls
 
-      await service.updateSlidingWindow('CA', 'retail', 100, baseTimestamp);
+      const service = new WalmartSlidingWindowService();
+      await service.updateSlidingWindow('CA', 100, baseTimestamp);
 
       expect(mockUpdateAggregate).toHaveBeenCalledWith(
         'CA',
-        'retail',
         100,
         baseTimestamp,
         oldTimestamp,
@@ -117,7 +122,6 @@ describe('WalmartSlidingWindowService', () => {
     it('handles missing old day job count gracefully', async () => {
       mockGetAggregate.mockResolvedValueOnce({
         state: 'CA',
-        jobType: 'retail',
         windowStart: oldTimestamp,
         totalJobCount: 200,
         dayCount: 4,
@@ -125,14 +129,17 @@ describe('WalmartSlidingWindowService', () => {
       });
 
       jest
-        .spyOn(service as any, 'getOldDayJobCount')
+        .spyOn(
+          WalmartSlidingWindowService.prototype as any,
+          'getOldDayJobCount',
+        )
         .mockResolvedValue(undefined);
 
-      await service.updateSlidingWindow('CA', 'retail', 100, baseTimestamp);
+      const service = new WalmartSlidingWindowService();
+      await service.updateSlidingWindow('CA', 100, baseTimestamp);
 
       expect(mockUpdateAggregate).toHaveBeenCalledWith(
         'CA',
-        'retail',
         100,
         baseTimestamp,
         undefined,
@@ -143,8 +150,9 @@ describe('WalmartSlidingWindowService', () => {
     it('logs and throws on update error', async () => {
       mockGetAggregate.mockRejectedValueOnce(new Error('fail'));
 
+      const service = new WalmartSlidingWindowService();
       await expect(
-        service.updateSlidingWindow('CA', 'retail', 100, baseTimestamp),
+        service.updateSlidingWindow('CA', 100, baseTimestamp),
       ).rejects.toThrow('fail');
 
       expect(logger.error).toHaveBeenCalledWith(
@@ -152,7 +160,6 @@ describe('WalmartSlidingWindowService', () => {
         expect.objectContaining({
           error: 'fail',
           state: 'CA',
-          jobType: 'retail',
           newDayJobCount: 100,
           newDayTimestamp: baseTimestamp,
         }),
@@ -162,8 +169,9 @@ describe('WalmartSlidingWindowService', () => {
     it('handles non-Error thrown object during update', async () => {
       mockGetAggregate.mockRejectedValueOnce('some string');
 
+      const service = new WalmartSlidingWindowService();
       await expect(
-        service.updateSlidingWindow('CA', 'retail', 10, baseTimestamp),
+        service.updateSlidingWindow('CA', 10, baseTimestamp),
       ).rejects.toBe('some string');
 
       expect(logger.error).toHaveBeenCalledWith(
@@ -183,7 +191,8 @@ describe('WalmartSlidingWindowService', () => {
         return undefined;
       });
 
-      const result = await service.getSlidingWindowScores('retail');
+      const service = new WalmartSlidingWindowService();
+      const result = await service.getSlidingWindowScores();
 
       expect(result.CA).toBe(100);
       expect(result.TX).toBe(50);
@@ -193,15 +202,13 @@ describe('WalmartSlidingWindowService', () => {
     it('logs and throws on error', async () => {
       mockGetAggregate.mockRejectedValueOnce(new Error('fail'));
 
-      await expect(service.getSlidingWindowScores('retail')).rejects.toThrow(
-        'fail',
-      );
+      const service = new WalmartSlidingWindowService();
+      await expect(service.getSlidingWindowScores()).rejects.toThrow('fail');
 
       expect(logger.error).toHaveBeenCalledWith(
         'Failed to get Walmart sliding window scores',
         expect.objectContaining({
           error: 'fail',
-          jobType: 'retail',
         }),
       );
     });
@@ -209,24 +216,13 @@ describe('WalmartSlidingWindowService', () => {
     it('handles thrown non-Error during score retrieval', async () => {
       mockGetAggregate.mockRejectedValueOnce(null);
 
-      await expect(service.getSlidingWindowScores('retail')).rejects.toBe(null);
+      const service = new WalmartSlidingWindowService();
+      await expect(service.getSlidingWindowScores()).rejects.toBe(null);
 
       expect(logger.error).toHaveBeenCalledWith(
         'Failed to get Walmart sliding window scores',
-        { error: 'null', jobType: 'retail' },
+        { error: 'null' },
       );
-    });
-  });
-
-  describe('getOldDayJobCount', () => {
-    it('returns undefined and logs warning on error', async () => {
-      const service = new WalmartSlidingWindowService();
-      const result = await (service as any).getOldDayJobCount(
-        'CA',
-        'retail',
-        1234,
-      );
-      expect(result).toBe(undefined);
     });
   });
 });

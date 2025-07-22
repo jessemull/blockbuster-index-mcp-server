@@ -1,6 +1,6 @@
 import { CensusWorkforceData } from '../../types';
 
-export function calculateWorkforceNormalizedInvertedScores(
+export function calculateWorkforceNormalizedScores(
   jobCounts: Record<string, number>,
   workforceData: CensusWorkforceData,
 ): Record<string, number> {
@@ -11,18 +11,13 @@ export function calculateWorkforceNormalizedInvertedScores(
 
     if (workforceSize > 0) {
       /**
-       * 1. Calculate percentage of workforce that Walmart physical jobs represent.
+       * 1. Calculate percentage of workforce that Walmart jobs represent.
        * 2. Scale by 1,000,000 to get meaningful scores.
-       * 3. Invert the score: higher percentage = lower digital adoption score.
        * E.g. (jobs / workforce) * 100 * 1,000,000 = jobs_percentage * 1,000,000.
        */
-
       const percentageOfWorkforce = (jobCount / workforceSize) * 100;
       const scaledScore = Math.round(percentageOfWorkforce * 1000000);
-      const maxPossibleScore = 10000000;
-      const invertedScore = Math.max(0, maxPossibleScore - scaledScore);
-
-      scores[state] = invertedScore;
+      scores[state] = scaledScore;
     } else {
       scores[state] = 0;
     }
@@ -31,4 +26,4 @@ export function calculateWorkforceNormalizedInvertedScores(
   return scores;
 }
 
-export default calculateWorkforceNormalizedInvertedScores;
+export default calculateWorkforceNormalizedScores;

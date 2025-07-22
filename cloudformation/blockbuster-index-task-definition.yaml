@@ -272,10 +272,8 @@ Resources:
               Value: !FindInMap [EnvConfig, !Ref Environment, LogLevel]
             - Name: S3_BUCKET_NAME
               Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]
-            - Name: WALMART_PHYSICAL_DYNAMODB_TABLE_NAME
-              Value: !Sub 'blockbuster-index-walmart-physical-jobs-${Environment}'
-            - Name: WALMART_TECHNOLOGY_DYNAMODB_TABLE_NAME
-              Value: !Sub 'blockbuster-index-walmart-technology-jobs-${Environment}'
+            - Name: WALMART_DYNAMODB_TABLE_NAME
+              Value: !Sub 'blockbuster-index-walmart-jobs-${Environment}'
             - Name: WALMART_SLIDING_WINDOW_DYNAMODB_TABLE_NAME
               Value: !Sub 'blockbuster-index-walmart-sliding-window-${Environment}'
             - Name: SIGNAL_SCORES_DYNAMODB_TABLE_NAME

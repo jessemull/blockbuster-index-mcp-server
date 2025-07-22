@@ -1,513 +1,463 @@
 {
   "states": {
     "AK": {
-      "score": 16.75,
+      "score": 35.75,
       "components": {
         "AMAZON": 0,
         "CENSUS": 59,
         "BROADBAND": 0,
-        "WALMART_PHYSICAL": 16,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 84
       }
     },
     "AL": {
-      "score": 32.88,
+      "score": 32.75,
       "components": {
         "AMAZON": 0,
         "CENSUS": 50,
         "BROADBAND": 48,
-        "WALMART_PHYSICAL": 67,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 33
       }
     },
     "AR": {
-      "score": 43.5,
+      "score": 18.5,
       "components": {
         "AMAZON": 1,
         "CENSUS": 52,
         "BROADBAND": 21,
-        "WALMART_PHYSICAL": 100,
-        "WALMART_TECHNOLOGY": 100
+        "WALMART": 0
       }
     },
     "AZ": {
-      "score": 38.38,
+      "score": 59.25,
       "components": {
         "AMAZON": 5,
         "CENSUS": 100,
         "BROADBAND": 43,
-        "WALMART_PHYSICAL": 11,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 89
       }
     },
     "CA": {
-      "score": 38.88,
+      "score": 63.25,
       "components": {
         "AMAZON": 8,
         "CENSUS": 84,
         "BROADBAND": 61,
-        "WALMART_PHYSICAL": 0,
-        "WALMART_TECHNOLOGY": 5
+        "WALMART": 100
       }
     },
     "CO": {
-      "score": 31.63,
+      "score": 48,
       "components": {
         "AMAZON": 6,
         "CENSUS": 65,
         "BROADBAND": 43,
-        "WALMART_PHYSICAL": 22,
-        "WALMART_TECHNOLOGY": 3
+        "WALMART": 78
       }
     },
     "CT": {
-      "score": 39.5,
+      "score": 60,
       "components": {
         "AMAZON": 1,
         "CENSUS": 62,
         "BROADBAND": 89,
-        "WALMART_PHYSICAL": 12,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 88
       }
     },
     "DE": {
-      "score": 29.38,
+      "score": 48,
       "components": {
         "AMAZON": 1,
         "CENSUS": 44,
         "BROADBAND": 64,
-        "WALMART_PHYSICAL": 17,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 83
       }
     },
     "FL": {
-      "score": 33.25,
+      "score": 51.5,
       "components": {
         "AMAZON": 1,
         "CENSUS": 56,
         "BROADBAND": 67,
-        "WALMART_PHYSICAL": 18,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 82
       }
     },
     "GA": {
-      "score": 31.75,
+      "score": 44.75,
       "components": {
         "AMAZON": 4,
         "CENSUS": 61,
         "BROADBAND": 46,
-        "WALMART_PHYSICAL": 32,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 68
       }
     },
     "HI": {
-      "score": 37.25,
+      "score": 59.25,
       "components": {
         "AMAZON": 0,
         "CENSUS": 70,
         "BROADBAND": 75,
-        "WALMART_PHYSICAL": 8,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 92
       }
     },
     "IA": {
-      "score": 29.63,
+      "score": 33.25,
       "components": {
         "AMAZON": 1,
         "CENSUS": 53,
         "BROADBAND": 36,
-        "WALMART_PHYSICAL": 57,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 43
       }
     },
     "ID": {
-      "score": 22.13,
+      "score": 39.25,
       "components": {
         "AMAZON": 1,
         "CENSUS": 64,
         "BROADBAND": 13,
-        "WALMART_PHYSICAL": 21,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 79
       }
     },
     "IL": {
-      "score": 38.13,
+      "score": 51.5,
       "components": {
         "AMAZON": 4,
         "CENSUS": 79,
         "BROADBAND": 54,
-        "WALMART_PHYSICAL": 31,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 69
       }
     },
     "IN": {
-      "score": 38.38,
+      "score": 50.25,
       "components": {
         "AMAZON": 4,
         "CENSUS": 70,
         "BROADBAND": 62,
-        "WALMART_PHYSICAL": 35,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 65
       }
     },
     "KS": {
-      "score": 32.63,
+      "score": 37,
       "components": {
         "AMAZON": 1,
         "CENSUS": 61,
         "BROADBAND": 41,
-        "WALMART_PHYSICAL": 55,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 45
       }
     },
     "KY": {
-      "score": 35.5,
+      "score": 38.75,
       "components": {
         "AMAZON": 1,
         "CENSUS": 58,
         "BROADBAND": 54,
-        "WALMART_PHYSICAL": 58,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 42
       }
     },
     "LA": {
-      "score": 32.5,
+      "score": 33.5,
       "components": {
         "AMAZON": 1,
         "CENSUS": 51,
         "BROADBAND": 46,
-        "WALMART_PHYSICAL": 64,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 36
       }
     },
     "MA": {
-      "score": 40.63,
+      "score": 64.5,
       "components": {
         "AMAZON": 14,
         "CENSUS": 62,
         "BROADBAND": 85,
-        "WALMART_PHYSICAL": 3,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 97
       }
     },
     "MD": {
-      "score": 41.13,
+      "score": 61.25,
       "components": {
         "AMAZON": 4,
         "CENSUS": 86,
         "BROADBAND": 68,
-        "WALMART_PHYSICAL": 13,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 87
       }
     },
     "ME": {
-      "score": 20.75,
+      "score": 27,
       "components": {
         "AMAZON": 0,
         "CENSUS": 11,
         "BROADBAND": 47,
-        "WALMART_PHYSICAL": 50,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 50
       }
     },
     "MI": {
-      "score": 31.75,
+      "score": 48.5,
       "components": {
         "AMAZON": 1,
         "CENSUS": 60,
         "BROADBAND": 55,
-        "WALMART_PHYSICAL": 22,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 78
       }
     },
     "MN": {
-      "score": 36.25,
+      "score": 50,
       "components": {
         "AMAZON": 2,
         "CENSUS": 68,
         "BROADBAND": 60,
-        "WALMART_PHYSICAL": 30,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 70
       }
     },
     "MO": {
-      "score": 31.38,
+      "score": 33.5,
       "components": {
         "AMAZON": 1,
         "CENSUS": 62,
         "BROADBAND": 32,
-        "WALMART_PHYSICAL": 61,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 39
       }
     },
     "MS": {
-      "score": 27.13,
+      "score": 17.25,
       "components": {
         "AMAZON": 3,
         "CENSUS": 34,
         "BROADBAND": 25,
-        "WALMART_PHYSICAL": 93,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 7
       }
     },
     "MT": {
-      "score": 10.75,
+      "score": 26.75,
       "components": {
         "AMAZON": 1,
         "CENSUS": 20,
         "BROADBAND": 10,
-        "WALMART_PHYSICAL": 24,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 76
       }
     },
     "NC": {
-      "score": 38.5,
+      "score": 50.75,
       "components": {
         "AMAZON": 1,
         "CENSUS": 60,
         "BROADBAND": 76,
-        "WALMART_PHYSICAL": 34,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 66
       }
     },
     "ND": {
-      "score": 35.63,
+      "score": 43.75,
       "components": {
         "AMAZON": 1,
         "CENSUS": 28,
         "BROADBAND": 91,
-        "WALMART_PHYSICAL": 45,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 55
       }
     },
     "NE": {
-      "score": 25.5,
+      "score": 35.5,
       "components": {
         "AMAZON": 1,
         "CENSUS": 50,
         "BROADBAND": 31,
-        "WALMART_PHYSICAL": 40,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 60
       }
     },
     "NH": {
-      "score": 31.25,
+      "score": 36,
       "components": {
         "AMAZON": 0,
         "CENSUS": 23,
         "BROADBAND": 75,
-        "WALMART_PHYSICAL": 54,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 46
       }
     },
     "NJ": {
-      "score": 37.63,
+      "score": 60.75,
       "components": {
         "AMAZON": 2,
         "CENSUS": 63,
         "BROADBAND": 83,
-        "WALMART_PHYSICAL": 5,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 95
       }
     },
     "NM": {
-      "score": 27.38,
+      "score": 35.5,
       "components": {
         "AMAZON": 1,
         "CENSUS": 72,
         "BROADBAND": 14,
-        "WALMART_PHYSICAL": 45,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 55
       }
     },
     "NV": {
-      "score": 31.38,
+      "score": 56,
       "components": {
         "AMAZON": 2,
         "CENSUS": 80,
         "BROADBAND": 43,
-        "WALMART_PHYSICAL": 1,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 99
       }
     },
     "NY": {
-      "score": 34.38,
+      "score": 58.25,
       "components": {
         "AMAZON": 11,
         "CENSUS": 41,
         "BROADBAND": 84,
-        "WALMART_PHYSICAL": 3,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 97
       }
     },
     "OH": {
-      "score": 40.5,
+      "score": 54.25,
       "components": {
         "AMAZON": 2,
         "CENSUS": 77,
         "BROADBAND": 68,
-        "WALMART_PHYSICAL": 30,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 70
       }
     },
     "OK": {
-      "score": 33.13,
+      "score": 30,
       "components": {
         "AMAZON": 0,
         "CENSUS": 62,
         "BROADBAND": 33,
-        "WALMART_PHYSICAL": 75,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 25
       }
     },
     "OR": {
-      "score": 27.75,
+      "score": 47.5,
       "components": {
         "AMAZON": 7,
         "CENSUS": 61,
         "BROADBAND": 36,
-        "WALMART_PHYSICAL": 14,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 86
       }
     },
     "PA": {
-      "score": 37.5,
+      "score": 53.5,
       "components": {
         "AMAZON": 2,
         "CENSUS": 68,
         "BROADBAND": 68,
-        "WALMART_PHYSICAL": 24,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 76
       }
     },
     "RI": {
-      "score": 41.25,
+      "score": 64,
       "components": {
         "AMAZON": 1,
         "CENSUS": 61,
         "BROADBAND": 100,
-        "WALMART_PHYSICAL": 6,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 94
       }
     },
     "SC": {
-      "score": 34,
+      "score": 44,
       "components": {
         "AMAZON": 1,
         "CENSUS": 51,
         "BROADBAND": 64,
-        "WALMART_PHYSICAL": 40,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 60
       }
     },
     "SD": {
-      "score": 20.5,
+      "score": 33,
       "components": {
         "AMAZON": 1,
         "CENSUS": 19,
         "BROADBAND": 45,
-        "WALMART_PHYSICAL": 33,
-        "WALMART_TECHNOLOGY": 1
+        "WALMART": 67
       }
     },
     "TN": {
-      "score": 40.13,
+      "score": 49.75,
       "components": {
         "AMAZON": 13,
         "CENSUS": 59,
         "BROADBAND": 68,
-        "WALMART_PHYSICAL": 41,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 59
       }
     },
     "TX": {
-      "score": 38.38,
+      "score": 54.25,
       "components": {
         "AMAZON": 7,
         "CENSUS": 83,
         "BROADBAND": 51,
-        "WALMART_PHYSICAL": 23,
-        "WALMART_TECHNOLOGY": 2
+        "WALMART": 76
       }
     },
     "UT": {
-      "score": 34.75,
+      "score": 45.5,
       "components": {
         "AMAZON": 1,
         "CENSUS": 72,
         "BROADBAND": 47,
-        "WALMART_PHYSICAL": 38,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 62
       }
     },
     "VA": {
-      "score": 43.5,
+      "score": 59,
       "components": {
         "AMAZON": 32,
         "CENSUS": 74,
         "BROADBAND": 55,
-        "WALMART_PHYSICAL": 25,
-        "WALMART_TECHNOLOGY": 1
+        "WALMART": 75
       }
     },
     "VT": {
-      "score": 13.75,
+      "score": 33.5,
       "components": {
         "AMAZON": 0,
         "CENSUS": 2,
         "BROADBAND": 46,
-        "WALMART_PHYSICAL": 14,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 86
       }
     },
     "WA": {
-      "score": 59.5,
+      "score": 82.75,
       "components": {
         "AMAZON": 100,
         "CENSUS": 89,
         "BROADBAND": 45,
-        "WALMART_PHYSICAL": 3,
-        "WALMART_TECHNOLOGY": 5
+        "WALMART": 97
       }
     },
     "WI": {
-      "score": 34.5,
+      "score": 44.5,
       "components": {
         "AMAZON": 1,
         "CENSUS": 70,
         "BROADBAND": 47,
-        "WALMART_PHYSICAL": 40,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 60
       }
     },
     "WV": {
-      "score": 35,
+      "score": 25.5,
       "components": {
         "AMAZON": 1,
         "CENSUS": 62,
         "BROADBAND": 31,
-        "WALMART_PHYSICAL": 92,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 8
       }
     },
     "WY": {
-      "score": 9,
+      "score": 10.75,
       "components": {
         "AMAZON": 0,
         "CENSUS": 0,
         "BROADBAND": 5,
-        "WALMART_PHYSICAL": 62,
-        "WALMART_TECHNOLOGY": 0
+        "WALMART": 38
       }
     }
   },
   "metadata": {
-    "calculatedAt": "2025-07-22T01:39:51.596Z",
+    "calculatedAt": "2025-07-22T04:20:29.324Z",
     "version": "dev",
     "totalStates": 50,
     "signalStatus": {
-      "total": 5,
-      "successful": 5,
+      "total": 4,
+      "successful": 4,
       "failed": 0
     }
   }

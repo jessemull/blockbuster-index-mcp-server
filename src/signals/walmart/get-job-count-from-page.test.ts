@@ -11,12 +11,19 @@ const mockPage = {
 describe('getJobCountFromPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('should extract job count from page', async () => {
     mockEvaluate.mockResolvedValueOnce(150);
 
-    const result = await getJobCountFromPage(mockPage);
+    const resultPromise = getJobCountFromPage(mockPage);
+    jest.runAllTimers();
+    const result = await resultPromise;
 
     expect(result).toBe(150);
     expect(mockEvaluate).toHaveBeenCalledWith(
@@ -28,7 +35,9 @@ describe('getJobCountFromPage', () => {
   it('should return 0 when job count element is not found', async () => {
     mockEvaluate.mockResolvedValueOnce(0);
 
-    const result = await getJobCountFromPage(mockPage);
+    const resultPromise = getJobCountFromPage(mockPage);
+    jest.runAllTimers();
+    const result = await resultPromise;
 
     expect(result).toBe(0);
   });
@@ -36,7 +45,9 @@ describe('getJobCountFromPage', () => {
   it('should return 0 when job count text is invalid', async () => {
     mockEvaluate.mockResolvedValueOnce(0);
 
-    const result = await getJobCountFromPage(mockPage);
+    const resultPromise = getJobCountFromPage(mockPage);
+    jest.runAllTimers();
+    const result = await resultPromise;
 
     expect(result).toBe(0);
   });
@@ -45,7 +56,9 @@ describe('getJobCountFromPage', () => {
     const error = new Error('DOM evaluation error');
     mockEvaluate.mockRejectedValueOnce(error);
 
-    const result = await getJobCountFromPage(mockPage);
+    const resultPromise = getJobCountFromPage(mockPage);
+    jest.runAllTimers();
+    const result = await resultPromise;
     expect(result).toBe(0);
   });
 
@@ -69,7 +82,9 @@ describe('getJobCountFromPage', () => {
       }
     });
 
-    const result = await getJobCountFromPage(mockPage);
+    const resultPromise = getJobCountFromPage(mockPage);
+    jest.runAllTimers();
+    const result = await resultPromise;
 
     expect(result).toBe(150);
   });
@@ -90,7 +105,9 @@ describe('getJobCountFromPage', () => {
       }
     });
 
-    const result = await getJobCountFromPage(mockPage);
+    const resultPromise = getJobCountFromPage(mockPage);
+    jest.runAllTimers();
+    const result = await resultPromise;
 
     expect(result).toBe(0);
   });
@@ -115,7 +132,9 @@ describe('getJobCountFromPage', () => {
       }
     });
 
-    const result = await getJobCountFromPage(mockPage);
+    const resultPromise = getJobCountFromPage(mockPage);
+    jest.runAllTimers();
+    const result = await resultPromise;
 
     expect(result).toBe(0);
   });

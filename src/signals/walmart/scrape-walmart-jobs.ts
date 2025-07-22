@@ -4,17 +4,14 @@ import { States } from '../../types';
 import { searchWalmartJobsInState } from './search-jobs-in-state';
 import type {
   WalmartSignalRepository,
-  WalmartPhysicalJobRecord,
-  WalmartTechnologyJobRecord,
+  WalmartJobRecord,
 } from '../../types/walmart';
 
 export async function scrapeWalmartJobs(
-  physicalRepository?: WalmartSignalRepository<WalmartPhysicalJobRecord>,
-  technologyRepository?: WalmartSignalRepository<WalmartTechnologyJobRecord>,
+  walmartRepository?: WalmartSignalRepository<WalmartJobRecord>,
   timestamp?: number,
 ): Promise<{
-  physicalJobs: Record<string, number>;
-  technologyJobs: Record<string, number>;
+  walmartJobs: Record<string, number>;
 }> {
   const browser = await puppeteer.launch({
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
@@ -23,63 +20,39 @@ export async function scrapeWalmartJobs(
   });
 
   try {
-    const physicalJobCounts: Record<string, number> = {};
-    const technologyJobCounts: Record<string, number> = {};
+    const walmartJobCounts: Record<string, number> = {};
 
     // Initialize job count for all states...
 
     for (const state of Object.values(States)) {
-      physicalJobCounts[state] = 0;
-      technologyJobCounts[state] = 0;
+      walmartJobCounts[state] = 0;
     }
 
     // Query job data per state, checking for existing data first...
+
     for (const state of Object.values(States)) {
       logger.info(`Processing Walmart jobs for ${state}`);
-
-      let statePhysicalJobCount = 0;
-      let stateTechnologyJobCount = 0;
-
+      let stateJobCount = 0;
       // Check if data already exists for today before scraping...
 
-      if (physicalRepository && technologyRepository && timestamp) {
+      if (walmartRepository && timestamp) {
         try {
-          const physicalExists = await physicalRepository.exists(
-            state,
-            timestamp,
-          );
-          const technologyExists = await technologyRepository.exists(
-            state,
-            timestamp,
-          );
-
-          if (physicalExists && technologyExists) {
+          const exists = await walmartRepository.exists(state, timestamp);
+          if (exists) {
             // Use existing data, don't scrape...
 
-            const existingPhysicalRecord = await physicalRepository.get(
+            const existingRecord = await walmartRepository.get(
               state,
               timestamp,
             );
-
-            const existingTechnologyRecord = await technologyRepository.get(
-              state,
-              timestamp,
-            );
-
-            if (existingPhysicalRecord) {
-              statePhysicalJobCount = existingPhysicalRecord.jobCount;
+            if (existingRecord) {
+              stateJobCount = existingRecord.jobCount;
             }
-
-            if (existingTechnologyRecord) {
-              stateTechnologyJobCount = existingTechnologyRecord.jobCount;
-            }
-
             logger.info(
-              `Using existing data for ${state}: ${statePhysicalJobCount} physical, ${stateTechnologyJobCount} technology jobs`,
+              `Using existing data for ${state}: ${stateJobCount} jobs`,
               {
                 state,
-                physicalJobCount: statePhysicalJobCount,
-                technologyJobCount: stateTechnologyJobCount,
+                jobCount: stateJobCount,
                 timestamp,
               },
             );
@@ -87,37 +60,16 @@ export async function scrapeWalmartJobs(
             // Data doesn't exist, scrape and store...
 
             logger.info(`No existing data found for ${state}, scraping...`);
-
-            statePhysicalJobCount = await searchWalmartJobsInState(
-              browser,
-              state,
-              'physical',
-            );
-            stateTechnologyJobCount = await searchWalmartJobsInState(
-              browser,
-              state,
-              'technology',
-            );
-
-            const physicalRecord: WalmartPhysicalJobRecord = {
+            stateJobCount = await searchWalmartJobsInState(browser, state);
+            const record: WalmartJobRecord = {
               state,
               timestamp,
-              jobCount: statePhysicalJobCount,
+              jobCount: stateJobCount,
             };
-
-            const technologyRecord: WalmartTechnologyJobRecord = {
-              state,
-              timestamp,
-              jobCount: stateTechnologyJobCount,
-            };
-
-            await physicalRepository.save(physicalRecord);
-            await technologyRepository.save(technologyRecord);
-
+            await walmartRepository.save(record);
             logger.info(`Stored job counts for ${state}`, {
               state,
-              physicalJobCount: statePhysicalJobCount,
-              technologyJobCount: stateTechnologyJobCount,
+              jobCount: stateJobCount,
               timestamp,
             });
           }
@@ -130,55 +82,17 @@ export async function scrapeWalmartJobs(
           // Fallback to scraping if storage operations fail...
 
           logger.info(`Falling back to scraping for ${state}`);
-          statePhysicalJobCount = await searchWalmartJobsInState(
-            browser,
-            state,
-            'physical',
-          );
-          stateTechnologyJobCount = await searchWalmartJobsInState(
-            browser,
-            state,
-            'technology',
-          );
+          stateJobCount = await searchWalmartJobsInState(browser, state);
         }
       } else {
-        // No repository available, scrape directly...
+        // No repository, just scrape...
 
-        logger.info(`No repository available, scraping ${state}`);
-        statePhysicalJobCount = await searchWalmartJobsInState(
-          browser,
-          state,
-          'physical',
-        );
-        stateTechnologyJobCount = await searchWalmartJobsInState(
-          browser,
-          state,
-          'technology',
-        );
+        stateJobCount = await searchWalmartJobsInState(browser, state);
       }
-
-      physicalJobCounts[state] = statePhysicalJobCount;
-      technologyJobCounts[state] = stateTechnologyJobCount;
-
-      logger.info(
-        `Completed ${state}: found ${statePhysicalJobCount} physical, ${stateTechnologyJobCount} technology jobs`,
-      );
-
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      walmartJobCounts[state] = stateJobCount;
     }
-
-    return {
-      physicalJobs: physicalJobCounts,
-      technologyJobs: technologyJobCounts,
-    };
+    return { walmartJobs: walmartJobCounts };
   } finally {
-    try {
-      await browser.close();
-    } catch (closeError) {
-      logger.warn('Failed to close browser: ', closeError);
-      throw closeError;
-    }
+    await browser.close();
   }
 }
-
-export default scrapeWalmartJobs;

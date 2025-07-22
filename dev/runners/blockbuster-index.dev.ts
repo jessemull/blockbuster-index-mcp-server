@@ -58,10 +58,6 @@ async function runBlockbusterIndexDev() {
 
     logger.info('Blockbuster index written to file:', { filePath });
     logger.info('Blockbuster index dev runner completed successfully!');
-    logger.info(
-      'Sample state scores:',
-      Object.entries(response.states).slice(0, 5),
-    );
   } catch (error) {
     logger.error('Blockbuster index dev runner failed:', error);
     process.exit(1);

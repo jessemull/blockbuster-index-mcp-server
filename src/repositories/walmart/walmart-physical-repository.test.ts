@@ -7,8 +7,8 @@ import {
   QueryCommand,
   QueryCommandInput,
 } from '@aws-sdk/lib-dynamodb';
-import { DynamoDBWalmartPhysicalRepository } from './walmart-physical-repository';
-import type { WalmartPhysicalJobRecord } from '../../types/walmart';
+import { DynamoDBWalmartJobRepository } from './walmart-physical-repository';
+import type { WalmartJobRecord } from '../../types/walmart';
 
 jest.mock('@aws-sdk/client-dynamodb');
 jest.mock('@aws-sdk/lib-dynamodb');
@@ -55,17 +55,17 @@ jest.mock('../../util', () => ({
 }));
 
 describe('DynamoDBWalmartPhysicalRepository', () => {
-  let repository: DynamoDBWalmartPhysicalRepository;
+  let repository: DynamoDBWalmartJobRepository;
   const tableName = 'test-walmart-physical-table';
 
   beforeEach(() => {
-    repository = new DynamoDBWalmartPhysicalRepository(tableName);
+    repository = new DynamoDBWalmartJobRepository(tableName);
     (repository as any).client = mockDynamoDBDocumentClient;
     jest.clearAllMocks();
   });
 
   describe('save', () => {
-    const mockRecord: WalmartPhysicalJobRecord = {
+    const mockRecord: WalmartJobRecord = {
       state: 'CA',
       timestamp: 1234567890,
       jobCount: 150,

@@ -1,9 +1,6 @@
 import { Browser } from 'puppeteer';
 import { logger } from '../../util';
-import {
-  WALMART_PHYSICAL_JOBS_URL_TEMPLATE,
-  WALMART_TECHNOLOGY_JOBS_URL_TEMPLATE,
-} from '../../constants/walmart';
+import { WALMART_JOBS_URL_TEMPLATE } from '../../constants/walmart';
 import { searchWalmartJobsInState } from './search-jobs-in-state';
 import { getJobCountFromPage } from './get-job-count-from-page';
 
@@ -40,26 +37,18 @@ describe('searchWalmartJobsInState', () => {
   });
 
   it('uses physical URL template', async () => {
-    const result = await searchWalmartJobsInState(
-      mockBrowser,
-      'CA',
-      'physical',
-    );
+    const result = await searchWalmartJobsInState(mockBrowser, 'CA');
     expect(mockPage.goto).toHaveBeenCalledWith(
-      WALMART_PHYSICAL_JOBS_URL_TEMPLATE.replace('{STATE}', 'CA'),
+      WALMART_JOBS_URL_TEMPLATE.replace('{STATE}', 'CA'),
       { waitUntil: 'networkidle2' },
     );
     expect(result).toBe(123);
   });
 
   it('uses technology URL template', async () => {
-    const result = await searchWalmartJobsInState(
-      mockBrowser,
-      'TX',
-      'technology',
-    );
+    const result = await searchWalmartJobsInState(mockBrowser, 'TX');
     expect(mockPage.goto).toHaveBeenCalledWith(
-      WALMART_TECHNOLOGY_JOBS_URL_TEMPLATE.replace('{STATE}', 'TX'),
+      WALMART_JOBS_URL_TEMPLATE.replace('{STATE}', 'TX'),
       { waitUntil: 'networkidle2' },
     );
     expect(result).toBe(123);
@@ -67,41 +56,33 @@ describe('searchWalmartJobsInState', () => {
 
   it('logs warning if job count selector not found', async () => {
     mockPage.waitForSelector.mockRejectedValueOnce(new Error('Timeout'));
-    const result = await searchWalmartJobsInState(
-      mockBrowser,
-      'CA',
-      'physical',
-    );
+    const result = await searchWalmartJobsInState(mockBrowser, 'CA');
     expect(result).toBe(123);
     expect(logger.warn).toHaveBeenCalledWith(
-      'Job count element not found for CA physical jobs',
+      'Job count element not found for CA jobs',
     );
   });
 
   it('throws if navigation fails', async () => {
     mockPage.goto.mockRejectedValueOnce(new Error('Navigation failed'));
-    await expect(
-      searchWalmartJobsInState(mockBrowser, 'CA', 'physical'),
-    ).rejects.toThrow('Navigation failed');
+    await expect(searchWalmartJobsInState(mockBrowser, 'CA')).rejects.toThrow(
+      'Navigation failed',
+    );
   });
 
   it('throws if getJobCountFromPage fails', async () => {
     mockGetJobCountFromPage.mockRejectedValueOnce(new Error('Parse fail'));
-    await expect(
-      searchWalmartJobsInState(mockBrowser, 'CA', 'technology'),
-    ).rejects.toThrow('Parse fail');
+    await expect(searchWalmartJobsInState(mockBrowser, 'CA')).rejects.toThrow(
+      'Parse fail',
+    );
   });
 
   it('logs and suppresses close error', async () => {
     mockPage.close.mockRejectedValueOnce(new Error('Close error'));
-    const result = await searchWalmartJobsInState(
-      mockBrowser,
-      'CA',
-      'physical',
-    );
+    const result = await searchWalmartJobsInState(mockBrowser, 'CA');
     expect(result).toBe(123);
     expect(logger.warn).toHaveBeenCalledWith(
-      'Failed to close page for CA physical jobs: ',
+      'Failed to close page for CA jobs: ',
       expect.any(Error),
     );
   });
@@ -109,15 +90,15 @@ describe('searchWalmartJobsInState', () => {
   it('throws and logs if both scrape and close fail', async () => {
     mockPage.goto.mockRejectedValueOnce(new Error('Main logic error'));
     mockPage.close.mockRejectedValueOnce(new Error('Close error'));
-    await expect(
-      searchWalmartJobsInState(mockBrowser, 'CA', 'technology'),
-    ).rejects.toThrow('Main logic error');
+    await expect(searchWalmartJobsInState(mockBrowser, 'CA')).rejects.toThrow(
+      'Main logic error',
+    );
     expect(logger.warn).toHaveBeenCalledWith(
-      'Failed to search technology jobs in CA: ',
+      'Failed to search jobs in CA: ',
       expect.any(Error),
     );
     expect(logger.warn).toHaveBeenCalledWith(
-      'Failed to close page for CA technology jobs: ',
+      'Failed to close page for CA jobs: ',
       expect.any(Error),
     );
   });

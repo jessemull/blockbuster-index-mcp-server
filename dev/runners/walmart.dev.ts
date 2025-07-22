@@ -11,73 +11,17 @@ async function runWalmartTest() {
 
     // Get Walmart job counts and store data while scraping...
 
-    const scores = await getWalmartScores();
+    const { scores } = await getWalmartScores();
 
-    logger.info('Walmart signal results:', {
-      totalStates: Object.keys(scores.physicalScores).length,
-      physicalStatesWithData: Object.values(scores.physicalScores).filter(
-        (score) => score > 0,
-      ).length,
-      technologyStatesWithData: Object.values(scores.technologyScores).filter(
-        (score) => score > 0,
-      ).length,
-      samplePhysicalScores: Object.entries(scores.physicalScores)
-        .filter(([, score]) => score > 0)
-        .slice(0, 5)
-        .reduce((acc, [state, score]) => ({ ...acc, [state]: score }), {}),
-      sampleTechnologyScores: Object.entries(scores.technologyScores)
-        .filter(([, score]) => score > 0)
-        .slice(0, 5)
-        .reduce((acc, [state, score]) => ({ ...acc, [state]: score }), {}),
-      averagePhysicalScore:
-        Object.values(scores.physicalScores).filter((score) => score > 0)
-          .length > 0
-          ? Object.values(scores.physicalScores)
-              .filter((score) => score > 0)
-              .reduce((sum, score) => sum + score, 0) /
-            Object.values(scores.physicalScores).filter((score) => score > 0)
-              .length
-          : 0,
-      averageTechnologyScore:
-        Object.values(scores.technologyScores).filter((score) => score > 0)
-          .length > 0
-          ? Object.values(scores.technologyScores)
-              .filter((score) => score > 0)
-              .reduce((sum, score) => sum + score, 0) /
-            Object.values(scores.technologyScores).filter((score) => score > 0)
-              .length
-          : 0,
-    });
-
-    // Write physical scores to dev/scores/walmart-physical-scores.json...
+    // Write scores to dev/scores/walmart-scores.json...
 
     const scoresDir = path.resolve(__dirname, '../scores');
-    const physicalFilePath = path.join(
-      scoresDir,
-      'walmart-physical-scores.json',
-    );
-    const technologyFilePath = path.join(
-      scoresDir,
-      'walmart-technology-scores.json',
-    );
+    const filePath = path.join(scoresDir, 'walmart-scores.json');
 
     fs.mkdirSync(scoresDir, { recursive: true });
+    fs.writeFileSync(filePath, JSON.stringify(scores, null, 2));
 
-    fs.writeFileSync(
-      physicalFilePath,
-      JSON.stringify(scores.physicalScores, null, 2),
-    );
-    fs.writeFileSync(
-      technologyFilePath,
-      JSON.stringify(scores.technologyScores, null, 2),
-    );
-
-    logger.info('Walmart physical scores written to file:', {
-      filePath: physicalFilePath,
-    });
-    logger.info('Walmart technology scores written to file:', {
-      filePath: technologyFilePath,
-    });
+    logger.info('Walmart scores written to file:', { filePath });
     logger.info('Walmart signal test completed successfully!');
   } catch (error) {
     logger.error('Walmart signal test failed:', error);
