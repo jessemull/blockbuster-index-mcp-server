@@ -1,8 +1,9 @@
-// BLS Industry Classification Codes (NAICS)
+// BLS Industry Classification Codes
+// Note: BLS data from 1990s uses SIC codes, not NAICS codes
 
 export const BLS_INDUSTRY_CODES = {
-  RETAIL_TRADE: ['44-45', '44', '45'],
-  TOTAL_PRIVATE: ['10'],
+  // SIC codes for retail trade (used in all years 1990-2024)
+  RETAIL_TRADE_SIC: ['52', '53', '54', '55', '56', '57', '58', '59'],
 } as const;
 
 // State FIPS Codes for BLS data
@@ -17,7 +18,6 @@ export const STATE_FIPS_CODES: Record<string, string> = {
   '08000': 'CO', // Colorado
   '09000': 'CT', // Connecticut
   '10000': 'DE', // Delaware
-  '11000': 'DC', // District of Columbia
   '12000': 'FL', // Florida
   '13000': 'GA', // Georgia
   '15000': 'HI', // Hawaii

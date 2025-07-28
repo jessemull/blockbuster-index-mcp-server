@@ -71,25 +71,35 @@ export class BlsService implements IBlsService {
         return;
       }
 
-      // Download and parse the CSV file...
+      // Process the CSV file in chunks to manage memory...
 
-      const csvRecords = await this.s3Loader.downloadAndParseCsv(year);
       const fileSize = await this.s3Loader.getFileSize(year);
-
-      // Extract retail data from the CSV...
-
-      const stateData = extractRetailDataFromCsv(
-        csvRecords,
-        parseInt(year, 10),
-      );
-
-      // Validate and save state data...
-
+      let totalRecords = 0;
       let validRecords = 0;
-      for (const data of stateData) {
-        if (validateStateData(data)) {
-          await this.repository.saveStateData(data);
-          validRecords++;
+
+      // Process CSV in chunks of 10,000 records
+      for await (const chunk of this.s3Loader.processCsvInChunks(year, 10000)) {
+        totalRecords += chunk.length;
+
+        // Extract retail data from this chunk...
+
+        const stateData = extractRetailDataFromCsv(chunk, parseInt(year, 10));
+
+        // Validate and save state data from this chunk...
+
+        for (const data of stateData) {
+          if (validateStateData(data)) {
+            await this.repository.saveStateData(data);
+            validRecords++;
+          }
+        }
+
+        // Log progress for large files...
+        if (fileSize > 100 * 1024 * 1024) {
+          // 100MB
+          logger.info(
+            `Processed ${totalRecords} records for year ${year} (${validRecords} valid states so far)`,
+          );
         }
       }
 

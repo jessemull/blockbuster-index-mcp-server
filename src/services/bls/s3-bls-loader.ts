@@ -82,6 +82,37 @@ export class S3BlsLoader {
     }
   }
 
+  async *processCsvInChunks(
+    year: string,
+    chunkSize: number = 10000,
+  ): AsyncGenerator<BlsCsvRecord[]> {
+    try {
+      logger.info(
+        `Processing BLS CSV for year ${year} in chunks of ${chunkSize}`,
+      );
+
+      const response = await this.s3Client.send(
+        new GetObjectCommand({
+          Bucket: this.bucketName,
+          Key: `${year}.annual.singlefile.csv`,
+        }),
+      );
+
+      if (!response.Body) {
+        throw new Error(`No body in S3 response for year ${year}`);
+      }
+
+      yield* this.parseCsvStreamInChunks(response.Body, year, chunkSize);
+    } catch (error) {
+      logger.error(`Failed to process CSV for year ${year}`, {
+        error: error instanceof Error ? error.message : String(error),
+        bucket: this.bucketName,
+        key: `${year}.annual.singlefile.csv`,
+      });
+      throw error;
+    }
+  }
+
   private async parseCsvStream(
     body: { transformToWebStream: () => ReadableStream },
     year: string,
@@ -180,6 +211,116 @@ export class S3BlsLoader {
     }
 
     return records;
+  }
+
+  private async *parseCsvStreamInChunks(
+    body: { transformToWebStream: () => ReadableStream },
+    year: string,
+    chunkSize: number,
+  ): AsyncGenerator<BlsCsvRecord[]> {
+    let headers: string[] = [];
+    let lineNumber = 0;
+    let buffer = '';
+    let currentChunk: BlsCsvRecord[] = [];
+
+    const stream = body.transformToWebStream();
+    const reader = stream.getReader();
+    const decoder = new TextDecoder();
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+          // Process any remaining buffer
+          if (buffer.trim()) {
+            const remainingLines = buffer.split('\n');
+            for (const line of remainingLines) {
+              if (line.trim()) {
+                const record = this.parseCsvLine(line, headers, lineNumber);
+                if (record && typeof record !== 'string') {
+                  currentChunk.push(record);
+
+                  if (currentChunk.length >= chunkSize) {
+                    yield currentChunk;
+                    currentChunk = [];
+                  }
+                }
+                lineNumber++;
+              }
+            }
+          }
+
+          // Yield any remaining records
+          if (currentChunk.length > 0) {
+            yield currentChunk;
+          }
+          break;
+        }
+
+        // Decode the chunk and add to buffer
+        const chunk = decoder.decode(value, { stream: true });
+        buffer += chunk;
+
+        // Process complete lines
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (line.trim()) {
+            if (lineNumber === 0) {
+              // Parse headers
+              const headerResult = this.parseCsvLine(line, [], lineNumber);
+              if (typeof headerResult === 'string') {
+                headers = headerResult.split(',');
+              }
+              if (headers.length === 0) {
+                throw new Error('CSV file is empty or has no headers');
+              }
+            } else {
+              // Parse data record
+              const record = this.parseCsvLine(line, headers, lineNumber);
+              if (record && typeof record !== 'string') {
+                currentChunk.push(record);
+
+                if (currentChunk.length >= chunkSize) {
+                  yield currentChunk;
+                  currentChunk = [];
+                }
+              }
+            }
+            lineNumber++;
+          }
+        }
+
+        // Memory management: limit buffer size
+        if (buffer.length > 1024 * 1024) {
+          logger.warn(
+            `Buffer size exceeded 1MB for year ${year}, processing remaining data`,
+          );
+
+          const remainingLines = buffer.split('\n');
+          buffer = remainingLines.pop() || '';
+
+          for (const line of remainingLines) {
+            if (line.trim()) {
+              const record = this.parseCsvLine(line, headers, lineNumber);
+              if (record && typeof record !== 'string') {
+                currentChunk.push(record);
+
+                if (currentChunk.length >= chunkSize) {
+                  yield currentChunk;
+                  currentChunk = [];
+                }
+              }
+              lineNumber++;
+            }
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
   }
 
   private parseCsvLine(

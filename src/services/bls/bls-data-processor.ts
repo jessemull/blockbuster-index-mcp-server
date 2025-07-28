@@ -16,6 +16,11 @@ export function extractRetailDataFromCsv(
 
   const stateData: BlsStateData[] = [];
   const processedStates = new Set<string>();
+  let stateLevelRecords = 0;
+  let retailRecords = 0;
+  let unknownFips = 0;
+  let invalidLq = 0;
+  const industryCodes = new Set<string>();
 
   for (const record of records) {
     // Check if this is state-level data (area_fips ends with 000)...
@@ -23,20 +28,25 @@ export function extractRetailDataFromCsv(
     if (!record.area_fips.endsWith('000')) {
       continue;
     }
+    stateLevelRecords++;
+    industryCodes.add(record.industry_code);
 
-    // Check if this is retail trade data...
+    // Check if this is retail trade data (using SIC codes for all years)...
+    // Match by prefix to handle codes like 5213, 5311, etc.
 
-    if (
-      !BLS_INDUSTRY_CODES.RETAIL_TRADE.includes(
-        record.industry_code as '44-45' | '44' | '45',
-      )
-    ) {
+    const isRetailTrade = BLS_INDUSTRY_CODES.RETAIL_TRADE_SIC.some((prefix) =>
+      record.industry_code.startsWith(prefix),
+    );
+
+    if (!isRetailTrade) {
       continue;
     }
+    retailRecords++;
 
     const stateAbbr = STATE_FIPS_CODES[record.area_fips];
     if (!stateAbbr) {
       logger.warn(`Unknown state FIPS code: ${record.area_fips}`);
+      unknownFips++;
       continue;
     }
 
@@ -51,6 +61,7 @@ export function extractRetailDataFromCsv(
       logger.warn(
         `Invalid retail LQ value for ${stateAbbr}: ${record.lq_annual_avg_emplvl}`,
       );
+      invalidLq++;
       continue;
     }
 
@@ -67,6 +78,15 @@ export function extractRetailDataFromCsv(
 
   logger.info(
     `Extracted retail data for ${stateData.length} states for year ${year}`,
+    {
+      totalRecords: records.length,
+      stateLevelRecords,
+      retailRecords,
+      unknownFips,
+      invalidLq,
+      validStates: stateData.length,
+      industryCodes: Array.from(industryCodes).slice(0, 10), // Show first 10 codes
+    },
   );
   return stateData;
 }
