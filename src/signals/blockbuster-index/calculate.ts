@@ -45,6 +45,7 @@ export function calculateBlockbusterIndex(
       [Signal.CENSUS]: normalizedSignals[Signal.CENSUS]?.[state] ?? 0,
       [Signal.BROADBAND]: normalizedSignals[Signal.BROADBAND]?.[state] ?? 0,
       [Signal.WALMART]: normalizedSignals[Signal.WALMART]?.[state] ?? 0,
+      [Signal.BLS]: normalizedSignals[Signal.BLS]?.[state] ?? 0,
     };
 
     const score = Object.entries(components).reduce(
