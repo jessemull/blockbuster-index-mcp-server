@@ -206,6 +206,76 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
+  BlsProcessedFilesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'blockbuster-index-bls-processed-files-${Environment}'
+      AttributeDefinitions:
+        - AttributeName: year
+          AttributeType: S
+      KeySchema:
+        - AttributeName: year
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: false
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  BlsStateDataTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'blockbuster-index-bls-state-data-${Environment}'
+      AttributeDefinitions:
+        - AttributeName: state_year
+          AttributeType: S
+      KeySchema:
+        - AttributeName: state_year
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: false
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  BlsSignalsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'blockbuster-index-bls-signals-${Environment}'
+      AttributeDefinitions:
+        - AttributeName: state_fips
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: state_fips
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: false
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
 Outputs:
   AmazonJobsTableArn:
     Description: 'ARN of the Amazon Jobs table'
@@ -246,4 +316,19 @@ Outputs:
     Description: 'ARN of the Walmart Sliding Window table'
     Value: !GetAtt WalmartSlidingWindowV2Table.Arn
     Export:
-      Name: !Sub '${Environment}-BlockbusterWalmartSlidingWindowTableArn' 
+      Name: !Sub '${Environment}-BlockbusterWalmartSlidingWindowTableArn'
+  BlsProcessedFilesTableArn:
+    Description: 'ARN of the BLS Processed Files table'
+    Value: !GetAtt BlsProcessedFilesTable.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterBlsProcessedFilesTableArn'
+  BlsStateDataTableArn:
+    Description: 'ARN of the BLS State Data table'
+    Value: !GetAtt BlsStateDataTable.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterBlsStateDataTableArn'
+  BlsSignalsTableArn:
+    Description: 'ARN of the BLS Signals table'
+    Value: !GetAtt BlsSignalsTable.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterBlsSignalsTableArn' 
