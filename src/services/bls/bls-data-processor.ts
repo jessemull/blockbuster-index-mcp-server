@@ -6,89 +6,323 @@ import {
 } from '../../constants';
 import type { BlsCsvRecord, BlsStateData } from '../../types/bls';
 
-export function extractRetailDataFromCsv(
+// TEMPORARY TESTING FUNCTION - REMOVE AFTER TESTING
+export function testSingleStateProcessing(
   records: BlsCsvRecord[],
   year: number,
+  targetState: string = 'CA', // Test with California
 ): BlsStateData[] {
-  logger.info(
-    `Extracting retail data from ${records.length} records for year ${year}`,
-  );
+  logger.info(`TESTING: Processing ${records.length} records for year ${year}`);
 
   const stateData: BlsStateData[] = [];
-  const processedStates = new Set<string>();
   let stateLevelRecords = 0;
   let retailRecords = 0;
-  let unknownFips = 0;
-  let invalidLq = 0;
-  const industryCodes = new Set<string>();
+  const stateFipsFound = new Set<string>();
+  const retailCodesFound = new Set<string>();
 
   for (const record of records) {
-    // Check if this is state-level data (area_fips ends with 000)...
-
+    // Check if this is state-level data (area_fips ends with 000)
     if (!record.area_fips.endsWith('000')) {
       continue;
     }
     stateLevelRecords++;
-    industryCodes.add(record.industry_code);
+    stateFipsFound.add(record.area_fips);
 
-    // Check if this is retail trade data (using SIC codes for all years)...
-    // Match by prefix to handle codes like 5213, 5311, etc.
+    // Check if this is brick and mortar retail data
+    const isBrickAndMortarRetail =
+      BLS_INDUSTRY_CODES.BRICK_AND_MORTAR_RETAIL_NAICS.some((code) =>
+        record.industry_code.startsWith(code),
+      );
 
-    const isRetailTrade = BLS_INDUSTRY_CODES.RETAIL_TRADE_SIC.some((prefix) =>
-      record.industry_code.startsWith(prefix),
+    // Check if this is e-commerce data
+    const isECommerce = BLS_INDUSTRY_CODES.E_COMMERCE_NAICS.some((code) =>
+      record.industry_code.startsWith(code),
     );
 
-    if (!isRetailTrade) {
-      continue;
+    if (isBrickAndMortarRetail || isECommerce) {
+      retailRecords++;
+      retailCodesFound.add(record.industry_code);
     }
-    retailRecords++;
 
     const stateAbbr = STATE_FIPS_CODES[record.area_fips];
-    if (!stateAbbr) {
-      logger.warn(`Unknown state FIPS code: ${record.area_fips}`);
-      unknownFips++;
-      continue;
-    }
-
-    // Skip if we've already processed this state for this year...
-
-    if (processedStates.has(stateAbbr)) {
+    if (!stateAbbr || stateAbbr !== targetState) {
       continue;
     }
 
     const retailLq = parseFloat(record.lq_annual_avg_emplvl);
     if (isNaN(retailLq)) {
-      logger.warn(
-        `Invalid retail LQ value for ${stateAbbr}: ${record.lq_annual_avg_emplvl}`,
-      );
-      invalidLq++;
       continue;
     }
 
     const stateDataRecord: BlsStateData = {
       state: stateAbbr,
       year,
-      retailLq,
       timestamp: Math.floor(Date.now() / 1000),
+      brickAndMortarCodes: isBrickAndMortarRetail
+        ? { [record.industry_code]: retailLq }
+        : {},
+      ecommerceCodes: isECommerce ? { [record.industry_code]: retailLq } : {},
     };
 
     stateData.push(stateDataRecord);
-    processedStates.add(stateAbbr);
   }
 
-  logger.info(
-    `Extracted retail data for ${stateData.length} states for year ${year}`,
-    {
-      totalRecords: records.length,
-      stateLevelRecords,
-      retailRecords,
-      unknownFips,
-      invalidLq,
-      validStates: stateData.length,
-      industryCodes: Array.from(industryCodes).slice(0, 10), // Show first 10 codes
-    },
-  );
+  logger.info(`TESTING RESULTS for ${targetState} in ${year}:`, {
+    stateLevelRecords,
+    retailRecords,
+    stateFipsFound: Array.from(stateFipsFound),
+    retailCodesFound: Array.from(retailCodesFound),
+    targetRecords: stateData.length,
+  });
+
   return stateData;
+}
+
+export function extractBrickAndMortarRetailDataFromCsv(
+  records: BlsCsvRecord[],
+  year: number,
+): BlsStateData[] {
+  const stateAggregatedData: Record<string, Record<string, number>> = {};
+
+  for (const record of records) {
+    // Check if this is state-level data (area_fips ends with 000)
+    if (!record.area_fips.endsWith('000')) {
+      continue;
+    }
+
+    // Check if this is brick and mortar retail data (using NAICS codes in industry_code column)
+    const isBrickAndMortarRetail =
+      BLS_INDUSTRY_CODES.BRICK_AND_MORTAR_RETAIL_NAICS.some((code) =>
+        record.industry_code.startsWith(code),
+      );
+
+    if (!isBrickAndMortarRetail) {
+      continue;
+    }
+
+    const stateAbbr = STATE_FIPS_CODES[record.area_fips];
+    if (!stateAbbr) {
+      continue;
+    }
+
+    const retailLq = parseFloat(record.lq_annual_avg_emplvl);
+    if (isNaN(retailLq)) {
+      continue;
+    }
+
+    // Aggregate by state and industry code
+    if (!stateAggregatedData[stateAbbr]) {
+      stateAggregatedData[stateAbbr] = {};
+    }
+
+    // Sum the retailLq for this industry code in this state
+    if (!stateAggregatedData[stateAbbr][record.industry_code]) {
+      stateAggregatedData[stateAbbr][record.industry_code] = 0;
+    }
+    stateAggregatedData[stateAbbr][record.industry_code] += retailLq;
+  }
+
+  // Convert aggregated data to BlsStateData format
+  const stateData: BlsStateData[] = [];
+  for (const [state, industryCodes] of Object.entries(stateAggregatedData)) {
+    const stateDataRecord: BlsStateData = {
+      state,
+      year,
+      timestamp: Math.floor(Date.now() / 1000),
+      brickAndMortarCodes: industryCodes,
+      ecommerceCodes: {},
+    };
+
+    stateData.push(stateDataRecord);
+  }
+
+  if (stateData.length > 0) {
+    logger.info(
+      `Extracted ${stateData.length} brick and mortar retail records for year ${year}`,
+    );
+  }
+  return stateData;
+}
+
+export function extractEcommerceDataFromCsv(
+  records: BlsCsvRecord[],
+  year: number,
+): BlsStateData[] {
+  const stateAggregatedData: Record<string, Record<string, number>> = {};
+
+  for (const record of records) {
+    // Check if this is state-level data (area_fips ends with 000)
+    if (!record.area_fips.endsWith('000')) {
+      continue;
+    }
+
+    // Check if this is e-commerce data (using NAICS codes in industry_code column)
+    const isECommerce = BLS_INDUSTRY_CODES.E_COMMERCE_NAICS.some((code) =>
+      record.industry_code.startsWith(code),
+    );
+
+    if (!isECommerce) {
+      continue;
+    }
+
+    const stateAbbr = STATE_FIPS_CODES[record.area_fips];
+    if (!stateAbbr) {
+      continue;
+    }
+
+    const retailLq = parseFloat(record.lq_annual_avg_emplvl);
+    if (isNaN(retailLq)) {
+      continue;
+    }
+
+    // Aggregate by state and industry code
+    if (!stateAggregatedData[stateAbbr]) {
+      stateAggregatedData[stateAbbr] = {};
+    }
+
+    // Sum the retailLq for this industry code in this state
+    if (!stateAggregatedData[stateAbbr][record.industry_code]) {
+      stateAggregatedData[stateAbbr][record.industry_code] = 0;
+    }
+    stateAggregatedData[stateAbbr][record.industry_code] += retailLq;
+  }
+
+  // Convert aggregated data to BlsStateData format
+  const stateData: BlsStateData[] = [];
+  for (const [state, industryCodes] of Object.entries(stateAggregatedData)) {
+    const stateDataRecord: BlsStateData = {
+      state,
+      year,
+      timestamp: Math.floor(Date.now() / 1000),
+      brickAndMortarCodes: {},
+      ecommerceCodes: industryCodes,
+    };
+
+    stateData.push(stateDataRecord);
+  }
+
+  if (stateData.length > 0) {
+    logger.info(
+      `Extracted ${stateData.length} e-commerce records for year ${year}`,
+    );
+  }
+  return stateData;
+}
+
+export function extractCombinedRetailDataFromCsv(
+  records: BlsCsvRecord[],
+  year: number,
+): BlsStateData[] {
+  const stateAggregatedData: Record<
+    string,
+    {
+      brickAndMortarCodes: Record<string, number>;
+      ecommerceCodes: Record<string, number>;
+    }
+  > = {};
+
+  let processedRecords = 0;
+  let validRecords = 0;
+
+  for (const record of records) {
+    processedRecords++;
+
+    // Check if this is state-level data (area_fips ends with 000)
+    if (!record.area_fips.endsWith('000')) {
+      continue;
+    }
+
+    const stateAbbr = STATE_FIPS_CODES[record.area_fips];
+    if (!stateAbbr) {
+      continue;
+    }
+
+    const retailLq = parseFloat(record.lq_annual_avg_emplvl);
+    if (isNaN(retailLq) || retailLq < 0) {
+      continue;
+    }
+
+    // Check if this is e-commerce data first (for zero value filtering)
+    const isECommerce = BLS_INDUSTRY_CODES.E_COMMERCE_NAICS.some((code) =>
+      record.industry_code.startsWith(code),
+    );
+
+    // For e-commerce, skip zero values as they don't represent actual activity
+    if (isECommerce && retailLq === 0) {
+      continue;
+    }
+
+    // Initialize state data if not exists
+    if (!stateAggregatedData[stateAbbr]) {
+      stateAggregatedData[stateAbbr] = {
+        brickAndMortarCodes: {},
+        ecommerceCodes: {},
+      };
+    }
+
+    // Check if this is brick and mortar retail data
+    const isBrickAndMortarRetail =
+      BLS_INDUSTRY_CODES.BRICK_AND_MORTAR_RETAIL_NAICS.some((code) =>
+        record.industry_code.startsWith(code),
+      );
+
+    // Add to appropriate category
+    if (isBrickAndMortarRetail) {
+      if (
+        !stateAggregatedData[stateAbbr].brickAndMortarCodes[
+          record.industry_code
+        ]
+      ) {
+        stateAggregatedData[stateAbbr].brickAndMortarCodes[
+          record.industry_code
+        ] = 0;
+      }
+      stateAggregatedData[stateAbbr].brickAndMortarCodes[
+        record.industry_code
+      ] += retailLq;
+      validRecords++;
+    }
+
+    if (isECommerce) {
+      if (
+        !stateAggregatedData[stateAbbr].ecommerceCodes[record.industry_code]
+      ) {
+        stateAggregatedData[stateAbbr].ecommerceCodes[record.industry_code] = 0;
+      }
+      stateAggregatedData[stateAbbr].ecommerceCodes[record.industry_code] +=
+        retailLq;
+      validRecords++;
+    }
+  }
+
+  // Convert aggregated data to BlsStateData format
+  const stateData: BlsStateData[] = [];
+  for (const [state, aggregatedData] of Object.entries(stateAggregatedData)) {
+    const stateDataRecord: BlsStateData = {
+      state,
+      year,
+      timestamp: Math.floor(Date.now() / 1000),
+      brickAndMortarCodes: aggregatedData.brickAndMortarCodes,
+      ecommerceCodes: aggregatedData.ecommerceCodes,
+    };
+
+    stateData.push(stateDataRecord);
+  }
+
+  if (stateData.length > 0) {
+    logger.info(
+      `Extracted ${stateData.length} combined retail records for year ${year} (${validRecords} valid records from ${processedRecords} total)`,
+    );
+  }
+  return stateData;
+}
+
+// Keep the original function for backward compatibility
+export function extractRetailDataFromCsv(
+  records: BlsCsvRecord[],
+  year: number,
+): BlsStateData[] {
+  return extractBrickAndMortarRetailDataFromCsv(records, year);
 }
 
 export function calculateTrendSlope(
@@ -150,13 +384,13 @@ export function calculateBlockbusterScore(
       // Convert negative slope to positive score (0-100).
       // More negative slope = higher score.
 
-      baseScore = Math.min(100, Math.abs(slope) * 1000);
+      baseScore = Math.min(100, Math.max(0, Math.abs(slope) * 0.1));
       break;
     case 'growing':
-      // Convert positive slope to negative score (0-100).
+      // Convert positive slope to lower score (0-100).
       // More positive slope = lower score.
 
-      baseScore = Math.max(0, 100 - slope * 1000);
+      baseScore = Math.max(0, 100 - slope * 0.1);
       break;
     case 'stable':
       // Middle score for stable trends...
@@ -188,8 +422,13 @@ export function validateStateData(data: BlsStateData): boolean {
     return false;
   }
 
-  if (typeof data.retailLq !== 'number' || isNaN(data.retailLq)) {
-    logger.warn('Invalid retailLq in data', { data });
+  // Check that we have at least some data in one of the code mappings
+  const hasBrickAndMortarData =
+    Object.keys(data.brickAndMortarCodes).length > 0;
+  const hasEcommerceData = Object.keys(data.ecommerceCodes).length > 0;
+
+  if (!hasBrickAndMortarData && !hasEcommerceData) {
+    logger.warn('No valid code data in state data', { data });
     return false;
   }
 

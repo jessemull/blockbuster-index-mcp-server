@@ -345,8 +345,8 @@ export class S3BlsLoader {
 
     const record: BlsCsvRecord = {
       area_fips: values[0] || '',
-      industry_code: values[1] || '',
-      own_code: values[2] || '',
+      own_code: values[1] || '',
+      industry_code: values[2] || '',
       agglvl_code: values[3] || '',
       size_code: values[4] || '',
       year: values[5] || '',

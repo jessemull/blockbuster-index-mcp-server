@@ -1,13 +1,31 @@
-// BLS Industry Classification Codes
-// Note: BLS data from 1990s uses SIC codes, not NAICS codes
+// BLS Industry Classification Codes.
+// Note: BLS says that from 1990s it uses SIC codes then switched to NAICS codes but only the SIC codes are used in all data.
 
 export const BLS_INDUSTRY_CODES = {
-  // SIC codes for retail trade (used in all years 1990-2024)
-  RETAIL_TRADE_SIC: ['52', '53', '54', '55', '56', '57', '58', '59'],
+  // NAICS codes for brick and mortar retail trade
+  BRICK_AND_MORTAR_RETAIL_NAICS: [
+    '4411',
+    '4421',
+    '4431',
+    '4441',
+    '4451',
+    '4461',
+    '4471',
+    '4481',
+    '4511',
+    '4522',
+    '4523',
+    '4531',
+    '4532',
+    '4533',
+    '4539',
+  ],
+  // NAICS codes for e-commerce (Electronic Shopping and Mail-Order Houses)
+  E_COMMERCE_NAICS: ['454110', '454111', '454112'],
 } as const;
 
-// State FIPS Codes for BLS data
-// These are used to identify state-level data in BLS CSV files
+// State FIPS Codes for BLS data.
+// These are used to identify state-level data in BLS CSV files.
 
 export const STATE_FIPS_CODES: Record<string, string> = {
   '01000': 'AL', // Alabama
@@ -62,25 +80,25 @@ export const STATE_FIPS_CODES: Record<string, string> = {
   '56000': 'WY', // Wyoming
 } as const;
 
-// Trend analysis thresholds
+// Trend analysis thresholds.
 
 export const TREND_THRESHOLDS = {
-  SLOPE_THRESHOLD: 0.001, // Small threshold to account for noise
+  SLOPE_THRESHOLD: 0.001, // Small threshold to account for noise.
 } as const;
 
 // Score calculation parameters
 
 export const SCORE_PARAMETERS = {
-  DECLINING_MULTIPLIER: 1.0, // Higher score for declining retail
-  STABLE_MULTIPLIER: 0.5, // Medium score for stable retail
-  GROWING_MULTIPLIER: 0.0, // Lower score for growing retail
-  MAX_SCORE: 100, // Maximum possible score
+  DECLINING_MULTIPLIER: 1.0, // Higher score for declining retail.
+  STABLE_MULTIPLIER: 0.5, // Medium score for stable retail.
+  GROWING_MULTIPLIER: 0.0, // Lower score for growing retail.
+  MAX_SCORE: 100, // Maximum possible score.
 } as const;
 
-// Data validation parameters
+// Data validation parameters.
 
 export const VALIDATION = {
-  MIN_DATA_POINTS: 2, // Minimum data points for trend calculation
-  MIN_YEAR: 1990, // Earliest year to consider
-  MAX_YEAR: 2024, // Latest year to consider
+  MIN_DATA_POINTS: 2, // Minimum data points for trend calculation.
+  MIN_YEAR: 1990, // Earliest year to consider.
+  MAX_YEAR: 2024, // Latest year to consider.
 } as const;

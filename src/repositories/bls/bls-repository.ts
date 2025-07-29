@@ -3,6 +3,8 @@ import {
   PutCommand,
   QueryCommand,
   ScanCommand,
+  BatchWriteCommand,
+  ScanCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import { logger } from '../../util';
 import type {
@@ -106,8 +108,9 @@ export class DynamoDBBlsRepository implements BlsRepository {
             state_year: `${data.state}_${data.year}`,
             state: data.state,
             year: data.year,
-            retailLq: data.retailLq,
             timestamp: data.timestamp,
+            brickAndMortarCodes: data.brickAndMortarCodes,
+            ecommerceCodes: data.ecommerceCodes,
           },
           TableName: this.stateDataTableName,
           ConditionExpression: 'attribute_not_exists(#state_year)',
@@ -120,7 +123,8 @@ export class DynamoDBBlsRepository implements BlsRepository {
       logger.info('Successfully saved state data', {
         state: data.state,
         year: data.year,
-        retailLq: data.retailLq,
+        brickAndMortarCodeCount: Object.keys(data.brickAndMortarCodes).length,
+        ecommerceCodeCount: Object.keys(data.ecommerceCodes).length,
       });
     } catch (error: unknown) {
       if (
@@ -138,6 +142,49 @@ export class DynamoDBBlsRepository implements BlsRepository {
         error: error instanceof Error ? error.message : String(error),
         state: data.state,
         year: data.year,
+      });
+      throw error;
+    }
+  }
+
+  async saveStateDataBatch(dataArray: BlsStateData[]): Promise<void> {
+    try {
+      const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
+      const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+
+      // Process in batches of 25 (DynamoDB batch limit)
+      const BATCH_SIZE = 25;
+
+      for (let i = 0; i < dataArray.length; i += BATCH_SIZE) {
+        const batch = dataArray.slice(i, i + BATCH_SIZE);
+
+        const batchWrites = batch.map((data) => ({
+          PutRequest: {
+            Item: {
+              state_year: `${data.state}_${data.year}`,
+              state: data.state,
+              year: data.year,
+              timestamp: data.timestamp,
+              brickAndMortarCodes: data.brickAndMortarCodes,
+              ecommerceCodes: data.ecommerceCodes,
+            },
+          },
+        }));
+
+        await client.send(
+          new BatchWriteCommand({
+            RequestItems: {
+              [this.stateDataTableName]: batchWrites,
+            },
+          }),
+        );
+
+        logger.info(`Saved batch of ${batch.length} state data records`);
+      }
+    } catch (error: unknown) {
+      logger.error('Failed to save state data batch', {
+        error: error instanceof Error ? error.message : String(error),
+        recordCount: dataArray.length,
       });
       throw error;
     }
@@ -167,8 +214,12 @@ export class DynamoDBBlsRepository implements BlsRepository {
       return {
         state: response.Item.state as string,
         year: response.Item.year as number,
-        retailLq: response.Item.retailLq as number,
         timestamp: response.Item.timestamp as number,
+        brickAndMortarCodes: response.Item.brickAndMortarCodes as Record<
+          string,
+          number
+        >,
+        ecommerceCodes: response.Item.ecommerceCodes as Record<string, number>,
       };
     } catch (error: unknown) {
       logger.error('Failed to get state data', {
@@ -185,42 +236,174 @@ export class DynamoDBBlsRepository implements BlsRepository {
       const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
       const client = new DynamoDBClient({ region: process.env.AWS_REGION });
 
-      const allItems: BlsStateData[] = [];
-      let lastEvaluatedKey: Record<string, unknown> | undefined;
+      // Use a simple Scan to get all state data for this year
+      const response = await client.send(
+        new ScanCommand({
+          TableName: this.stateDataTableName,
+          FilterExpression: '#year = :year',
+          ExpressionAttributeNames: {
+            '#year': 'year',
+          },
+          ExpressionAttributeValues: {
+            ':year': year,
+          },
+        }),
+      );
 
-      do {
-        const response = await client.send(
-          new ScanCommand({
-            TableName: this.stateDataTableName,
-            FilterExpression: '#year = :year',
-            ExpressionAttributeNames: {
-              '#year': 'year',
-            },
-            ExpressionAttributeValues: {
-              ':year': year,
-            },
-            ExclusiveStartKey: lastEvaluatedKey,
-          }),
-        );
+      if (!response.Items || response.Items.length === 0) {
+        return [];
+      }
 
-        if (response.Items) {
-          const items = response.Items.map((item) => ({
-            state: item.state as string,
-            year: item.year as number,
-            retailLq: item.retailLq as number,
-            timestamp: item.timestamp as number,
-          }));
-          allItems.push(...items);
-        }
-
-        lastEvaluatedKey = response.LastEvaluatedKey;
-      } while (lastEvaluatedKey);
-
-      return allItems;
+      return response.Items.map((item) => ({
+        state: item.state as string,
+        year: item.year as number,
+        timestamp: item.timestamp as number,
+        brickAndMortarCodes: item.brickAndMortarCodes as Record<string, number>,
+        ecommerceCodes: item.ecommerceCodes as Record<string, number>,
+      }));
     } catch (error: unknown) {
       logger.error('Failed to get all state data for year', {
         error: error instanceof Error ? error.message : String(error),
         year,
+      });
+      throw error;
+    }
+  }
+
+  async getAllUniqueStates(): Promise<string[]> {
+    try {
+      const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
+      const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+
+      // Use a simple Scan to get all unique states
+      const response = await client.send(
+        new ScanCommand({
+          TableName: this.stateDataTableName,
+          ProjectionExpression: '#state',
+          ExpressionAttributeNames: {
+            '#state': 'state',
+          },
+        }),
+      );
+
+      if (!response.Items || response.Items.length === 0) {
+        return [];
+      }
+
+      const uniqueStates = [
+        ...new Set(response.Items.map((item) => item.state as string)),
+      ];
+      return uniqueStates;
+    } catch (error: unknown) {
+      logger.error('Failed to get all unique states', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async getAllStateDataForState(state: string): Promise<BlsStateData[]> {
+    try {
+      const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
+      const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+
+      const allItems: BlsStateData[] = [];
+      let lastEvaluatedKey: Record<string, unknown> | undefined;
+
+      try {
+        // Try to use GSI first (more efficient)
+        do {
+          const response = await client.send(
+            new QueryCommand({
+              TableName: this.stateDataTableName,
+              IndexName: 'state-index', // GSI on state field
+              KeyConditionExpression: '#state = :state',
+              ExpressionAttributeNames: {
+                '#state': 'state',
+              },
+              ExpressionAttributeValues: {
+                ':state': state,
+              },
+              ExclusiveStartKey: lastEvaluatedKey,
+              Limit: 100, // Process in smaller chunks
+            }),
+          );
+
+          if (response.Items) {
+            const items = response.Items.map((item) => ({
+              state: item.state as string,
+              year: item.year as number,
+              timestamp: item.timestamp as number,
+              brickAndMortarCodes: item.brickAndMortarCodes as Record<
+                string,
+                number
+              >,
+              ecommerceCodes: item.ecommerceCodes as Record<string, number>,
+            }));
+            allItems.push(...items);
+          }
+
+          lastEvaluatedKey = response.LastEvaluatedKey;
+        } while (lastEvaluatedKey);
+
+        return allItems;
+      } catch (gsiError: unknown) {
+        // If GSI is not available yet, fall back to Scan
+        if (
+          gsiError instanceof Error &&
+          gsiError.name === 'ResourceNotFoundException'
+        ) {
+          logger.warn(
+            `GSI not available yet, falling back to Scan for state ${state}`,
+          );
+
+          // Reset for Scan operation
+          lastEvaluatedKey = undefined;
+
+          do {
+            const response: ScanCommandOutput = await client.send(
+              new ScanCommand({
+                TableName: this.stateDataTableName,
+                FilterExpression: '#state = :state',
+                ExpressionAttributeNames: {
+                  '#state': 'state',
+                },
+                ExpressionAttributeValues: {
+                  ':state': state,
+                },
+                ExclusiveStartKey: lastEvaluatedKey,
+                Limit: 100,
+              }),
+            );
+
+            if (response.Items) {
+              const items = response.Items.map(
+                (item: Record<string, unknown>) => ({
+                  state: item.state as string,
+                  year: item.year as number,
+                  timestamp: item.timestamp as number,
+                  brickAndMortarCodes: item.brickAndMortarCodes as Record<
+                    string,
+                    number
+                  >,
+                  ecommerceCodes: item.ecommerceCodes as Record<string, number>,
+                }),
+              );
+              allItems.push(...items);
+            }
+
+            lastEvaluatedKey = response.LastEvaluatedKey;
+          } while (lastEvaluatedKey);
+
+          return allItems;
+        } else {
+          throw gsiError;
+        }
+      }
+    } catch (error: unknown) {
+      logger.error('Failed to get all state data for state', {
+        error: error instanceof Error ? error.message : String(error),
+        state,
       });
       throw error;
     }
@@ -237,9 +420,12 @@ export class DynamoDBBlsRepository implements BlsRepository {
             state_fips: record.state,
             timestamp: record.timestamp,
             calculatedAt: record.calculatedAt,
-            retailLqSlope: record.retailLqSlope,
-            retailLqTrend: record.retailLqTrend,
-            blockbusterScore: record.blockbusterScore,
+            physicalSlope: record.physicalSlope,
+            physicalTrend: record.physicalTrend,
+            ecommerceSlope: record.ecommerceSlope,
+            ecommerceTrend: record.ecommerceTrend,
+            physicalScore: record.physicalScore,
+            ecommerceScore: record.ecommerceScore,
             dataPoints: record.dataPoints,
             yearsAnalyzed: record.yearsAnalyzed,
           },
@@ -256,7 +442,8 @@ export class DynamoDBBlsRepository implements BlsRepository {
       logger.info('Successfully saved BLS signal record', {
         state: record.state,
         timestamp: record.timestamp,
-        blockbusterScore: record.blockbusterScore,
+        physicalScore: record.physicalScore,
+        ecommerceScore: record.ecommerceScore,
       });
     } catch (error: unknown) {
       if (
@@ -308,9 +495,15 @@ export class DynamoDBBlsRepository implements BlsRepository {
         state: item.state_fips as string,
         timestamp: item.timestamp as number,
         calculatedAt: item.calculatedAt as string,
-        retailLqSlope: item.retailLqSlope as number,
-        retailLqTrend: item.retailLqTrend as 'declining' | 'stable' | 'growing',
-        blockbusterScore: item.blockbusterScore as number,
+        physicalSlope: item.physicalSlope as number,
+        physicalTrend: item.physicalTrend as 'declining' | 'stable' | 'growing',
+        ecommerceSlope: item.ecommerceSlope as number,
+        ecommerceTrend: item.ecommerceTrend as
+          | 'declining'
+          | 'stable'
+          | 'growing',
+        physicalScore: item.physicalScore as number,
+        ecommerceScore: item.ecommerceScore as number,
         dataPoints: item.dataPoints as number,
         yearsAnalyzed: item.yearsAnalyzed as number[],
       };
@@ -344,12 +537,18 @@ export class DynamoDBBlsRepository implements BlsRepository {
             state: item.state_fips as string,
             timestamp: item.timestamp as number,
             calculatedAt: item.calculatedAt as string,
-            retailLqSlope: item.retailLqSlope as number,
-            retailLqTrend: item.retailLqTrend as
+            physicalSlope: item.physicalSlope as number,
+            physicalTrend: item.physicalTrend as
               | 'declining'
               | 'stable'
               | 'growing',
-            blockbusterScore: item.blockbusterScore as number,
+            ecommerceSlope: item.ecommerceSlope as number,
+            ecommerceTrend: item.ecommerceTrend as
+              | 'declining'
+              | 'stable'
+              | 'growing',
+            physicalScore: item.physicalScore as number,
+            ecommerceScore: item.ecommerceScore as number,
             dataPoints: item.dataPoints as number,
             yearsAnalyzed: item.yearsAnalyzed as number[],
           }));

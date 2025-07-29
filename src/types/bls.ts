@@ -27,8 +27,9 @@ export interface BlsCsvRecord {
 export interface BlsStateData {
   state: string;
   year: number;
-  retailLq: number;
   timestamp: number;
+  brickAndMortarCodes: Record<string, number>; // Map of codes to retailLq values
+  ecommerceCodes: Record<string, number>; // Map of codes to retailLq values
 }
 
 export interface BlsProcessedFile {
@@ -42,9 +43,12 @@ export interface BlsSignalRecord {
   state: string;
   timestamp: number;
   calculatedAt: string;
-  retailLqSlope: number;
-  retailLqTrend: 'declining' | 'stable' | 'growing';
-  blockbusterScore: number;
+  physicalSlope: number; // Brick and mortar retail slope
+  physicalTrend: 'declining' | 'stable' | 'growing'; // Brick and mortar retail trend
+  ecommerceSlope: number; // E-commerce slope
+  ecommerceTrend: 'declining' | 'stable' | 'growing'; // E-commerce trend
+  physicalScore: number; // Brick and mortar retail signal score
+  ecommerceScore: number; // E-commerce signal score
   dataPoints: number;
   yearsAnalyzed: number[];
 }
@@ -53,17 +57,22 @@ export interface BlsRepository {
   saveProcessedFile(file: BlsProcessedFile): Promise<void>;
   isFileProcessed(year: string): Promise<boolean>;
   saveStateData(data: BlsStateData): Promise<void>;
+  saveStateDataBatch(dataArray: BlsStateData[]): Promise<void>;
   getStateData(state: string, year: number): Promise<BlsStateData | null>;
   getAllStateDataForYear(year: number): Promise<BlsStateData[]>;
+  getAllStateDataForState(state: string): Promise<BlsStateData[]>;
   saveSignal(record: BlsSignalRecord): Promise<void>;
   getLatestSignal(state: string): Promise<BlsSignalRecord | null>;
   getAllSignals(): Promise<BlsSignalRecord[]>;
 }
 
 export interface BlsMetrics {
-  retailLqSlope: number;
-  retailLqTrend: 'declining' | 'stable' | 'growing';
-  blockbusterScore: number;
+  physicalSlope: number; // Brick and mortar retail slope
+  physicalTrend: 'declining' | 'stable' | 'growing'; // Brick and mortar retail trend
+  ecommerceSlope: number; // E-commerce slope
+  ecommerceTrend: 'declining' | 'stable' | 'growing'; // E-commerce trend
+  physicalScore: number; // Brick and mortar retail signal score
+  ecommerceScore: number; // E-commerce signal score
   dataPoints: number;
   yearsAnalyzed: number[];
 }
