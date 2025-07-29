@@ -12,11 +12,9 @@ async function getSignalScores(
 ): Promise<Record<string, number>> {
   const scoresDir = path.resolve(__dirname, '../scores');
 
-  // Special case for BLS: read from combined scores file
-  const fileName =
-    signalName === 'bls'
-      ? 'bls-scores-combined.json'
-      : `${signalName}-scores.json`;
+  let fileName: string;
+  fileName = `${signalName}-scores.json`;
+
   const filePath = path.join(scoresDir, fileName);
 
   if (!fs.existsSync(filePath)) {

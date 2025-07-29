@@ -1,4 +1,4 @@
-import { getBlsScores } from './get-bls-scores';
+import { BlsService } from '../../services/bls/bls-service';
 import { CONFIG } from '../../config';
 import { logger, uploadToS3 } from '../../util';
 import fs from 'fs';
@@ -7,11 +7,18 @@ import path from 'path';
 async function main() {
   try {
     logger.info('Starting BLS signal task...');
-    const scores = await getBlsScores();
+
+    const blsService = new BlsService();
+    await blsService.processBlsData();
+
+    // Get both physical and e-commerce scores
+    const physicalScores = await blsService.getAllPhysicalScores();
+    const ecommerceScores = await blsService.getAllEcommerceScores();
+
     const calculatedAt = new Date().toISOString();
     const timestamp = Math.floor(Date.now() / 1000);
 
-    // Store scores in DynamoDB for historical tracking...
+    // Store both signals in DynamoDB for historical tracking...
 
     if (
       !CONFIG.IS_DEVELOPMENT &&
@@ -25,21 +32,30 @@ async function main() {
           process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
         );
 
+        // Store physical scores
         await signalScoresRepository.save({
-          signalType: 'bls',
+          signalType: 'bls-physical',
           timestamp,
           calculatedAt,
-          scores,
+          scores: physicalScores,
         });
 
-        logger.info('BLS scores stored in DynamoDB', {
+        // Store e-commerce scores
+        await signalScoresRepository.save({
+          signalType: 'bls-ecommerce',
+          timestamp,
+          calculatedAt,
+          scores: ecommerceScores,
+        });
+
+        logger.info('BLS signals stored in DynamoDB', {
           table: process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
           timestamp,
         });
       } catch (dbError) {
         // Continue with S3 upload even if DynamoDB fails...
 
-        logger.error('Failed to store BLS scores in DynamoDB', {
+        logger.error('Failed to store BLS signals in DynamoDB', {
           error: dbError,
           table: process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
         });
@@ -48,26 +64,54 @@ async function main() {
 
     if (CONFIG.IS_DEVELOPMENT) {
       const scoresDir = path.resolve(__dirname, '../../../dev/scores');
-      const filePath = path.join(scoresDir, 'bls-scores.json');
 
+      // Write physical scores
+      const physicalFilePath = path.join(scoresDir, 'bls-physical-scores.json');
       fs.mkdirSync(scoresDir, { recursive: true });
       fs.writeFileSync(
-        filePath,
-        JSON.stringify({ scores, calculatedAt }, null, 2),
+        physicalFilePath,
+        JSON.stringify(physicalScores, null, 2),
       );
 
-      logger.info('BLS scores written to file', { filePath });
+      // Write e-commerce scores
+      const ecommerceFilePath = path.join(
+        scoresDir,
+        'bls-ecommerce-scores.json',
+      );
+      fs.writeFileSync(
+        ecommerceFilePath,
+        JSON.stringify(ecommerceScores, null, 2),
+      );
+
+      logger.info('BLS signals written to files', {
+        physicalFilePath,
+        ecommerceFilePath,
+      });
     } else {
+      // Upload physical scores to S3
       await uploadToS3({
         bucket: CONFIG.S3_BUCKET_NAME!,
-        key: 'data/signals/bls-scores.json',
-        body: JSON.stringify({ scores, calculatedAt }, null, 2),
-        metadata: { calculatedAt, signal: 'BLS' },
+        key: 'data/signals/bls-physical-scores.json',
+        body: JSON.stringify({ scores: physicalScores, calculatedAt }, null, 2),
+        metadata: { calculatedAt, signal: 'BLS_PHYSICAL' },
       });
 
-      logger.info('BLS scores uploaded to S3', {
+      // Upload e-commerce scores to S3
+      await uploadToS3({
         bucket: CONFIG.S3_BUCKET_NAME!,
-        key: 'data/signals/bls-scores.json',
+        key: 'data/signals/bls-ecommerce-scores.json',
+        body: JSON.stringify(
+          { scores: ecommerceScores, calculatedAt },
+          null,
+          2,
+        ),
+        metadata: { calculatedAt, signal: 'BLS_ECOMMERCE' },
+      });
+
+      logger.info('BLS signals uploaded to S3', {
+        bucket: CONFIG.S3_BUCKET_NAME!,
+        physicalKey: 'data/signals/bls-physical-scores.json',
+        ecommerceKey: 'data/signals/bls-ecommerce-scores.json',
       });
     }
 

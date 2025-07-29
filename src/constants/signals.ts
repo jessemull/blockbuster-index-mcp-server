@@ -5,5 +5,6 @@ export const SIGNALS = [
   { name: 'census', signal: Signal.CENSUS, inverted: true },
   { name: 'broadband', signal: Signal.BROADBAND, inverted: false },
   { name: 'walmart', signal: Signal.WALMART, inverted: true },
-  { name: 'bls', signal: Signal.BLS, inverted: true },
+  { name: 'bls-physical', signal: Signal.BLS_PHYSICAL, inverted: true },
+  { name: 'bls-ecommerce', signal: Signal.BLS_ECOMMERCE, inverted: false },
 ];

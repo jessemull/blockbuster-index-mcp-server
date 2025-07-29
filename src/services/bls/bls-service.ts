@@ -667,6 +667,44 @@ export class BlsService implements IBlsService {
     }
   }
 
+  async getAllPhysicalScores(): Promise<Record<string, number>> {
+    try {
+      const signals = await this.repository.getAllSignals();
+      const scores: Record<string, number> = {};
+
+      for (const signal of signals) {
+        scores[signal.state] = signal.physicalScore;
+      }
+
+      logger.info(
+        `Retrieved physical scores for ${Object.keys(scores).length} states`,
+      );
+      return scores;
+    } catch (error) {
+      logger.error('Error getting physical scores:', error);
+      throw error;
+    }
+  }
+
+  async getAllEcommerceScores(): Promise<Record<string, number>> {
+    try {
+      const signals = await this.repository.getAllSignals();
+      const scores: Record<string, number> = {};
+
+      for (const signal of signals) {
+        scores[signal.state] = signal.ecommerceScore;
+      }
+
+      logger.info(
+        `Retrieved ecommerce scores for ${Object.keys(scores).length} states`,
+      );
+      return scores;
+    } catch (error) {
+      logger.error('Error getting ecommerce scores:', error);
+      throw error;
+    }
+  }
+
   async getAllScores(): Promise<Record<string, number>> {
     try {
       const signals = await this.repository.getAllSignals();

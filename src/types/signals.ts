@@ -3,7 +3,8 @@ export enum Signal {
   CENSUS = 'CENSUS',
   BROADBAND = 'BROADBAND',
   WALMART = 'WALMART',
-  BLS = 'BLS',
+  BLS_PHYSICAL = 'BLS_PHYSICAL',
+  BLS_ECOMMERCE = 'BLS_ECOMMERCE',
 }
 
 export interface SignalScoreRecord {
