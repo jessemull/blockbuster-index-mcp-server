@@ -54,6 +54,7 @@ The calculation process currently includes the following signals with more signa
 - **Census** – Retail market maturity using U.S. Census Bureau data: retail establishments per 100,000 people.
 - **Broadband** – Internet infrastructure and connectivity metrics.
 - **Walmart** – Physical retail presence and technology job distribution through dual-signal analysis of Walmart job postings.
+- **Bureau of Labor Statistics** – Historical retail employment transformation analysis using Bureau of Labor Statistics data (1991-2024).
 
 Each signal is weighted and combined to generate a comprehensive score that reflects the balance between digital and physical retail activity in each state.
 
@@ -77,6 +78,7 @@ The Blockbuster Index MCP Server employs a **modular microservices architecture*
 - **Census Signal Task**: Demographic data processing and analysis.
 - **Broadband Signal Task**: Infrastructure and connectivity metrics.
 - **Walmart Signal Task**: Web scraping and job posting analysis with sliding window aggregation.
+- **Bureau of Labor Statistics Signal Task**: Historical employment data processing and trend analysis.
 - **Blockbuster Index Task**: Signal aggregation and final index calculation.
 
 ### Data Flow

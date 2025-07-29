@@ -126,6 +126,56 @@ Provides a perspective on traditional retail employment patterns by tracking Wal
 
 ---
 
+## BLS Signal
+
+**Purpose:**
+Measures retail employment transformation by analyzing Bureau of Labor Statistics (BLS) data on physical retail decline and e-commerce growth across all U.S. states.
+
+**Data Source:**
+
+- Bureau of Labor Statistics Quarterly Census of Employment and Wages (QCEW) data.
+- Industry codes for brick-and-mortar retail vs. e-commerce establishments.
+
+**Calculation Method:**
+
+- **Physical Retail Component**: Analyzes employment trends in traditional brick-and-mortar retail industries.
+
+  - Calculates slope of employment change over time (1991-2024).
+  - Declining physical retail employment = higher digital adoption score.
+  - Uses location quotient (LQ) analysis to normalize by state size.
+
+- **E-commerce Component**: Analyzes employment trends in e-commerce and digital retail industries.
+
+  - Calculates weighted slope of e-commerce employment growth.
+  - Growing e-commerce employment = higher digital adoption score.
+  - Combines multiple e-commerce industry codes with weighted averaging.
+
+- **Combined Score**: (Physical Score + E-commerce Score) / 2
+
+**Normalization & Inversion:**
+
+- Both components are normalized to a 0–100 scale using z-score normalization.
+- **Physical retail scores are inverted** (declining physical retail = higher score).
+- **E-commerce scores are not inverted** (growing e-commerce = higher score).
+- The final BLS signal is inverted in the blockbuster index calculation.
+
+**Technical Implementation:**
+
+- S3-based data loading from processed BLS CSV files.
+- DynamoDB storage for processed state data and calculated signals.
+- Z-score normalization across all states for fair comparison.
+- Trend analysis using linear regression on employment time series.
+- Industry code classification for physical vs. digital retail.
+
+**Special Notes:**
+
+- The BLS signal provides historical perspective on retail transformation (1991-2024).
+- Physical retail decline is interpreted as positive for digital adoption.
+- E-commerce growth directly indicates digital retail adoption.
+- Data is processed in batches to handle large datasets efficiently.
+
+---
+
 ## Signal Inversion Logic
 
 Some signals represent physical presence (e.g., retail establishments, physical jobs) and must be inverted after normalization so that higher values indicate lower digital adoption.
@@ -142,17 +192,18 @@ Each signal is assigned a weight based on its relevance to the overall retail tr
 
 | Signal    | Weight | Rationale                                                            |
 | --------- | ------ | -------------------------------------------------------------------- |
-| Amazon    | 0.25   | Primary indicator of e-commerce adoption and digital retail presence |
-| Walmart   | 0.25   | Dual-perspective analysis of retail employment evolution             |
-| Census    | 0.25   | Demographic and economic context for retail behavior                 |
-| Broadband | 0.25   | Infrastructure foundation for digital commerce                       |
+| Amazon    | 0.20   | Primary indicator of e-commerce adoption and digital retail presence |
+| Walmart   | 0.20   | Dual-perspective analysis of retail employment evolution             |
+| Census    | 0.20   | Demographic and economic context for retail behavior                 |
+| Broadband | 0.20   | Infrastructure foundation for digital commerce                       |
+| BLS       | 0.20   | Historical employment transformation analysis (1991-2024)            |
 
 ### Calculation Formula
 
 The Blockbuster Index for each state is calculated using the following formula:
 
 ```
-Blockbuster Index = (Amazon Score × 0.25) + (Walmart Score × 0.25) + (Census Score × 0.25) + (Broadband Score × 0.25)
+Blockbuster Index = (Amazon Score × 0.20) + (Walmart Score × 0.20) + (Census Score × 0.20) + (Broadband Score × 0.20) + (BLS Score × 0.20)
 ```
 
 ### Score Normalization
