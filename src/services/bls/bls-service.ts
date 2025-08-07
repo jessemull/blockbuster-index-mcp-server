@@ -11,12 +11,10 @@ import type {
 } from '../../types/bls';
 import { DynamoDBBlsRepository } from '../../repositories/bls/bls-repository';
 import { S3BlsLoader } from './s3-bls-loader';
-import {
-  extractCombinedRetailDataFromCsv,
-  calculateTrendSlope,
-  determineTrendCategory,
-  validateStateData,
-} from './bls-data-processor';
+import { calculateTrendSlope } from './calculate-trend-slope';
+import { determineTrendCategory } from './determine-trend-category';
+import { validateStateData } from './validate-state-data';
+import { extractCombinedRetailDataFromCsv } from './extract-combined-retail-data';
 
 export class BlsService implements IBlsService {
   private repository: DynamoDBBlsRepository;
@@ -50,6 +48,7 @@ export class BlsService implements IBlsService {
       }
 
       // After processing all years, calculate signals for all states...
+
       await this.calculateAllSignals();
 
       logger.info('BLS data processing completed');
@@ -176,7 +175,8 @@ export class BlsService implements IBlsService {
     try {
       logger.info('Calculating BLS signals for all states...');
 
-      // Get all unique states
+      // Get all unique states...
+
       const states = await this.repository.getAllUniqueStates();
       logger.info(`Found ${states.length} states to process`);
 
@@ -185,7 +185,8 @@ export class BlsService implements IBlsService {
         return;
       }
 
-      // Calculate signals for all states and collect slopes for normalization
+      // Calculate signals for all states and collect slopes for normalization...
+
       const stateSignals: Array<{
         state: string;
         physicalSlope: number;
@@ -196,7 +197,8 @@ export class BlsService implements IBlsService {
         yearsAnalyzed: number[];
       }> = [];
 
-      // Process states in batches to avoid memory issues
+      // Process states in batches to avoid memory issues...
+
       const batchSize = 5;
       const batches = Math.ceil(states.length / batchSize);
 
@@ -217,17 +219,20 @@ export class BlsService implements IBlsService {
               return null;
             }
 
-            // Sort by year
+            // Sort by year...
+
             const sortedData = stateData.sort((a, b) => a.year - b.year);
 
-            // Calculate physical retail signal using weighted approach (same as ecommerce)
+            // Calculate physical retail signal using weighted approach (same as ecommerce)...
+
             const physicalCodeSlopes: Array<{
               slope: number;
               dataPoints: number;
             }> = [];
             let totalPhysicalDataPoints = 0;
 
-            // Get all unique physical retail codes for this state
+            // Get all unique physical retail codes for this state...
+
             const allPhysicalCodes = new Set<string>();
             for (const data of sortedData) {
               Object.keys(data.brickAndMortarCodes).forEach((code) => {
@@ -237,7 +242,8 @@ export class BlsService implements IBlsService {
               });
             }
 
-            // Calculate individual slopes for each physical retail code
+            // Calculate individual slopes for each physical retail code...
+
             for (const code of allPhysicalCodes) {
               const codeDataPoints: { year: number; retailLq: number }[] = [];
 
@@ -267,7 +273,8 @@ export class BlsService implements IBlsService {
             let physicalTrend: 'declining' | 'stable' | 'growing' = 'stable';
 
             if (physicalCodeSlopes.length > 0) {
-              // Calculate weighted average slope
+              // Calculate weighted average slope...
+
               const weightedSum = physicalCodeSlopes.reduce(
                 (sum, codeData) => sum + codeData.slope * codeData.dataPoints,
                 0,
@@ -276,14 +283,16 @@ export class BlsService implements IBlsService {
               physicalTrend = determineTrendCategory(physicalSlope);
             }
 
-            // Calculate e-commerce signal using weighted approach
+            // Calculate e-commerce signal using weighted approach...
+
             const ecommerceCodeSlopes: Array<{
               slope: number;
               dataPoints: number;
             }> = [];
             let totalDataPoints = 0;
 
-            // Get all unique e-commerce codes for this state
+            // Get all unique e-commerce codes for this state...
+
             const allEcommerceCodes = new Set<string>();
             for (const data of sortedData) {
               Object.keys(data.ecommerceCodes).forEach((code) => {
@@ -293,7 +302,8 @@ export class BlsService implements IBlsService {
               });
             }
 
-            // Calculate individual slopes for each e-commerce code
+            // Calculate individual slopes for each e-commerce code...
+
             for (const code of allEcommerceCodes) {
               const codeDataPoints: { year: number; retailLq: number }[] = [];
 
@@ -323,7 +333,8 @@ export class BlsService implements IBlsService {
             let ecommerceTrend: 'declining' | 'stable' | 'growing' = 'stable';
 
             if (ecommerceCodeSlopes.length > 0) {
-              // Calculate weighted average slope
+              // Calculate weighted average slope...
+
               const weightedSum = ecommerceCodeSlopes.reduce(
                 (sum, codeData) => sum + codeData.slope * codeData.dataPoints,
                 0,
@@ -353,13 +364,15 @@ export class BlsService implements IBlsService {
 
         logger.info(`Processed ${batch.length} states`);
 
-        // Add a small delay between batches to prevent throttling
+        // Add a small delay between batches to prevent throttling...
+
         if (i < batches - 1) {
           await new Promise((resolve) => setTimeout(resolve, 100));
         }
       }
 
-      // Normalize slopes using z-score across all states
+      // Normalize slopes using z-score across all states...
+
       const physicalSlopes = stateSignals.map((s) => s.physicalSlope);
       const ecommerceSlopes = stateSignals.map((s) => s.ecommerceSlope);
 
@@ -390,20 +403,24 @@ export class BlsService implements IBlsService {
         `Normalization stats: E-commerce mean=${ecommerceMean.toFixed(4)}, std=${ecommerceStd.toFixed(4)}`,
       );
 
-      // Calculate normalized scores and save signals
+      // Calculate normalized scores and save signals...
+
       for (const signal of stateSignals) {
         try {
-          // Calculate z-scores
+          // Calculate z-scores...
+
           const physicalZScore =
             (signal.physicalSlope - physicalMean) / physicalStd;
           const ecommerceZScore =
             (signal.ecommerceSlope - ecommerceMean) / ecommerceStd;
 
-          // Invert physical retail signal (decline = higher score)
+          // Invert physical retail signal (decline = higher score)...
+
           const physicalComponent = -physicalZScore;
           const ecommerceComponent = ecommerceZScore;
 
-          // Convert to 0-100 scale
+          // Convert to 0-100 scale...
+
           const physicalScore = Math.max(
             0,
             Math.min(100, 50 + physicalComponent * 15),
@@ -453,7 +470,8 @@ export class BlsService implements IBlsService {
         scores[signal.state] = signal.physicalScore;
       }
 
-      // Apply outlier detection and correction
+      // Apply outlier detection and correction...
+
       const outlierAnalysis = detectAndCorrectOutliers(scores);
       logOutlierAnalysis(outlierAnalysis, 'physical');
 
