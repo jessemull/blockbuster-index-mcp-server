@@ -79,6 +79,6 @@ export interface BlsMetrics {
 
 export interface BlsService {
   processBlsData(): Promise<void>;
-  calculateStateMetrics(state: string): Promise<BlsMetrics | null>;
-  getAllScores(): Promise<Record<string, number>>;
+  getAllPhysicalScores(): Promise<Record<string, number>>;
+  getAllEcommerceScores(): Promise<Record<string, number>>;
 }

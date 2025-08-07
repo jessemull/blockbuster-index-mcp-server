@@ -4,7 +4,6 @@ import {
   logOutlierAnalysis,
 } from '../../util/helpers';
 import type {
-  BlsMetrics,
   BlsProcessedFile,
   BlsStateData,
   BlsSignalRecord,
@@ -411,29 +410,6 @@ export class BlsService implements IBlsService {
     }
   }
 
-  async calculateStateMetrics(state: string): Promise<BlsMetrics | null> {
-    try {
-      const latestSignal = await this.repository.getLatestSignal(state);
-      if (!latestSignal) {
-        return null;
-      }
-
-      return {
-        physicalSlope: latestSignal.physicalSlope,
-        physicalTrend: latestSignal.physicalTrend,
-        ecommerceSlope: latestSignal.ecommerceSlope,
-        ecommerceTrend: latestSignal.ecommerceTrend,
-        physicalScore: latestSignal.physicalScore,
-        ecommerceScore: latestSignal.ecommerceScore,
-        dataPoints: latestSignal.dataPoints,
-        yearsAnalyzed: latestSignal.yearsAnalyzed,
-      };
-    } catch (error) {
-      logger.error(`Error calculating metrics for state ${state}:`, error);
-      throw error;
-    }
-  }
-
   async getAllPhysicalScores(): Promise<Record<string, number>> {
     try {
       const signals = await this.repository.getAllSignals();
@@ -489,57 +465,6 @@ export class BlsService implements IBlsService {
       return outlierAnalysis.correctedScores;
     } catch (error) {
       logger.error('Error getting ecommerce scores:', error);
-      throw error;
-    }
-  }
-
-  async getAllScores(): Promise<Record<string, number>> {
-    try {
-      // Get corrected scores from the individual methods
-      const physicalScores = await this.getAllPhysicalScores();
-      const ecommerceScores = await this.getAllEcommerceScores();
-      const scores: Record<string, number> = {};
-
-      for (const state of Object.keys(physicalScores)) {
-        // Combine both scores equally: (physicalScore + ecommerceScore) / 2
-        scores[state] = (physicalScores[state] + ecommerceScores[state]) / 2;
-      }
-
-      logger.info(
-        `Retrieved combined scores for ${Object.keys(scores).length} states`,
-      );
-      return scores;
-    } catch (error) {
-      logger.error('Error getting all scores:', error);
-      throw error;
-    }
-  }
-
-  async getAllIndividualScores(): Promise<
-    Record<string, { physicalScore: number; ecommerceScore: number }>
-  > {
-    try {
-      // Get corrected scores from the individual methods
-      const physicalScores = await this.getAllPhysicalScores();
-      const ecommerceScores = await this.getAllEcommerceScores();
-      const scores: Record<
-        string,
-        { physicalScore: number; ecommerceScore: number }
-      > = {};
-
-      for (const state of Object.keys(physicalScores)) {
-        scores[state] = {
-          physicalScore: physicalScores[state],
-          ecommerceScore: ecommerceScores[state],
-        };
-      }
-
-      logger.info(
-        `Retrieved individual scores for ${Object.keys(scores).length} states`,
-      );
-      return scores;
-    } catch (error) {
-      logger.error('Error getting individual scores:', error);
       throw error;
     }
   }
