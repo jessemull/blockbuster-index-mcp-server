@@ -32,6 +32,12 @@ jest.mock('../../constants', () => ({
     broadband: 0.2,
   },
 }));
+jest.mock('../../services/bls/bls-service', () => ({
+  BlsService: jest.fn().mockImplementation(() => ({
+    getAllPhysicalScores: jest.fn().mockResolvedValue({ CA: 75.5, TX: 25.5 }),
+    getAllEcommerceScores: jest.fn().mockResolvedValue({ CA: 80.0, TX: 60.0 }),
+  })),
+}));
 jest.mock('../../types', () => ({
   States: { CA: 'CA', OR: 'OR' },
   Signal: {
@@ -63,6 +69,12 @@ describe('blockbuster index combiner entrypoint', () => {
       }
       if (filePath.includes('broadband-scores.json')) {
         return JSON.stringify({ scores: { CA: 0.2, OR: 0.4 } });
+      }
+      if (filePath.includes('bls-physical-scores.json')) {
+        return JSON.stringify({ scores: { CA: 75.5, TX: 25.5 } });
+      }
+      if (filePath.includes('bls-ecommerce-scores.json')) {
+        return JSON.stringify({ scores: { CA: 80.0, TX: 60.0 } });
       }
       return '{}';
     });
