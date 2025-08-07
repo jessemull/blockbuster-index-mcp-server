@@ -245,7 +245,6 @@ export function extractCombinedRetailDataFromCsv(
   return stateData;
 }
 
-// Keep the original function for backward compatibility
 export function extractRetailDataFromCsv(
   records: BlsCsvRecord[],
   year: number,
@@ -375,10 +374,6 @@ export function validateStateData(data: BlsStateData): boolean {
   }
 
   return true;
-}
-
-export function sortStateDataByYear(data: BlsStateData[]): BlsStateData[] {
-  return [...data].sort((a, b) => a.year - b.year);
 }
 
 export function groupStateDataByState(
