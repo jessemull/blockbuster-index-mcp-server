@@ -220,27 +220,61 @@ export class BlsService implements IBlsService {
             // Sort by year
             const sortedData = stateData.sort((a, b) => a.year - b.year);
 
-            // Calculate physical retail signal (brick and mortar)
-            const physicalDataPoints: { year: number; retailLq: number }[] = [];
+            // Calculate physical retail signal using weighted approach (same as ecommerce)
+            const physicalCodeSlopes: Array<{
+              slope: number;
+              dataPoints: number;
+            }> = [];
+            let totalPhysicalDataPoints = 0;
+
+            // Get all unique physical retail codes for this state
+            const allPhysicalCodes = new Set<string>();
             for (const data of sortedData) {
-              const totalPhysicalLq = Object.values(
-                data.brickAndMortarCodes,
-              ).reduce((sum, lq) => sum + lq, 0);
-              if (totalPhysicalLq > 0) {
-                physicalDataPoints.push({
-                  year: data.year,
-                  retailLq: totalPhysicalLq,
+              Object.keys(data.brickAndMortarCodes).forEach((code) => {
+                if (data.brickAndMortarCodes[code] > 0) {
+                  allPhysicalCodes.add(code);
+                }
+              });
+            }
+
+            // Calculate individual slopes for each physical retail code
+            for (const code of allPhysicalCodes) {
+              const codeDataPoints: { year: number; retailLq: number }[] = [];
+
+              for (const data of sortedData) {
+                if (
+                  data.brickAndMortarCodes[code] &&
+                  data.brickAndMortarCodes[code] > 0
+                ) {
+                  codeDataPoints.push({
+                    year: data.year,
+                    retailLq: data.brickAndMortarCodes[code],
+                  });
+                }
+              }
+
+              if (codeDataPoints.length >= 2) {
+                const codeSlope = calculateTrendSlope(codeDataPoints);
+                physicalCodeSlopes.push({
+                  slope: codeSlope,
+                  dataPoints: codeDataPoints.length,
                 });
+                totalPhysicalDataPoints += codeDataPoints.length;
               }
             }
 
-            if (physicalDataPoints.length < 2) {
-              logger.warn(`Insufficient physical data points for ${state}`);
-              return null;
-            }
+            let physicalSlope = 0;
+            let physicalTrend: 'declining' | 'stable' | 'growing' = 'stable';
 
-            const physicalSlope = calculateTrendSlope(physicalDataPoints);
-            const physicalTrend = determineTrendCategory(physicalSlope);
+            if (physicalCodeSlopes.length > 0) {
+              // Calculate weighted average slope
+              const weightedSum = physicalCodeSlopes.reduce(
+                (sum, codeData) => sum + codeData.slope * codeData.dataPoints,
+                0,
+              );
+              physicalSlope = weightedSum / totalPhysicalDataPoints;
+              physicalTrend = determineTrendCategory(physicalSlope);
+            }
 
             // Calculate e-commerce signal using weighted approach
             const ecommerceCodeSlopes: Array<{
@@ -304,7 +338,7 @@ export class BlsService implements IBlsService {
               ecommerceSlope,
               physicalTrend,
               ecommerceTrend,
-              dataPoints: physicalDataPoints.length,
+              dataPoints: totalPhysicalDataPoints,
               yearsAnalyzed: sortedData.map((d) => d.year),
             };
           } catch (error) {

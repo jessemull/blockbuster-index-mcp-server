@@ -1,102 +1,102 @@
 {
   "states": {
     "AK": {
-      "score": 40.83,
+      "score": 35.83,
       "components": {
         "AMAZON": 0,
         "CENSUS": 59,
         "BROADBAND": 0,
         "WALMART": 100,
-        "BLS_PHYSICAL": 88,
-        "BLS_ECOMMERCE": 67
+        "BLS_PHYSICAL": 77,
+        "BLS_ECOMMERCE": 54
       }
     },
     "AL": {
-      "score": 37.85,
+      "score": 40.45,
       "components": {
         "AMAZON": 0,
         "CENSUS": 50,
         "BROADBAND": 48,
         "WALMART": 72,
-        "BLS_PHYSICAL": 68,
-        "BLS_ECOMMERCE": 41
+        "BLS_PHYSICAL": 97,
+        "BLS_ECOMMERCE": 40
       }
     },
     "AR": {
-      "score": 27.58,
+      "score": 30.88,
       "components": {
         "AMAZON": 0,
         "CENSUS": 52,
         "BROADBAND": 21,
         "WALMART": 77,
-        "BLS_PHYSICAL": 41,
-        "BLS_ECOMMERCE": 32
+        "BLS_PHYSICAL": 65,
+        "BLS_ECOMMERCE": 35
       }
     },
     "AZ": {
-      "score": 41.13,
+      "score": 40.23,
       "components": {
         "AMAZON": 5,
         "CENSUS": 100,
         "BROADBAND": 43,
         "WALMART": 85,
         "BLS_PHYSICAL": 33,
-        "BLS_ECOMMERCE": 47
+        "BLS_ECOMMERCE": 44
       }
     },
     "CA": {
-      "score": 46.88,
+      "score": 62.17,
       "components": {
         "AMAZON": 40,
         "CENSUS": 84,
         "BROADBAND": 61,
         "WALMART": 37,
-        "BLS_PHYSICAL": 0,
-        "BLS_ECOMMERCE": 52
+        "BLS_PHYSICAL": 9,
+        "BLS_ECOMMERCE": 100
       }
     },
     "CO": {
-      "score": 31.4,
+      "score": 33.7,
       "components": {
         "AMAZON": 5,
         "CENSUS": 65,
         "BROADBAND": 43,
         "WALMART": 81,
-        "BLS_PHYSICAL": 40,
-        "BLS_ECOMMERCE": 22
+        "BLS_PHYSICAL": 39,
+        "BLS_ECOMMERCE": 30
       }
     },
     "CT": {
-      "score": 53.85,
+      "score": 64.35,
       "components": {
         "AMAZON": 0,
         "CENSUS": 62,
         "BROADBAND": 89,
         "WALMART": 92,
-        "BLS_PHYSICAL": 89,
-        "BLS_ECOMMERCE": 52
+        "BLS_PHYSICAL": 77,
+        "BLS_ECOMMERCE": 91
       }
     },
     "DE": {
-      "score": 50.83,
+      "score": 45.53,
       "components": {
         "AMAZON": 0,
         "CENSUS": 44,
         "BROADBAND": 64,
         "WALMART": 99,
-        "BLS_PHYSICAL": 87,
-        "BLS_ECOMMERCE": 62
+        "BLS_PHYSICAL": 64,
+        "BLS_ECOMMERCE": 52
       }
     },
     "FL": {
-      "score": 45.45,
+      "score": 39.85,
       "components": {
         "AMAZON": 2,
         "CENSUS": 56,
         "BROADBAND": 67,
         "WALMART": 38,
-        "BLS_PHYSICAL": 56,
-        "BLS_ECOMMERCE": 63
+        "BLS_PHYSICAL": 33,
+        "BLS_ECOMMERCE": 52
       }
     },
     "GA": {
@@ -106,453 +106,453 @@
         "CENSUS": 61,
         "BROADBAND": 46,
         "WALMART": 59,
-        "BLS_PHYSICAL": 70,
-        "BLS_ECOMMERCE": 29
+        "BLS_PHYSICAL": 55,
+        "BLS_ECOMMERCE": 34
       }
     },
     "HI": {
-      "score": 55.58,
+      "score": 46.08,
       "components": {
         "AMAZON": 0,
         "CENSUS": 70,
         "BROADBAND": 75,
         "WALMART": 99,
-        "BLS_PHYSICAL": 57,
-        "BLS_ECOMMERCE": 74
+        "BLS_PHYSICAL": 10,
+        "BLS_ECOMMERCE": 58
       }
     },
     "IA": {
-      "score": 31.3,
+      "score": 34.9,
       "components": {
         "AMAZON": 0,
         "CENSUS": 53,
         "BROADBAND": 36,
         "WALMART": 83,
         "BLS_PHYSICAL": 100,
-        "BLS_ECOMMERCE": 13
+        "BLS_ECOMMERCE": 25
       }
     },
     "ID": {
-      "score": 36.4,
+      "score": 35.1,
       "components": {
         "AMAZON": 0,
         "CENSUS": 64,
         "BROADBAND": 13,
         "WALMART": 96,
-        "BLS_PHYSICAL": 53,
-        "BLS_ECOMMERCE": 55
+        "BLS_PHYSICAL": 61,
+        "BLS_ECOMMERCE": 48
       }
     },
     "IL": {
-      "score": 37.1,
+      "score": 34.7,
       "components": {
         "AMAZON": 7,
         "CENSUS": 79,
         "BROADBAND": 54,
         "WALMART": 51,
-        "BLS_PHYSICAL": 31,
+        "BLS_PHYSICAL": 7,
         "BLS_ECOMMERCE": 39
       }
     },
     "IN": {
-      "score": 45.4,
+      "score": 46.1,
       "components": {
         "AMAZON": 4,
         "CENSUS": 70,
         "BROADBAND": 62,
         "WALMART": 74,
-        "BLS_PHYSICAL": 80,
-        "BLS_ECOMMERCE": 44
+        "BLS_PHYSICAL": 93,
+        "BLS_ECOMMERCE": 42
       }
     },
     "KS": {
-      "score": 43.85,
+      "score": 41.15,
       "components": {
         "AMAZON": 0,
         "CENSUS": 61,
         "BROADBAND": 41,
         "WALMART": 85,
-        "BLS_PHYSICAL": 82,
-        "BLS_ECOMMERCE": 55
+        "BLS_PHYSICAL": 76,
+        "BLS_ECOMMERCE": 48
       }
     },
     "KY": {
-      "score": 39.88,
+      "score": 39.28,
       "components": {
         "AMAZON": 1,
         "CENSUS": 58,
         "BROADBAND": 54,
         "WALMART": 77,
-        "BLS_PHYSICAL": 73,
-        "BLS_ECOMMERCE": 38
+        "BLS_PHYSICAL": 64,
+        "BLS_ECOMMERCE": 39
       }
     },
     "LA": {
-      "score": 41.08,
+      "score": 38.48,
       "components": {
         "AMAZON": 1,
         "CENSUS": 51,
         "BROADBAND": 46,
         "WALMART": 76,
-        "BLS_PHYSICAL": 53,
-        "BLS_ECOMMERCE": 56
+        "BLS_PHYSICAL": 51,
+        "BLS_ECOMMERCE": 48
       }
     },
     "MA": {
-      "score": 63.65,
+      "score": 54.55,
       "components": {
         "AMAZON": 14,
         "CENSUS": 62,
         "BROADBAND": 85,
         "WALMART": 88,
-        "BLS_PHYSICAL": 82,
-        "BLS_ECOMMERCE": 79
+        "BLS_PHYSICAL": 45,
+        "BLS_ECOMMERCE": 61
       }
     },
     "MD": {
-      "score": 52.97,
+      "score": 47.28,
       "components": {
         "AMAZON": 3,
         "CENSUS": 86,
         "BROADBAND": 68,
         "WALMART": 85,
-        "BLS_PHYSICAL": 57,
-        "BLS_ECOMMERCE": 67
+        "BLS_PHYSICAL": 39,
+        "BLS_ECOMMERCE": 54
       }
     },
     "ME": {
-      "score": 41.97,
+      "score": 39.27,
       "components": {
         "AMAZON": 0,
         "CENSUS": 11,
         "BROADBAND": 47,
         "WALMART": 94,
-        "BLS_PHYSICAL": 58,
-        "BLS_ECOMMERCE": 63
+        "BLS_PHYSICAL": 64,
+        "BLS_ECOMMERCE": 52
       }
     },
     "MI": {
-      "score": 36.4,
+      "score": 38.5,
       "components": {
         "AMAZON": 1,
         "CENSUS": 60,
         "BROADBAND": 55,
         "WALMART": 70,
         "BLS_PHYSICAL": 79,
-        "BLS_ECOMMERCE": 25
+        "BLS_ECOMMERCE": 32
       }
     },
     "MN": {
-      "score": 42.38,
+      "score": 41.88,
       "components": {
         "AMAZON": 1,
         "CENSUS": 68,
         "BROADBAND": 60,
         "WALMART": 79,
-        "BLS_PHYSICAL": 68,
+        "BLS_PHYSICAL": 63,
         "BLS_ECOMMERCE": 41
       }
     },
     "MO": {
-      "score": 35.38,
+      "score": 35.58,
       "components": {
         "AMAZON": 1,
         "CENSUS": 62,
         "BROADBAND": 32,
         "WALMART": 65,
-        "BLS_PHYSICAL": 81,
-        "BLS_ECOMMERCE": 37
+        "BLS_PHYSICAL": 80,
+        "BLS_ECOMMERCE": 38
       }
     },
     "MS": {
-      "score": 18,
+      "score": 27.8,
       "components": {
         "AMAZON": 1,
         "CENSUS": 34,
         "BROADBAND": 25,
         "WALMART": 80,
-        "BLS_PHYSICAL": 42,
-        "BLS_ECOMMERCE": 0
+        "BLS_PHYSICAL": 86,
+        "BLS_ECOMMERCE": 18
       }
     },
     "MT": {
-      "score": 32.75,
+      "score": 33.55,
       "components": {
         "AMAZON": 0,
         "CENSUS": 20,
         "BROADBAND": 10,
         "WALMART": 98,
-        "BLS_PHYSICAL": 30,
-        "BLS_ECOMMERCE": 63
+        "BLS_PHYSICAL": 71,
+        "BLS_ECOMMERCE": 52
       }
     },
     "NC": {
-      "score": 48.83,
+      "score": 44.53,
       "components": {
         "AMAZON": 1,
         "CENSUS": 60,
         "BROADBAND": 76,
         "WALMART": 57,
-        "BLS_PHYSICAL": 69,
-        "BLS_ECOMMERCE": 59
+        "BLS_PHYSICAL": 53,
+        "BLS_ECOMMERCE": 50
       }
     },
     "ND": {
-      "score": 42.05,
+      "score": 45.35,
       "components": {
         "AMAZON": 0,
         "CENSUS": 28,
         "BROADBAND": 91,
         "WALMART": 98,
-        "BLS_PHYSICAL": 6,
-        "BLS_ECOMMERCE": 46
+        "BLS_PHYSICAL": 48,
+        "BLS_ECOMMERCE": 43
       }
     },
     "NE": {
-      "score": 31.95,
+      "score": 34.45,
       "components": {
         "AMAZON": 0,
         "CENSUS": 50,
         "BROADBAND": 31,
         "WALMART": 92,
-        "BLS_PHYSICAL": 4,
-        "BLS_ECOMMERCE": 49
+        "BLS_PHYSICAL": 44,
+        "BLS_ECOMMERCE": 44
       }
     },
     "NH": {
-      "score": 58.4,
+      "score": 50.1,
       "components": {
         "AMAZON": 0,
         "CENSUS": 23,
         "BROADBAND": 75,
         "WALMART": 93,
-        "BLS_PHYSICAL": 47,
-        "BLS_ECOMMERCE": 100
+        "BLS_PHYSICAL": 48,
+        "BLS_ECOMMERCE": 72
       }
     },
     "NJ": {
-      "score": 45.92,
+      "score": 42.53,
       "components": {
         "AMAZON": 3,
         "CENSUS": 63,
         "BROADBAND": 83,
         "WALMART": 82,
-        "BLS_PHYSICAL": 60,
+        "BLS_PHYSICAL": 26,
         "BLS_ECOMMERCE": 39
       }
     },
     "NM": {
-      "score": 31.2,
+      "score": 32.4,
       "components": {
         "AMAZON": 0,
         "CENSUS": 72,
         "BROADBAND": 14,
         "WALMART": 92,
-        "BLS_PHYSICAL": 47,
+        "BLS_PHYSICAL": 59,
         "BLS_ECOMMERCE": 38
       }
     },
     "NV": {
-      "score": 48.65,
+      "score": 40.75,
       "components": {
         "AMAZON": 1,
         "CENSUS": 80,
         "BROADBAND": 43,
         "WALMART": 96,
-        "BLS_PHYSICAL": 95,
-        "BLS_ECOMMERCE": 57
+        "BLS_PHYSICAL": 40,
+        "BLS_ECOMMERCE": 49
       }
     },
     "NY": {
-      "score": 57.35,
+      "score": 56.75,
       "components": {
         "AMAZON": 26,
         "CENSUS": 41,
         "BROADBAND": 84,
         "WALMART": 65,
-        "BLS_PHYSICAL": 0,
-        "BLS_ECOMMERCE": 87
+        "BLS_PHYSICAL": 60,
+        "BLS_ECOMMERCE": 65
       }
     },
     "OH": {
-      "score": 39.2,
+      "score": 43.7,
       "components": {
         "AMAZON": 3,
         "CENSUS": 77,
         "BROADBAND": 68,
         "WALMART": 57,
-        "BLS_PHYSICAL": 76,
-        "BLS_ECOMMERCE": 24
+        "BLS_PHYSICAL": 100,
+        "BLS_ECOMMERCE": 31
       }
     },
     "OK": {
-      "score": 31.38,
+      "score": 32.47,
       "components": {
         "AMAZON": 0,
         "CENSUS": 62,
         "BROADBAND": 33,
         "WALMART": 75,
-        "BLS_PHYSICAL": 31,
-        "BLS_ECOMMERCE": 38
+        "BLS_PHYSICAL": 39,
+        "BLS_ECOMMERCE": 39
       }
     },
     "OR": {
-      "score": 39.3,
+      "score": 38.4,
       "components": {
         "AMAZON": 4,
         "CENSUS": 61,
         "BROADBAND": 36,
         "WALMART": 91,
-        "BLS_PHYSICAL": 74,
-        "BLS_ECOMMERCE": 41
+        "BLS_PHYSICAL": 68,
+        "BLS_ECOMMERCE": 40
       }
     },
     "PA": {
-      "score": 45.5,
+      "score": 43.6,
       "components": {
         "AMAZON": 3,
         "CENSUS": 68,
         "BROADBAND": 68,
         "WALMART": 58,
-        "BLS_PHYSICAL": 67,
-        "BLS_ECOMMERCE": 50
+        "BLS_PHYSICAL": 63,
+        "BLS_ECOMMERCE": 45
       }
     },
     "RI": {
-      "score": 46,
+      "score": 47.6,
       "components": {
         "AMAZON": 0,
         "CENSUS": 61,
         "BROADBAND": 100,
         "WALMART": 99,
-        "BLS_PHYSICAL": 5,
-        "BLS_ECOMMERCE": 45
+        "BLS_PHYSICAL": 30,
+        "BLS_ECOMMERCE": 42
       }
     },
     "SC": {
-      "score": 53.05,
+      "score": 46.65,
       "components": {
         "AMAZON": 0,
         "CENSUS": 51,
         "BROADBAND": 64,
         "WALMART": 79,
-        "BLS_PHYSICAL": 71,
-        "BLS_ECOMMERCE": 78
+        "BLS_PHYSICAL": 61,
+        "BLS_ECOMMERCE": 60
       }
     },
     "SD": {
-      "score": 44.67,
+      "score": 43.67,
       "components": {
         "AMAZON": 0,
         "CENSUS": 19,
         "BROADBAND": 45,
         "WALMART": 98,
-        "BLS_PHYSICAL": 32,
-        "BLS_ECOMMERCE": 79
+        "BLS_PHYSICAL": 76,
+        "BLS_ECOMMERCE": 61
       }
     },
     "TN": {
-      "score": 46.23,
+      "score": 44.43,
       "components": {
         "AMAZON": 11,
         "CENSUS": 59,
         "BROADBAND": 68,
         "WALMART": 70,
-        "BLS_PHYSICAL": 64,
-        "BLS_ECOMMERCE": 46
+        "BLS_PHYSICAL": 55,
+        "BLS_ECOMMERCE": 43
       }
     },
     "TX": {
-      "score": 50.63,
+      "score": 44.52,
       "components": {
         "AMAZON": 26,
         "CENSUS": 83,
         "BROADBAND": 51,
         "WALMART": 0,
-        "BLS_PHYSICAL": 49,
-        "BLS_ECOMMERCE": 76
+        "BLS_PHYSICAL": 42,
+        "BLS_ECOMMERCE": 58
       }
     },
     "UT": {
-      "score": 49.25,
+      "score": 42.95,
       "components": {
         "AMAZON": 0,
         "CENSUS": 72,
         "BROADBAND": 47,
         "WALMART": 86,
         "BLS_PHYSICAL": 25,
-        "BLS_ECOMMERCE": 85
+        "BLS_ECOMMERCE": 64
       }
     },
     "VA": {
-      "score": 62.38,
+      "score": 53.48,
       "components": {
         "AMAZON": 36,
         "CENSUS": 74,
         "BROADBAND": 55,
         "WALMART": 71,
-        "BLS_PHYSICAL": 30,
-        "BLS_ECOMMERCE": 95
+        "BLS_PHYSICAL": 22,
+        "BLS_ECOMMERCE": 68
       }
     },
     "VT": {
-      "score": 41.45,
+      "score": 22.95,
       "components": {
         "AMAZON": 0,
         "CENSUS": 2,
         "BROADBAND": 46,
         "WALMART": 100,
-        "BLS_PHYSICAL": 90,
-        "BLS_ECOMMERCE": 52
+        "BLS_PHYSICAL": 61,
+        "BLS_ECOMMERCE": 0
       }
     },
     "WA": {
-      "score": 68.5,
+      "score": 75.1,
       "components": {
         "AMAZON": 100,
         "CENSUS": 89,
         "BROADBAND": 45,
         "WALMART": 87,
-        "BLS_PHYSICAL": 57,
-        "BLS_ECOMMERCE": 52
+        "BLS_PHYSICAL": 0,
+        "BLS_ECOMMERCE": 93
       }
     },
     "WI": {
-      "score": 44.85,
+      "score": 44.15,
       "components": {
         "AMAZON": 1,
         "CENSUS": 70,
         "BROADBAND": 47,
         "WALMART": 74,
-        "BLS_PHYSICAL": 67,
-        "BLS_ECOMMERCE": 59
+        "BLS_PHYSICAL": 87,
+        "BLS_ECOMMERCE": 50
       }
     },
     "WV": {
-      "score": 45.33,
+      "score": 42.53,
       "components": {
         "AMAZON": 0,
         "CENSUS": 62,
         "BROADBAND": 31,
         "WALMART": 89,
-        "BLS_PHYSICAL": 68,
-        "BLS_ECOMMERCE": 70
+        "BLS_PHYSICAL": 82,
+        "BLS_ECOMMERCE": 56
       }
     },
     "WY": {
-      "score": 23.05,
+      "score": 24.65,
       "components": {
         "AMAZON": 0,
         "CENSUS": 0,
         "BROADBAND": 5,
         "WALMART": 98,
-        "BLS_PHYSICAL": 57,
-        "BLS_ECOMMERCE": 30
+        "BLS_PHYSICAL": 61,
+        "BLS_ECOMMERCE": 34
       }
     }
   },
   "metadata": {
-    "calculatedAt": "2025-08-07T01:42:46.863Z",
+    "calculatedAt": "2025-08-07T21:07:46.147Z",
     "version": "dev",
     "totalStates": 50,
     "signalStatus": {
