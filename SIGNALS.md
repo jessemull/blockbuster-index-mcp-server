@@ -218,14 +218,14 @@ The Blockbuster Index combines all individual signals using a weighted aggregati
 
 Each signal is assigned a weight based on its relevance to the overall retail transformation:
 
-| Signal                    | Weight | Rationale                                                            |
-| ------------------------- | ------ | -------------------------------------------------------------------- |
-| Amazon employment         | 0.25   | Primary indicator of e-commerce adoption and digital retail presence |
-| BLS e-commerce employment | 0.3333 | Historical e-commerce employment growth analysis (1991-2024)         |
-| Broadband penetration     | 0.1667 | Infrastructure foundation for digital commerce                       |
-| Walmart traffic           | 0.0833 | Traditional retail employment patterns                               |
-| Census physical retail    | 0.0833 | Physical retail establishment density                                |
-| BLS physical retail       | 0.0833 | Historical physical retail decline analysis (1991-2024)              |
+| Signal                    | Weight | Rationale                                         |
+| ------------------------- | ------ | ------------------------------------------------- |
+| Amazon employment         | 0.25   | E-commerce retail employment patterns             |
+| BLS e-commerce employment | 0.3333 | E-commerce employment growth (1991-Present)       |
+| Broadband penetration     | 0.1667 | Infrastructure foundation for digital commerce    |
+| Walmart employment        | 0.0833 | Physical retail employment patterns               |
+| Census physical retail    | 0.0833 | Physical retail establishment density             |
+| BLS physical employment   | 0.0833 | Physical retail employment decline (1991-Present) |
 
 ### Calculation Formula
 

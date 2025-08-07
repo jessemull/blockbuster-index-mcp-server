@@ -9,6 +9,8 @@ async function runCensusTest() {
   try {
     logger.info('Starting Census signal test...');
 
+    // Get census scores...
+
     const scores = await getCensusScores();
 
     logger.info('Census signal results:', {

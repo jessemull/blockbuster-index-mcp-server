@@ -1,13 +1,14 @@
 // BLS Industry Classification Codes.
-// Note: BLS says that from 1990s it uses SIC codes then switched to NAICS codes but only the SIC codes are used in all data.
 
 export const BLS_INDUSTRY_CODES = {
-  // NAICS codes for brick and mortar retail trade (FOCUSED ON DISRUPTABLE SECTORS)
-  // Excluded population-driven sectors that grow regardless of digital transformation:
-  // - 4411 (Auto dealers) - grows with population
-  // - 4441 (Building materials) - grows with construction
-  // - 4451 (Food stores) - essential, grows with population
-  // - 4471 (Gas stations) - grows with population
+  /**
+   * NAICS codes for brick and mortar retail trade (FOCUSED ON DISRUPTABLE SECTORS).
+   * Excluded population-driven sectors that grow regardless of digital transformation:
+   * - 4411 Auto dealers - grows with population.
+   * - 4441 Building materials - grows with construction.
+   * - 4451 Food stores - essential, grows with population.
+   * - 4471 Gas stations - grows with population.
+   */
   BRICK_AND_MORTAR_RETAIL_NAICS: [
     '4421', // Furniture Stores
     '4431', // Electronics and Appliance Stores
@@ -87,7 +88,7 @@ export const TREND_THRESHOLDS = {
   SLOPE_THRESHOLD: 0.001, // Small threshold to account for noise.
 } as const;
 
-// Score calculation parameters
+// Score calculation parameters.
 
 export const SCORE_PARAMETERS = {
   DECLINING_MULTIPLIER: 1.0, // Higher score for declining retail.

@@ -9,7 +9,7 @@ async function runAmazonTest() {
   try {
     logger.info('Starting Amazon signal test...');
 
-    // Get Amazon job counts and store data while scraping...
+    // Get Amazon job counts...
 
     const scores = await getAmazonScores();
 

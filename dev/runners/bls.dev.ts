@@ -9,16 +9,18 @@ async function runBlsTest() {
   try {
     logger.info('Starting BLS signal test...');
 
-    // Process BLS data and calculate signals
-    const blsService = new BlsService();
+    // Process BLS data and calculate signals...
 
+    const blsService = new BlsService();
     await blsService.processBlsData();
 
-    // Get both physical and e-commerce scores
+    // Get both physical and e-commerce scores...
+
     const physicalScores = await blsService.getAllPhysicalScores();
     const ecommerceScores = await blsService.getAllEcommerceScores();
 
-    // Write physical scores to dev/scores/bls-physical-scores.json
+    // Write physical scores to dev/scores/bls-physical-scores.json...
+
     const scoresDir = path.resolve(__dirname, '../scores');
     const physicalFilePath = path.join(scoresDir, 'bls-physical-scores.json');
     const ecommerceFilePath = path.join(scoresDir, 'bls-ecommerce-scores.json');

@@ -10,12 +10,12 @@ async function runBroadbandTest() {
   try {
     logger.info('Starting broadband signal test...');
 
-    // Process broadband data and write to DynamoDB...
+    // Get broadband data...
 
     const broadbandService = new BroadbandService();
     await broadbandService.processBroadbandData();
 
-    // Get FCC broadband data while scraping...
+    // Get FCC broadband scores...
 
     const scores = await getBroadbandScores();
 
