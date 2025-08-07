@@ -1,8 +1,8 @@
-import { getAmazonScores } from './get-amazon-scores';
-import { CONFIG } from '../../config';
-import { logger, uploadToS3 } from '../../util';
 import fs from 'fs';
 import path from 'path';
+import { CONFIG } from '../../config';
+import { getAmazonScores } from './get-amazon-scores';
+import { logger, uploadToS3 } from '../../util';
 
 async function main() {
   try {
