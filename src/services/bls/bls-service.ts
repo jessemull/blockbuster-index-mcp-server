@@ -372,11 +372,11 @@ export class BlsService implements IBlsService {
           // Convert to 0-100 scale
           const physicalScore = Math.max(
             0,
-            Math.min(100, 50 + physicalComponent * 25),
+            Math.min(100, 50 + physicalComponent * 15),
           );
           const ecommerceScore = Math.max(
             0,
-            Math.min(100, 50 + ecommerceComponent * 25),
+            Math.min(100, 50 + ecommerceComponent * 15),
           );
 
           const signalRecord: BlsSignalRecord = {
@@ -449,20 +449,10 @@ export class BlsService implements IBlsService {
         scores[signal.state] = signal.ecommerceScore;
       }
 
-      // Apply outlier detection and correction
-      const outlierAnalysis = detectAndCorrectOutliers(scores);
-      logOutlierAnalysis(outlierAnalysis, 'ecommerce');
-
-      if (outlierAnalysis.outliers.length > 0) {
-        logger.info(
-          `Corrected ${outlierAnalysis.outliers.length} ecommerce score outliers: ${outlierAnalysis.outliers.join(', ')}`,
-        );
-      }
-
       logger.info(
-        `Retrieved ecommerce scores for ${Object.keys(outlierAnalysis.correctedScores).length} states`,
+        `Retrieved ecommerce scores for ${Object.keys(scores).length} states`,
       );
-      return outlierAnalysis.correctedScores;
+      return scores;
     } catch (error) {
       logger.error('Error getting ecommerce scores:', error);
       throw error;
