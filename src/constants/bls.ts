@@ -2,23 +2,24 @@
 // Note: BLS says that from 1990s it uses SIC codes then switched to NAICS codes but only the SIC codes are used in all data.
 
 export const BLS_INDUSTRY_CODES = {
-  // NAICS codes for brick and mortar retail trade
+  // NAICS codes for brick and mortar retail trade (FOCUSED ON DISRUPTABLE SECTORS)
+  // Excluded population-driven sectors that grow regardless of digital transformation:
+  // - 4411 (Auto dealers) - grows with population
+  // - 4441 (Building materials) - grows with construction
+  // - 4451 (Food stores) - essential, grows with population
+  // - 4471 (Gas stations) - grows with population
   BRICK_AND_MORTAR_RETAIL_NAICS: [
-    '4411',
-    '4421',
-    '4431',
-    '4441',
-    '4451',
-    '4461',
-    '4471',
-    '4481',
-    '4511',
-    '4522',
-    '4523',
-    '4531',
-    '4532',
-    '4533',
-    '4539',
+    '4421', // Furniture Stores
+    '4431', // Electronics and Appliance Stores
+    '4461', // Health and Personal Care Stores
+    '4481', // Clothing and Clothing Accessories Stores
+    '4511', // Sporting Goods, Hobby, Musical Instrument, and Book Stores
+    '4522', // General Merchandise Stores
+    '4523', // Miscellaneous Store Retailers
+    '4531', // Florists
+    '4532', // Office Supplies, Stationery, and Gift Stores
+    '4533', // Used Merchandise Stores
+    '4539', // Other Miscellaneous Store Retailers
   ],
   // NAICS codes for e-commerce (Electronic Shopping and Mail-Order Houses)
   E_COMMERCE_NAICS: ['454110', '454111', '454112'],

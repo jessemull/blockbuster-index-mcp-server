@@ -6,78 +6,6 @@ import {
 } from '../../constants';
 import type { BlsCsvRecord, BlsStateData } from '../../types/bls';
 
-// TEMPORARY TESTING FUNCTION - REMOVE AFTER TESTING
-export function testSingleStateProcessing(
-  records: BlsCsvRecord[],
-  year: number,
-  targetState: string = 'CA', // Test with California
-): BlsStateData[] {
-  logger.info(`TESTING: Processing ${records.length} records for year ${year}`);
-
-  const stateData: BlsStateData[] = [];
-  let stateLevelRecords = 0;
-  let retailRecords = 0;
-  const stateFipsFound = new Set<string>();
-  const retailCodesFound = new Set<string>();
-
-  for (const record of records) {
-    // Check if this is state-level data (area_fips ends with 000)
-    if (!record.area_fips.endsWith('000')) {
-      continue;
-    }
-    stateLevelRecords++;
-    stateFipsFound.add(record.area_fips);
-
-    // Check if this is brick and mortar retail data
-    const isBrickAndMortarRetail =
-      BLS_INDUSTRY_CODES.BRICK_AND_MORTAR_RETAIL_NAICS.some((code) =>
-        record.industry_code.startsWith(code),
-      );
-
-    // Check if this is e-commerce data
-    const isECommerce = BLS_INDUSTRY_CODES.E_COMMERCE_NAICS.some((code) =>
-      record.industry_code.startsWith(code),
-    );
-
-    if (isBrickAndMortarRetail || isECommerce) {
-      retailRecords++;
-      retailCodesFound.add(record.industry_code);
-    }
-
-    const stateAbbr = STATE_FIPS_CODES[record.area_fips];
-    if (!stateAbbr || stateAbbr !== targetState) {
-      continue;
-    }
-
-    const retailLq = parseFloat(record.lq_annual_avg_emplvl);
-    if (isNaN(retailLq)) {
-      continue;
-    }
-
-    const stateDataRecord: BlsStateData = {
-      state: stateAbbr,
-      year,
-      timestamp: Math.floor(Date.now() / 1000),
-      brickAndMortarCodes: isBrickAndMortarRetail
-        ? { [record.industry_code]: retailLq }
-        : {},
-      ecommerceCodes: isECommerce ? { [record.industry_code]: retailLq } : {},
-    };
-
-    stateData.push(stateDataRecord);
-  }
-
-  logger.info(`TESTING RESULTS for ${targetState} in ${year}:`, {
-    stateLevelRecords,
-    retailRecords,
-    stateFipsFound: Array.from(stateFipsFound),
-    retailCodesFound: Array.from(retailCodesFound),
-    targetRecords: stateData.length,
-  });
-
-  return stateData;
-}
-
 export function extractBrickAndMortarRetailDataFromCsv(
   records: BlsCsvRecord[],
   year: number,
@@ -333,24 +261,38 @@ export function calculateTrendSlope(
   }
 
   // Sort by year to ensure chronological order...
-
   const sortedData = [...dataPoints].sort((a, b) => a.year - b.year);
 
-  // Calculate linear regression slope...
+  // Filter out zero and negative values (data quality issues)
+  const validData = sortedData.filter((point) => point.retailLq > 0);
 
-  const n = sortedData.length;
-  const sumX = sortedData.reduce((sum, point) => sum + point.year, 0);
-  const sumY = sortedData.reduce((sum, point) => sum + point.retailLq, 0);
-  const sumXY = sortedData.reduce(
+  if (validData.length < 2) {
+    logger.warn('Insufficient valid data points for slope calculation');
+    return 0;
+  }
+
+  // Calculate linear regression slope...
+  const n = validData.length;
+  const sumX = validData.reduce((sum, point) => sum + point.year, 0);
+  const sumY = validData.reduce((sum, point) => sum + point.retailLq, 0);
+  const sumXY = validData.reduce(
     (sum, point) => sum + point.year * point.retailLq,
     0,
   );
-  const sumXX = sortedData.reduce(
+  const sumXX = validData.reduce(
     (sum, point) => sum + point.year * point.year,
     0,
   );
 
   const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+
+  // Log data quality info
+  if (validData.length < sortedData.length) {
+    logger.info(
+      `Filtered ${sortedData.length - validData.length} invalid data points for slope calculation`,
+    );
+  }
+
   return slope;
 }
 

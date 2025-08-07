@@ -11,6 +11,7 @@ async function runBlsTest() {
 
     // Process BLS data and calculate signals
     const blsService = new BlsService();
+
     await blsService.processBlsData();
 
     // Get both physical and e-commerce scores

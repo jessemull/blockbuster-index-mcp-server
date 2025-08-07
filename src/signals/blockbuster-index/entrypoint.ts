@@ -2,6 +2,7 @@ import { CONFIG } from '../../config';
 import { SIGNALS } from '../../constants/signals';
 import { Signal, BlockbusterIndexRecord } from '../../types';
 import { logger, uploadToS3, downloadFromS3 } from '../../util';
+import { BlsService } from '../../services/bls/bls-service';
 import fs from 'fs';
 import path from 'path';
 import { calculateBlockbusterIndex } from './calculate';
@@ -9,6 +10,17 @@ import { calculateBlockbusterIndex } from './calculate';
 async function getSignalScores(
   signalName: string,
 ): Promise<Record<string, number>> {
+  // For BLS signals, use the service methods to get corrected scores
+  if (signalName === 'bls-physical' || signalName === 'bls-ecommerce') {
+    const blsService = new BlsService();
+    if (signalName === 'bls-physical') {
+      return await blsService.getAllPhysicalScores();
+    } else {
+      return await blsService.getAllEcommerceScores();
+    }
+  }
+
+  // For other signals, use the file-based approach
   if (CONFIG.IS_DEVELOPMENT) {
     const scoresDir = path.resolve(__dirname, '../../dev/scores');
     const filePath = path.join(scoresDir, `${signalName}-scores.json`);

@@ -1,4 +1,8 @@
 import { logger } from '../../util';
+import {
+  detectAndCorrectOutliers,
+  logOutlierAnalysis,
+} from '../../util/helpers';
 import type {
   BlsMetrics,
   BlsProcessedFile,
@@ -10,7 +14,6 @@ import { DynamoDBBlsRepository } from '../../repositories/bls/bls-repository';
 import { S3BlsLoader } from './s3-bls-loader';
 import {
   extractCombinedRetailDataFromCsv,
-  testSingleStateProcessing,
   calculateTrendSlope,
   determineTrendCategory,
   calculateBlockbusterScore,
@@ -676,10 +679,21 @@ export class BlsService implements IBlsService {
         scores[signal.state] = signal.physicalScore;
       }
 
+      // Apply outlier detection and correction
+      const outlierAnalysis = detectAndCorrectOutliers(scores);
+      logOutlierAnalysis(outlierAnalysis, 'physical');
+
+      if (outlierAnalysis.outliers.length > 0) {
+        logger.info(
+          `Corrected ${outlierAnalysis.outliers.length} physical score outliers: ${outlierAnalysis.outliers.join(', ')}`,
+        );
+      }
+
       logger.info(
-        `Retrieved physical scores for ${Object.keys(scores).length} states`,
+        `Retrieved physical scores for ${Object.keys(outlierAnalysis.correctedScores).length} states`,
       );
-      return scores;
+
+      return outlierAnalysis.correctedScores;
     } catch (error) {
       logger.error('Error getting physical scores:', error);
       throw error;
@@ -695,10 +709,20 @@ export class BlsService implements IBlsService {
         scores[signal.state] = signal.ecommerceScore;
       }
 
+      // Apply outlier detection and correction
+      const outlierAnalysis = detectAndCorrectOutliers(scores);
+      logOutlierAnalysis(outlierAnalysis, 'ecommerce');
+
+      if (outlierAnalysis.outliers.length > 0) {
+        logger.info(
+          `Corrected ${outlierAnalysis.outliers.length} ecommerce score outliers: ${outlierAnalysis.outliers.join(', ')}`,
+        );
+      }
+
       logger.info(
-        `Retrieved ecommerce scores for ${Object.keys(scores).length} states`,
+        `Retrieved ecommerce scores for ${Object.keys(outlierAnalysis.correctedScores).length} states`,
       );
-      return scores;
+      return outlierAnalysis.correctedScores;
     } catch (error) {
       logger.error('Error getting ecommerce scores:', error);
       throw error;
@@ -707,13 +731,14 @@ export class BlsService implements IBlsService {
 
   async getAllScores(): Promise<Record<string, number>> {
     try {
-      const signals = await this.repository.getAllSignals();
+      // Get corrected scores from the individual methods
+      const physicalScores = await this.getAllPhysicalScores();
+      const ecommerceScores = await this.getAllEcommerceScores();
       const scores: Record<string, number> = {};
 
-      for (const signal of signals) {
+      for (const state of Object.keys(physicalScores)) {
         // Combine both scores equally: (physicalScore + ecommerceScore) / 2
-        scores[signal.state] =
-          (signal.physicalScore + signal.ecommerceScore) / 2;
+        scores[state] = (physicalScores[state] + ecommerceScores[state]) / 2;
       }
 
       logger.info(
@@ -730,16 +755,18 @@ export class BlsService implements IBlsService {
     Record<string, { physicalScore: number; ecommerceScore: number }>
   > {
     try {
-      const signals = await this.repository.getAllSignals();
+      // Get corrected scores from the individual methods
+      const physicalScores = await this.getAllPhysicalScores();
+      const ecommerceScores = await this.getAllEcommerceScores();
       const scores: Record<
         string,
         { physicalScore: number; ecommerceScore: number }
       > = {};
 
-      for (const signal of signals) {
-        scores[signal.state] = {
-          physicalScore: signal.physicalScore,
-          ecommerceScore: signal.ecommerceScore,
+      for (const state of Object.keys(physicalScores)) {
+        scores[state] = {
+          physicalScore: physicalScores[state],
+          ecommerceScore: ecommerceScores[state],
         };
       }
 
@@ -749,66 +776,6 @@ export class BlsService implements IBlsService {
       return scores;
     } catch (error) {
       logger.error('Error getting individual scores:', error);
-      throw error;
-    }
-  }
-
-  // TEMPORARY TESTING METHOD - REMOVE AFTER TESTING
-  async testSingleStateProcessing(): Promise<void> {
-    logger.info('TESTING: Starting single state processing test...');
-
-    try {
-      // Test with pre-1998 format (1995)
-      logger.info('TESTING: Processing pre-1998 format (1995)...');
-      const pre1998Year = '1995';
-      const pre1998Data: BlsStateData[] = [];
-
-      for await (const chunk of this.s3Loader.processCsvInChunks(
-        pre1998Year,
-        10000,
-      )) {
-        const stateData = testSingleStateProcessing(
-          chunk,
-          parseInt(pre1998Year, 10),
-          'CA',
-        );
-        pre1998Data.push(...stateData);
-      }
-
-      logger.info(
-        `TESTING: Pre-1998 results: ${pre1998Data.length} records for CA in 1995`,
-      );
-
-      // Test with post-1998 format (2005)
-      logger.info('TESTING: Processing post-1998 format (2005)...');
-      const post1998Year = '2005';
-      const post1998Data: BlsStateData[] = [];
-
-      for await (const chunk of this.s3Loader.processCsvInChunks(
-        post1998Year,
-        10000,
-      )) {
-        const stateData = testSingleStateProcessing(
-          chunk,
-          parseInt(post1998Year, 10),
-          'CA',
-        );
-        post1998Data.push(...stateData);
-      }
-
-      logger.info(
-        `TESTING: Post-1998 results: ${post1998Data.length} records for CA in 2005`,
-      );
-
-      // Summary
-      logger.info('TESTING: Summary of single state processing test:', {
-        pre1998Records: pre1998Data.length,
-        post1998Records: post1998Data.length,
-        pre1998Sample: pre1998Data.slice(0, 3),
-        post1998Sample: post1998Data.slice(0, 3),
-      });
-    } catch (error) {
-      logger.error('TESTING: Error in single state processing test:', error);
       throw error;
     }
   }
