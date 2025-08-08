@@ -296,8 +296,10 @@ Resources:
                   - dynamodb:GetItem
                   - dynamodb:DescribeTable
                   - dynamodb:Scan
-                Resource: !ImportValue
-                  Fn::Sub: '${Environment}-BlockbusterBlsStateDataTableArn'
+                Resource:
+                  - !ImportValue
+                      Fn::Sub: '${Environment}-BlockbusterBlsStateDataTableArn'
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/blockbuster-index-bls-state-data-${Environment}/index/*'
         - PolicyName: 'DynamoDBBlsSignalsAccess'
           PolicyDocument:
             Version: '2012-10-17'

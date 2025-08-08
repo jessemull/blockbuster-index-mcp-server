@@ -5,6 +5,7 @@ import { logger } from '../../util';
 jest.mock('../../util', () => ({
   logger: {
     warn: jest.fn(),
+    info: jest.fn(),
   },
 }));
 
@@ -248,7 +249,7 @@ describe('validateStateData', () => {
       const result = validateStateData(data);
 
       expect(result).toBe(false);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         'No valid code data in state data',
         { data },
       );
@@ -273,8 +274,9 @@ describe('validateStateData', () => {
         expect(result).toBe(expected);
         if (expected) {
           expect(mockLogger.warn).not.toHaveBeenCalled();
+          expect(mockLogger.info).not.toHaveBeenCalled();
         } else {
-          expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect(mockLogger.info).toHaveBeenCalledWith(
             'No valid code data in state data',
             { data },
           );
@@ -301,6 +303,7 @@ describe('validateStateData', () => {
         expect(result).toBe(expected);
         if (expected) {
           expect(mockLogger.warn).not.toHaveBeenCalled();
+          expect(mockLogger.info).not.toHaveBeenCalled();
         } else {
           expect(mockLogger.warn).toHaveBeenCalledWith(
             'No valid code data in state data',
@@ -340,7 +343,7 @@ describe('validateStateData', () => {
       const result = validateStateData(data);
 
       expect(result).toBe(false);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         'No valid code data in state data',
         { data },
       );
@@ -438,14 +441,14 @@ describe('validateStateData', () => {
       });
     });
 
-    it('should log warning with data object when codes are invalid', () => {
+    it('should log info with data object when codes are invalid', () => {
       const data = createMockStateData({
         brickAndMortarCodes: {},
         ecommerceCodes: {},
       });
       validateStateData(data);
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         'No valid code data in state data',
         { data },
       );
