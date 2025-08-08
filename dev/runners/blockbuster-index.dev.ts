@@ -11,7 +11,11 @@ async function getSignalScores(
   signalName: string,
 ): Promise<Record<string, number>> {
   const scoresDir = path.resolve(__dirname, '../scores');
-  const filePath = path.join(scoresDir, `${signalName}-scores.json`);
+
+  let fileName: string;
+  fileName = `${signalName}-scores.json`;
+
+  const filePath = path.join(scoresDir, fileName);
 
   if (!fs.existsSync(filePath)) {
     throw new Error(`Missing local file for ${signalName}: ${filePath}`);

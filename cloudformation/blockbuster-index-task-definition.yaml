@@ -27,11 +27,13 @@ Mappings:
 Conditions:
   IsDev: !Equals [!Ref Environment, 'dev']
   IsAmazon: !Equals [!Ref SignalType, 'amazon']
+  IsBls: !Equals [!Ref SignalType, 'bls']
   IsCensus: !Equals [!Ref SignalType, 'census']
   IsBroadband: !Equals [!Ref SignalType, 'broadband']
   IsWalmart: !Equals [!Ref SignalType, 'walmart']
   IsBlockbusterIndex: !Equals [!Ref SignalType, 'blockbuster-index']
   IsProdAmazon: !And [!Equals [!Ref Environment, 'prod'], !Equals [!Ref SignalType, 'amazon']]
+  IsProdBls: !And [!Equals [!Ref Environment, 'prod'], !Equals [!Ref SignalType, 'bls']]
   IsProdCensus: !And [!Equals [!Ref Environment, 'prod'], !Equals [!Ref SignalType, 'census']]
   IsProdBroadband: !And [!Equals [!Ref Environment, 'prod'], !Equals [!Ref SignalType, 'broadband']]
   IsProdWalmart: !And [!Equals [!Ref Environment, 'prod'], !Equals [!Ref SignalType, 'walmart']]
@@ -49,6 +51,7 @@ Parameters:
     Type: String
     AllowedValues:
       - amazon
+      - bls
       - census
       - broadband
       - walmart
@@ -300,6 +303,69 @@ Resources:
             - Name: CW_LOG_STREAM
               Value: !Sub 'blockbuster-index-mcp-walmart-${Environment}-${AWS::StackName}'
 
+  BlsECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Condition: IsBls
+    Properties:
+      Family: !Sub 'blockbuster-index-bls-task-${Environment}'
+      Cpu: '2048'
+      Memory: '8192'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !ImportValue
+        Fn::Sub: '${Environment}-BlockbusterExecutionRoleArn'
+      TaskRoleArn: !ImportValue
+        Fn::Sub: '${Environment}-BlockbusterTaskRoleArn'
+      ContainerDefinitions:
+        - Name: blockbuster-index-bls-container
+          Image: !Ref ContainerImage
+          Cpu: 2048
+          Memory: 8192
+          Essential: true
+          Command: ["node", "dist/index.js"]
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !ImportValue
+                Fn::Sub: '${Environment}-BlockbusterBlsLogGroupName'
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: 'blockbuster-index-bls'
+          Environment:
+            - Name: NODE_ENV
+              Value: 'production'
+            - Name: LOG_LEVEL
+              Value: !FindInMap [EnvConfig, !Ref Environment, LogLevel]
+            - Name: S3_BUCKET_NAME
+              Value: !FindInMap [EnvConfig, !Ref Environment, S3BucketName]
+            - Name: BLS_S3_BUCKET
+              Value: !Sub 'blockbuster-index-bls-${Environment}'
+            - Name: BLS_PROCESSED_FILES_TABLE_NAME
+              Value: !Sub 'blockbuster-index-bls-processed-files-${Environment}'
+            - Name: BLS_STATE_DATA_TABLE_NAME
+              Value: !Sub 'blockbuster-index-bls-state-data-${Environment}'
+            - Name: BLS_SIGNALS_TABLE_NAME
+              Value: !Sub 'blockbuster-index-bls-signals-${Environment}'
+            - Name: SIGNAL_SCORES_DYNAMODB_TABLE_NAME
+              Value: !Sub 'blockbuster-index-signal-scores-${Environment}'
+            - Name: AWS_REGION
+              Value: !Ref AWS::Region
+            - Name: CACHE_CONTROL
+              Value: 'max-age=300'
+            - Name: MAX_RETRIES
+              Value: '3'
+            - Name: npm_package_version
+              Value: '1.0.0'
+            - Name: OPENAI_API_KEY
+              Value: !Sub '{{resolve:secretsmanager:blockbuster-index-openai-${Environment}:SecretString:apiKey}}'
+            - Name: RETRY_DELAY
+              Value: '1000'
+            - Name: CW_LOG_GROUP
+              Value: !ImportValue
+                Fn::Sub: '${Environment}-BlockbusterBlsLogGroupName'
+            - Name: CW_LOG_STREAM
+              Value: !Sub 'blockbuster-index-mcp-bls-${Environment}-${AWS::StackName}'
+
   BlockbusterIndexECSTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Condition: IsBlockbusterIndex
@@ -449,6 +515,29 @@ Resources:
                 SecurityGroups: !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
                 Subnets: !FindInMap [EnvConfig, !Ref Environment, Subnets]
 
+  BlsScheduledTaskRule:
+    Type: AWS::Events::Rule
+    Condition: IsProdBls
+    Properties:
+      Name: !Sub 'blockbuster-index-bls-scheduled-task-rule-${Environment}'
+      ScheduleExpression: 'cron(0 10 * * ? *)' # 10AM UTC
+      State: ENABLED
+      Targets:
+        - Arn: !ImportValue
+            Fn::Sub: '${Environment}-BlockbusterECSClusterArn'
+          Id: 'BlockbusterIndexBlsECSTask'
+          RoleArn: !ImportValue
+            Fn::Sub: '${Environment}-BlockbusterEventBridgeInvokeRoleArn'
+          EcsParameters:
+            TaskDefinitionArn: !Ref BlsECSTaskDefinition
+            TaskCount: 1
+            LaunchType: FARGATE
+            NetworkConfiguration:
+              AwsVpcConfiguration:
+                AssignPublicIp: ENABLED
+                SecurityGroups: !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
+                Subnets: !FindInMap [EnvConfig, !Ref Environment, Subnets]
+
   BlockbusterIndexScheduledTaskRule:
     Type: AWS::Events::Rule
     Condition: IsProdBlockbusterIndex
@@ -491,6 +580,10 @@ Outputs:
     Description: 'Walmart ECS Task Definition ARN'
     Condition: IsWalmart
     Value: !Ref WalmartECSTaskDefinition
+  BlsECSTaskDefinitionArn:
+    Description: 'BLS ECS Task Definition ARN'
+    Condition: IsBls
+    Value: !Ref BlsECSTaskDefinition
   BlockbusterIndexECSTaskDefinitionArn:
     Description: 'Blockbuster Index ECS Task Definition ARN'
     Condition: IsBlockbusterIndex

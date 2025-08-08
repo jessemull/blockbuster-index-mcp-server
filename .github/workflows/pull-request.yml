@@ -25,7 +25,7 @@ jobs:
       - name: Build All Signals
         run: |
           export NODE_ENV=dev
-          SIGNALS=(amazon blockbuster-index broadband census walmart)
+          SIGNALS=(amazon blockbuster-index bls broadband census walmart)
           for signal_type in "${SIGNALS[@]}"; do
             echo "Building signal: $signal_type"
             SIGNAL_TYPE=$signal_type npm run build

@@ -126,6 +126,84 @@ Provides a perspective on traditional retail employment patterns by tracking Wal
 
 ---
 
+## BLS Physical Retail Signal
+
+**Purpose:**
+Measures physical retail employment decline by analyzing Bureau of Labor Statistics (BLS) data on traditional brick-and-mortar retail industries across all U.S. states.
+
+**Data Source:**
+
+- Bureau of Labor Statistics Quarterly Census of Employment and Wages (QCEW) data.
+- Industry codes for brick-and-mortar retail establishments.
+
+**Calculation Method:**
+
+- Analyzes employment trends in traditional brick-and-mortar retail industries.
+- Calculates slope of employment change over time (1991-2024).
+- Declining physical retail employment = higher digital adoption score.
+- Uses location quotient (LQ) analysis to normalize by state size.
+
+**Normalization & Inversion:**
+
+- Scores are normalized to a 0–100 scale using z-score normalization.
+- **Physical retail scores are inverted** (declining physical retail = higher score).
+- The signal is inverted in the blockbuster index calculation.
+
+**Technical Implementation:**
+
+- S3-based data loading from processed BLS CSV files.
+- DynamoDB storage for processed state data and calculated signals.
+- Z-score normalization across all states for fair comparison.
+- Trend analysis using linear regression on employment time series.
+- Industry code classification for physical retail.
+
+**Special Notes:**
+
+- The BLS physical signal provides historical perspective on retail transformation (1991-2024).
+- Physical retail decline is interpreted as positive for digital adoption.
+- Data is processed in batches to handle large datasets efficiently.
+
+---
+
+## BLS E-commerce Signal
+
+**Purpose:**
+Measures e-commerce employment growth by analyzing Bureau of Labor Statistics (BLS) data on digital retail industries across all U.S. states.
+
+**Data Source:**
+
+- Bureau of Labor Statistics Quarterly Census of Employment and Wages (QCEW) data.
+- Industry codes for e-commerce and digital retail establishments.
+
+**Calculation Method:**
+
+- Analyzes employment trends in e-commerce and digital retail industries.
+- Calculates weighted slope of e-commerce employment growth over time (1991-2024).
+- Growing e-commerce employment = higher digital adoption score.
+- Combines multiple e-commerce industry codes with weighted averaging.
+
+**Normalization & Inversion:**
+
+- Scores are normalized to a 0–100 scale using z-score normalization.
+- **E-commerce scores are not inverted** (growing e-commerce = higher score).
+- The signal is not inverted in the blockbuster index calculation.
+
+**Technical Implementation:**
+
+- S3-based data loading from processed BLS CSV files.
+- DynamoDB storage for processed state data and calculated signals.
+- Z-score normalization across all states for fair comparison.
+- Trend analysis using linear regression on employment time series.
+- Industry code classification for e-commerce retail.
+
+**Special Notes:**
+
+- The BLS e-commerce signal provides historical perspective on digital retail growth (1991-2024).
+- E-commerce growth directly indicates digital retail adoption.
+- Data is processed in batches to handle large datasets efficiently.
+
+---
+
 ## Signal Inversion Logic
 
 Some signals represent physical presence (e.g., retail establishments, physical jobs) and must be inverted after normalization so that higher values indicate lower digital adoption.
@@ -140,19 +218,21 @@ The Blockbuster Index combines all individual signals using a weighted aggregati
 
 Each signal is assigned a weight based on its relevance to the overall retail transformation:
 
-| Signal    | Weight | Rationale                                                            |
-| --------- | ------ | -------------------------------------------------------------------- |
-| Amazon    | 0.25   | Primary indicator of e-commerce adoption and digital retail presence |
-| Walmart   | 0.25   | Dual-perspective analysis of retail employment evolution             |
-| Census    | 0.25   | Demographic and economic context for retail behavior                 |
-| Broadband | 0.25   | Infrastructure foundation for digital commerce                       |
+| Signal                    | Weight | Rationale                                         |
+| ------------------------- | ------ | ------------------------------------------------- |
+| Amazon employment         | 0.25   | E-commerce retail employment patterns             |
+| BLS e-commerce employment | 0.3333 | E-commerce employment growth (1991-Present)       |
+| Broadband penetration     | 0.1667 | Infrastructure foundation for digital commerce    |
+| Walmart employment        | 0.0833 | Physical retail employment patterns               |
+| Census physical retail    | 0.0833 | Physical retail establishment density             |
+| BLS physical employment   | 0.0833 | Physical retail employment decline (1991-Present) |
 
 ### Calculation Formula
 
 The Blockbuster Index for each state is calculated using the following formula:
 
 ```
-Blockbuster Index = (Amazon Score × 0.25) + (Walmart Score × 0.25) + (Census Score × 0.25) + (Broadband Score × 0.25)
+Blockbuster Index = (Amazon Score × 0.25) + (BLS E-commerce Score × 0.3333) + (Broadband Score × 0.1667) + (Walmart Score × 0.0833) + (Census Score × 0.0833) + (BLS Physical Score × 0.0833)
 ```
 
 ### Score Normalization

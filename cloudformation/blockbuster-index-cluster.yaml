@@ -86,6 +86,14 @@ Resources:
       LogGroupName: !Sub '/ecs/blockbuster-index-walmart-${Environment}'
       RetentionInDays: 14
 
+  BlsLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: !Sub '/ecs/blockbuster-index-bls-${Environment}'
+      RetentionInDays: 14
+
   ECSTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -111,6 +119,7 @@ Resources:
                   - logs:PutLogEvents
                 Resource:
                   - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-amazon-${Environment}:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-bls-${Environment}:*'
                   - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-census-${Environment}:*'
                   - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-broadband-${Environment}:*'
                   - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-blockbuster-index-${Environment}:*'
@@ -261,6 +270,59 @@ Resources:
                   - dynamodb:UpdateItem
                 Resource: !ImportValue
                   Fn::Sub: '${Environment}-BlockbusterWalmartSlidingWindowTableArn'
+        - PolicyName: 'DynamoDBBlsProcessedFilesAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:Scan
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterBlsProcessedFilesTableArn'
+        - PolicyName: 'DynamoDBBlsStateDataAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:Scan
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterBlsStateDataTableArn'
+        - PolicyName: 'DynamoDBBlsSignalsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:Scan
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterBlsSignalsTableArn'
+        - PolicyName: 'S3BlsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::blockbuster-index-bls-${Environment}'
+                  - !Sub 'arn:aws:s3:::blockbuster-index-bls-${Environment}/*'
 
   EventBridgeInvokeRole:
     Type: AWS::IAM::Role
@@ -334,6 +396,11 @@ Outputs:
     Value: !Ref WalmartLogGroup
     Export:
       Name: !Sub '${Environment}-BlockbusterWalmartLogGroupName'
+  BlsLogGroupName:
+    Description: 'BLS signal log group name'
+    Value: !Ref BlsLogGroup
+    Export:
+      Name: !Sub '${Environment}-BlockbusterBlsLogGroupName'
   ExecutionRoleArn:
     Description: 'ECS Execution Role ARN'
     Value: !GetAtt ECSTaskExecutionRole.Arn

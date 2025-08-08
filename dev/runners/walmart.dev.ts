@@ -9,7 +9,7 @@ async function runWalmartTest() {
   try {
     logger.info('Starting Walmart signal test...');
 
-    // Get Walmart job counts and store data while scraping...
+    // Get Walmart job scores...
 
     const { scores } = await getWalmartScores();
 

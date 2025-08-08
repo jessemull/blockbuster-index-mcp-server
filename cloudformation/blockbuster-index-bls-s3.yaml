@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'S3 bucket for Blockbuster Index BLS CSV files.'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: 'dev'
+    AllowedValues:
+      - dev
+      - prod
+
+Resources:
+  BlsS3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub 'blockbuster-index-bls-${Environment}'
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+            BucketKeyEnabled: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldVersions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30
+          - Id: DeleteIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Purpose
+          Value: 'BLS CSV file storage'
+
+Outputs:
+  BlsS3BucketName:
+    Description: 'Name of the BLS S3 bucket'
+    Value: !Ref BlsS3Bucket
+    Export:
+      Name: !Sub '${Environment}-BlockbusterBlsS3BucketName'
+  BlsS3BucketArn:
+    Description: 'ARN of the BLS S3 bucket'
+    Value: !GetAtt BlsS3Bucket.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterBlsS3BucketArn' 
