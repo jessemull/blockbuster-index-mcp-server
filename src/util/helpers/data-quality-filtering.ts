@@ -1,6 +1,6 @@
 /**
- * Data quality filtering utilities for BLS scores
- * Focuses on detecting actual data quality issues without making assumptions about trends
+ * Data quality filtering utilities for BLS scores.
+ * Focuses on detecting actual data quality issues without making assumptions about trends.
  */
 
 export interface DataQualityMetrics {
@@ -21,8 +21,8 @@ export interface FilteredDataPoint {
 }
 
 /**
- * Detects actual data quality issues without making assumptions about trends
- * Focuses on technical data problems, not business logic
+ * Detects actual data quality issues without making assumptions about trends.
+ * Focuses on technical data problems, not business logic.
  */
 export function analyzeDataQuality(
   dataPoints: Array<{ year: number; retailLq: number }>,
@@ -51,11 +51,13 @@ export function analyzeDataQuality(
   }> = [];
   const outliers: Array<{ year: number; value: number; reason: string }> = [];
 
-  // Check for data quality issues
+  // Check for data quality issues...
+
   for (let i = 0; i < sortedData.length; i++) {
     const point = sortedData[i];
 
-    // Count zero and negative values (actual data quality issues)
+    // Count zero and negative values (actual data quality issues)...
+
     if (point.retailLq === 0) {
       zeroValueCount++;
       outliers.push({
@@ -74,7 +76,8 @@ export function analyzeDataQuality(
       validDataPoints++;
     }
 
-    // Check for large gaps (missing data)
+    // Check for large gaps (missing data)...
+
     if (i > 0) {
       const prev = sortedData[i - 1];
       const gap = point.year - prev.year;
@@ -88,7 +91,8 @@ export function analyzeDataQuality(
     }
   }
 
-  // Calculate statistical outliers (not business logic outliers)
+  // Calculate statistical outliers (not business logic outliers)...
+
   if (validDataPoints >= minValidPoints) {
     const validValues = sortedData
       .filter((point) => point.retailLq > 0)
@@ -101,7 +105,8 @@ export function analyzeDataQuality(
       validValues.length;
     const stdDev = Math.sqrt(variance);
 
-    // Find statistical outliers
+    // Find statistical outliers...
+
     for (const point of sortedData) {
       if (point.retailLq > 0) {
         const zScore = Math.abs((point.retailLq - mean) / stdDev);
@@ -116,7 +121,8 @@ export function analyzeDataQuality(
     }
   }
 
-  // Calculate overall data quality score
+  // Calculate overall data quality score...
+
   const qualityFactors = [
     validDataPoints / totalDataPoints, // Valid data ratio
     1 - largeGaps.length / Math.max(1, totalDataPoints - 1), // Gap ratio
@@ -142,7 +148,7 @@ export function analyzeDataQuality(
 
 /**
  * Filters data based on actual quality issues, not business assumptions
- * Returns both filtered data and quality metrics
+ * Returns both filtered data and quality metrics.
  */
 export function filterDataQualityIssues(
   dataPoints: Array<{ year: number; retailLq: number }>,
@@ -170,6 +176,7 @@ export function filterDataQualityIssues(
     maxGapYears,
     outlierThreshold,
   });
+
   const sortedData = [...dataPoints].sort((a, b) => a.year - b.year);
   const filteredData: FilteredDataPoint[] = [];
 
@@ -177,7 +184,8 @@ export function filterDataQualityIssues(
     let wasFiltered = false;
     let filterReason: string | undefined;
 
-    // Apply filters based on actual data quality issues
+    // Apply filters based on actual data quality issues...
+
     if (filterZeros && point.retailLq === 0) {
       wasFiltered = true;
       filterReason = 'zero_value';
@@ -206,7 +214,7 @@ export function filterDataQualityIssues(
 }
 
 /**
- * Logs data quality analysis for debugging
+ * Logs data quality analysis for debugging.
  */
 export function logDataQualityAnalysis(
   metrics: DataQualityMetrics,

@@ -187,7 +187,6 @@ export class S3BlsLoader {
         // Memory management: limit buffer size...
 
         if (buffer.length > 1024 * 1024) {
-          // 1MB limit.
           logger.warn(
             `Buffer size exceeded 1MB for year ${year}, processing remaining data`,
           );
@@ -232,7 +231,8 @@ export class S3BlsLoader {
         const { done, value } = await reader.read();
 
         if (done) {
-          // Process any remaining buffer
+          // Process any remaining buffer...
+
           if (buffer.trim()) {
             const remainingLines = buffer.split('\n');
             for (const line of remainingLines) {
@@ -251,25 +251,29 @@ export class S3BlsLoader {
             }
           }
 
-          // Yield any remaining records
+          // Yield any remaining records...
+
           if (currentChunk.length > 0) {
             yield currentChunk;
           }
           break;
         }
 
-        // Decode the chunk and add to buffer
+        // Decode the chunk and add to buffer...
+
         const chunk = decoder.decode(value, { stream: true });
         buffer += chunk;
 
-        // Process complete lines
+        // Process complete lines...
+
         const lines = buffer.split('\n');
         buffer = lines.pop() || ''; // Keep incomplete line in buffer
 
         for (const line of lines) {
           if (line.trim()) {
             if (lineNumber === 0) {
-              // Parse headers
+              // Parse headers...
+
               const headerResult = this.parseCsvLine(line, [], lineNumber);
               if (typeof headerResult === 'string') {
                 headers = headerResult.split(',');
@@ -278,7 +282,8 @@ export class S3BlsLoader {
                 throw new Error('CSV file is empty or has no headers');
               }
             } else {
-              // Parse data record
+              // Parse data record...
+
               const record = this.parseCsvLine(line, headers, lineNumber);
               if (record && typeof record !== 'string') {
                 currentChunk.push(record);
@@ -293,7 +298,8 @@ export class S3BlsLoader {
           }
         }
 
-        // Memory management: limit buffer size
+        // Memory management: limit buffer size...
+
         if (buffer.length > 1024 * 1024) {
           logger.warn(
             `Buffer size exceeded 1MB for year ${year}, processing remaining data`,

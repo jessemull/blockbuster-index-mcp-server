@@ -152,7 +152,8 @@ export class DynamoDBBlsRepository implements BlsRepository {
       const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
       const client = new DynamoDBClient({ region: process.env.AWS_REGION });
 
-      // Process in batches of 25 (DynamoDB batch limit)
+      // Process in batches of 25 (DynamoDB batch limit)...
+
       const BATCH_SIZE = 25;
 
       for (let i = 0; i < dataArray.length; i += BATCH_SIZE) {
@@ -236,7 +237,8 @@ export class DynamoDBBlsRepository implements BlsRepository {
       const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
       const client = new DynamoDBClient({ region: process.env.AWS_REGION });
 
-      // Use a simple Scan to get all state data for this year
+      // Use a simple Scan to get all state data for this year...
+
       const response = await client.send(
         new ScanCommand({
           TableName: this.stateDataTableName,
@@ -275,7 +277,8 @@ export class DynamoDBBlsRepository implements BlsRepository {
       const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
       const client = new DynamoDBClient({ region: process.env.AWS_REGION });
 
-      // Use a simple Scan to get all unique states
+      // Use a simple Scan to get all unique states...
+
       const response = await client.send(
         new ScanCommand({
           TableName: this.stateDataTableName,
@@ -311,7 +314,8 @@ export class DynamoDBBlsRepository implements BlsRepository {
       let lastEvaluatedKey: Record<string, unknown> | undefined;
 
       try {
-        // Try to use GSI first (more efficient)
+        // Try to use GSI first (more efficient)...
+
         do {
           const response = await client.send(
             new QueryCommand({
@@ -348,7 +352,8 @@ export class DynamoDBBlsRepository implements BlsRepository {
 
         return allItems;
       } catch (gsiError: unknown) {
-        // If GSI is not available yet, fall back to Scan
+        // If GSI is not available yet, fall back to Scan...
+
         if (
           gsiError instanceof Error &&
           gsiError.name === 'ResourceNotFoundException'
@@ -357,7 +362,8 @@ export class DynamoDBBlsRepository implements BlsRepository {
             `GSI not available yet, falling back to Scan for state ${state}`,
           );
 
-          // Reset for Scan operation
+          // Reset for Scan operation...
+
           lastEvaluatedKey = undefined;
 
           do {

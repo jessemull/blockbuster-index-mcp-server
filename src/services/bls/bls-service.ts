@@ -61,6 +61,7 @@ export class BlsService implements IBlsService {
   private async processYearData(year: string): Promise<void> {
     try {
       // Check if this year has already been processed...
+
       const isProcessed = await this.repository.isFileProcessed(year);
       if (isProcessed) {
         logger.info(`Year ${year} already processed, skipping`);
@@ -95,6 +96,7 @@ export class BlsService implements IBlsService {
         totalRecords += chunk.length;
 
         // Extract combined retail data from this chunk...
+
         const combinedData = extractCombinedRetailDataFromCsv(
           chunk,
           parseInt(year, 10),
@@ -125,7 +127,6 @@ export class BlsService implements IBlsService {
         // Log progress for large files...
 
         if (fileSize > 100 * 1024 * 1024) {
-          // 100MB
           logger.info(
             `Processed ${totalRecords} records for year ${year} (${Object.keys(stateAggregatedData).length} states so far)`,
           );

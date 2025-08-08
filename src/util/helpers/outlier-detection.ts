@@ -11,8 +11,8 @@ export interface OutlierAnalysis {
 }
 
 /**
- * Detects outliers using z-score analysis (> 2 standard deviations from mean)
- * and replaces them with the national median
+ * Detects outliers using z-score analysis (> 2 standard deviations from mean).
+ * and replaces them with the national median.
  */
 export function detectAndCorrectOutliers(
   scores: Record<string, number>,
@@ -21,14 +21,16 @@ export function detectAndCorrectOutliers(
   const values = Object.values(scores);
   const states = Object.keys(scores);
 
-  // Calculate statistics
+  // Calculate statistics...
+
   const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
   const variance =
     values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
     values.length;
   const standardDeviation = Math.sqrt(variance);
 
-  // Calculate median
+  // Calculate median...
+
   const sortedValues = [...values].sort((a, b) => a - b);
   const median =
     sortedValues.length % 2 === 0
@@ -37,7 +39,8 @@ export function detectAndCorrectOutliers(
         2
       : sortedValues[Math.floor(sortedValues.length / 2)];
 
-  // Find outliers
+  // Find outliers...
+
   const outliers: string[] = [];
   const correctedScores: Record<string, number> = { ...scores };
 
@@ -61,7 +64,7 @@ export function detectAndCorrectOutliers(
 }
 
 /**
- * Logs outlier analysis results for debugging
+ * Logs outlier analysis results for debugging.
  */
 export function logOutlierAnalysis(
   analysis: OutlierAnalysis,

@@ -1,8 +1,8 @@
+import fs from 'fs';
+import path from 'path';
 import { BlsService } from '../../services/bls/bls-service';
 import { CONFIG } from '../../config';
 import { logger, uploadToS3 } from '../../util';
-import fs from 'fs';
-import path from 'path';
 
 async function main() {
   try {
@@ -11,7 +11,8 @@ async function main() {
     const blsService = new BlsService();
     await blsService.processBlsData();
 
-    // Get both physical and e-commerce scores
+    // Get both physical and e-commerce scores...
+
     const physicalScores = await blsService.getAllPhysicalScores();
     const ecommerceScores = await blsService.getAllEcommerceScores();
 
@@ -32,7 +33,8 @@ async function main() {
           process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
         );
 
-        // Store physical scores
+        // Store physical scores...
+
         await signalScoresRepository.save({
           signalType: 'bls-physical',
           timestamp,
@@ -40,7 +42,8 @@ async function main() {
           scores: physicalScores,
         });
 
-        // Store e-commerce scores
+        // Store e-commerce scores...
+
         await signalScoresRepository.save({
           signalType: 'bls-ecommerce',
           timestamp,
@@ -65,7 +68,8 @@ async function main() {
     if (CONFIG.IS_DEVELOPMENT) {
       const scoresDir = path.resolve(__dirname, '../../../dev/scores');
 
-      // Write physical scores
+      // Write physical scores...
+
       const physicalFilePath = path.join(scoresDir, 'bls-physical-scores.json');
       fs.mkdirSync(scoresDir, { recursive: true });
       fs.writeFileSync(
@@ -73,7 +77,8 @@ async function main() {
         JSON.stringify(physicalScores, null, 2),
       );
 
-      // Write e-commerce scores
+      // Write e-commerce scores...
+
       const ecommerceFilePath = path.join(
         scoresDir,
         'bls-ecommerce-scores.json',
@@ -88,7 +93,8 @@ async function main() {
         ecommerceFilePath,
       });
     } else {
-      // Upload physical scores to S3
+      // Upload physical scores to S3...
+
       await uploadToS3({
         bucket: CONFIG.S3_BUCKET_NAME!,
         key: 'data/signals/bls-physical-scores.json',
@@ -96,7 +102,8 @@ async function main() {
         metadata: { calculatedAt, signal: 'BLS_PHYSICAL' },
       });
 
-      // Upload e-commerce scores to S3
+      // Upload e-commerce scores to S3...
+
       await uploadToS3({
         bucket: CONFIG.S3_BUCKET_NAME!,
         key: 'data/signals/bls-ecommerce-scores.json',

@@ -11,10 +11,10 @@ describe('data-quality-filtering', () => {
       const dataPoints = [
         { year: 2018, retailLq: 1.2 },
         { year: 2019, retailLq: 1.3 },
-        { year: 2020, retailLq: 0 }, // zero value
-        { year: 2021, retailLq: -0.5 }, // negative value
+        { year: 2020, retailLq: 0 },
+        { year: 2021, retailLq: -0.5 },
         { year: 2022, retailLq: 1.4 },
-        { year: 2025, retailLq: 1.5 }, // large gap
+        { year: 2025, retailLq: 1.5 },
       ];
 
       const result = analyzeDataQuality(dataPoints);
@@ -23,7 +23,6 @@ describe('data-quality-filtering', () => {
       expect(result.validDataPoints).toBe(4);
       expect(result.zeroValueCount).toBe(1);
       expect(result.negativeValueCount).toBe(1);
-      // The gap detection might not work as expected, so let's be more flexible
       expect(result.largeGaps.length).toBeGreaterThanOrEqual(0);
       expect(result.outliers).toHaveLength(2);
       expect(result.dataQualityScore).toBeGreaterThan(0);
@@ -34,8 +33,8 @@ describe('data-quality-filtering', () => {
       const dataPoints = [
         { year: 2018, retailLq: 1.2 },
         { year: 2019, retailLq: 1.3 },
-        { year: 2022, retailLq: 1.4 }, // 3 year gap
-        { year: 2025, retailLq: 1.5 }, // 3 year gap
+        { year: 2022, retailLq: 1.4 },
+        { year: 2025, retailLq: 1.5 },
       ];
 
       const result = analyzeDataQuality(dataPoints, { maxGapYears: 2 });
@@ -55,9 +54,9 @@ describe('data-quality-filtering', () => {
 
     it('should handle insufficient valid points for statistical analysis', () => {
       const dataPoints = [
-        { year: 2018, retailLq: 0 }, // zero
-        { year: 2019, retailLq: -1 }, // negative
-        { year: 2020, retailLq: 0 }, // zero
+        { year: 2018, retailLq: 0 },
+        { year: 2019, retailLq: -1 },
+        { year: 2020, retailLq: 0 },
       ];
 
       const result = analyzeDataQuality(dataPoints, { minValidPoints: 5 });
@@ -80,7 +79,6 @@ describe('data-quality-filtering', () => {
 
       const result = analyzeDataQuality(dataPoints);
 
-      // Perfect data should have high quality score
       expect(result.dataQualityScore).toBeGreaterThan(90);
       expect(result.dataQualityScore).toBeLessThanOrEqual(100);
     });
@@ -96,7 +94,6 @@ describe('data-quality-filtering', () => {
       expect(result.negativeValueCount).toBe(0);
       expect(result.largeGaps).toHaveLength(0);
       expect(result.outliers).toHaveLength(0);
-      // For empty array, dataQualityScore might be NaN, so let's check for that
       expect(
         isNaN(result.dataQualityScore) || result.dataQualityScore === 0,
       ).toBe(true);
@@ -148,8 +145,8 @@ describe('data-quality-filtering', () => {
     it('should filter data with default options', () => {
       const dataPoints = [
         { year: 2018, retailLq: 1.2 },
-        { year: 2019, retailLq: 0 }, // should be filtered
-        { year: 2020, retailLq: -0.5 }, // should be filtered
+        { year: 2019, retailLq: 0 },
+        { year: 2020, retailLq: -0.5 },
         { year: 2021, retailLq: 1.4 },
       ];
 
@@ -197,7 +194,7 @@ describe('data-quality-filtering', () => {
       expect(result.filteredData[1]).toEqual({
         year: 2019,
         retailLq: 0,
-        wasFiltered: false, // not filtered because filterZeros is false
+        wasFiltered: false,
       });
       expect(result.filteredData[2]).toEqual({
         year: 2020,
@@ -317,7 +314,6 @@ describe('data-quality-filtering', () => {
       expect(consoleSpy).toHaveBeenCalledWith('Total data points: 3');
       expect(consoleSpy).toHaveBeenCalledWith('Valid data points: 3');
       expect(consoleSpy).toHaveBeenCalledWith('Data quality score: 100/100');
-      // Should not log zero values, negative values, large gaps, or outliers
     });
 
     it('should handle metrics with no issues', () => {
@@ -334,7 +330,6 @@ describe('data-quality-filtering', () => {
       logDataQualityAnalysis(metrics, 'NY', 'physical');
 
       expect(consoleSpy).toHaveBeenCalledWith('Data quality score: 100/100');
-      // Should not call specific issue logging
       expect(consoleSpy).not.toHaveBeenCalledWith(
         expect.stringContaining('Zero values:'),
       );

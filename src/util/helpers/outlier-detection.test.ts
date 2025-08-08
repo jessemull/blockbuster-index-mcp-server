@@ -8,7 +8,7 @@ describe('outlier-detection', () => {
   describe('detectAndCorrectOutliers', () => {
     it('should use custom threshold', () => {
       const scores = {
-        CA: 100, // outlier with threshold 1.5
+        CA: 100,
         TX: 50,
         NY: 55,
         FL: 45,
@@ -59,7 +59,6 @@ describe('outlier-detection', () => {
 
       const result = detectAndCorrectOutliers(scores);
 
-      // Median should be average of middle two values: (50 + 52) / 2 = 51
       expect(result.median).toBe(51);
     });
 
@@ -74,7 +73,6 @@ describe('outlier-detection', () => {
 
       const result = detectAndCorrectOutliers(scores);
 
-      // Median should be middle value when sorted: 45, 48, 50, 52, 55
       expect(result.median).toBe(50);
     });
 
@@ -96,7 +94,7 @@ describe('outlier-detection', () => {
 
     it('should preserve original scores for non-outliers', () => {
       const scores = {
-        CA: 200, // outlier
+        CA: 200,
         TX: 50,
         NY: 55,
         FL: 45,
@@ -163,7 +161,6 @@ describe('outlier-detection', () => {
       expect(consoleSpy).toHaveBeenCalledWith('Median: 45.00');
       expect(consoleSpy).toHaveBeenCalledWith('Standard Deviation: 8.10');
       expect(consoleSpy).toHaveBeenCalledWith('Outliers (> 2 SD): 0');
-      // Should not call outlier states or replacement message when no outliers
     });
 
     it('should handle analysis with no outliers', () => {
@@ -178,7 +175,6 @@ describe('outlier-detection', () => {
       logOutlierAnalysis(analysis, 'physical');
 
       expect(consoleSpy).toHaveBeenCalledWith('Outliers (> 2 SD): 0');
-      // Should not call outlier states or replacement message
       expect(consoleSpy).not.toHaveBeenCalledWith(
         expect.stringContaining('Outlier states:'),
       );

@@ -157,30 +157,23 @@ describe('BLS signal entrypoint', () => {
   });
 
   it('calls main when run directly', async () => {
-    // Test the require.main === module condition by creating a mock module
     const mockModule = { filename: __filename };
 
-    // Mock the entrypoint module to simulate being run directly
     jest.doMock('./entrypoint', () => {
       const originalModule = jest.requireActual('./entrypoint');
       return {
         ...originalModule,
-        // Override the require.main check to always be true
         main: async () => {
-          // Simulate the require.main === module condition
           if (mockModule === mockModule) {
-            // This will always be true
             await originalModule.main();
           }
         },
       };
     });
 
-    // Import the module which should trigger the require.main check
     const { main } = await import('./entrypoint');
     await main();
 
-    // The main function should have been called
     expect(logger.info).toHaveBeenCalledWith('Starting BLS signal task...');
   });
 });
