@@ -18,7 +18,7 @@ export function validateStateData(data: BlsStateData): boolean {
   const hasEcommerceData = Object.keys(data.ecommerceCodes).length > 0;
 
   if (!hasBrickAndMortarData && !hasEcommerceData) {
-    logger.warn('No valid code data in state data', { data });
+    logger.info('No valid code data in state data', { data });
     return false;
   }
 

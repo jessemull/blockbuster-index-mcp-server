@@ -4,7 +4,6 @@ import {
   QueryCommand,
   ScanCommand,
   BatchWriteCommand,
-  ScanCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import { logger } from '../../util';
 import type {
@@ -313,99 +312,41 @@ export class DynamoDBBlsRepository implements BlsRepository {
       const allItems: BlsStateData[] = [];
       let lastEvaluatedKey: Record<string, unknown> | undefined;
 
-      try {
-        // Try to use GSI first (more efficient)...
+      do {
+        const response = await client.send(
+          new QueryCommand({
+            TableName: this.stateDataTableName,
+            IndexName: 'state-index',
+            KeyConditionExpression: '#state = :state',
+            ExpressionAttributeNames: {
+              '#state': 'state',
+            },
+            ExpressionAttributeValues: {
+              ':state': state,
+            },
+            ExclusiveStartKey: lastEvaluatedKey,
+            Limit: 100,
+          }),
+        );
 
-        do {
-          const response = await client.send(
-            new QueryCommand({
-              TableName: this.stateDataTableName,
-              IndexName: 'state-index', // GSI on state field
-              KeyConditionExpression: '#state = :state',
-              ExpressionAttributeNames: {
-                '#state': 'state',
-              },
-              ExpressionAttributeValues: {
-                ':state': state,
-              },
-              ExclusiveStartKey: lastEvaluatedKey,
-              Limit: 100, // Process in smaller chunks
-            }),
-          );
-
-          if (response.Items) {
-            const items = response.Items.map((item) => ({
-              state: item.state as string,
-              year: item.year as number,
-              timestamp: item.timestamp as number,
-              brickAndMortarCodes: item.brickAndMortarCodes as Record<
-                string,
-                number
-              >,
-              ecommerceCodes: item.ecommerceCodes as Record<string, number>,
-            }));
-            allItems.push(...items);
-          }
-
-          lastEvaluatedKey = response.LastEvaluatedKey;
-        } while (lastEvaluatedKey);
-
-        return allItems;
-      } catch (gsiError: unknown) {
-        // If GSI is not available yet, fall back to Scan...
-
-        if (
-          gsiError instanceof Error &&
-          gsiError.name === 'ResourceNotFoundException'
-        ) {
-          logger.warn(
-            `GSI not available yet, falling back to Scan for state ${state}`,
-          );
-
-          // Reset for Scan operation...
-
-          lastEvaluatedKey = undefined;
-
-          do {
-            const response: ScanCommandOutput = await client.send(
-              new ScanCommand({
-                TableName: this.stateDataTableName,
-                FilterExpression: '#state = :state',
-                ExpressionAttributeNames: {
-                  '#state': 'state',
-                },
-                ExpressionAttributeValues: {
-                  ':state': state,
-                },
-                ExclusiveStartKey: lastEvaluatedKey,
-                Limit: 100,
-              }),
-            );
-
-            if (response.Items) {
-              const items = response.Items.map(
-                (item: Record<string, unknown>) => ({
-                  state: item.state as string,
-                  year: item.year as number,
-                  timestamp: item.timestamp as number,
-                  brickAndMortarCodes: item.brickAndMortarCodes as Record<
-                    string,
-                    number
-                  >,
-                  ecommerceCodes: item.ecommerceCodes as Record<string, number>,
-                }),
-              );
-              allItems.push(...items);
-            }
-
-            lastEvaluatedKey = response.LastEvaluatedKey;
-          } while (lastEvaluatedKey);
-
-          return allItems;
-        } else {
-          throw gsiError;
+        if (response.Items) {
+          const items = response.Items.map((item) => ({
+            state: item.state as string,
+            year: item.year as number,
+            timestamp: item.timestamp as number,
+            brickAndMortarCodes: item.brickAndMortarCodes as Record<
+              string,
+              number
+            >,
+            ecommerceCodes: item.ecommerceCodes as Record<string, number>,
+          }));
+          allItems.push(...items);
         }
-      }
+
+        lastEvaluatedKey = response.LastEvaluatedKey;
+      } while (lastEvaluatedKey);
+
+      return allItems;
     } catch (error: unknown) {
       logger.error('Failed to get all state data for state', {
         error: error instanceof Error ? error.message : String(error),

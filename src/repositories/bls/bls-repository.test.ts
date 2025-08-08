@@ -432,52 +432,6 @@ describe('DynamoDBBlsRepository', () => {
     expect(res.map((r: any) => r.year)).toEqual([2001, 2002]);
   });
 
-  test('getAllStateDataForState - GSI not available -> fallback to Scan and paginates', async () => {
-    // first call (Query) throws ResourceNotFoundException
-    const gsiErr = new Error('no gsi');
-    gsiErr.name = 'ResourceNotFoundException';
-
-    const scan1 = {
-      Items: [
-        {
-          state: 'F',
-          year: 1999,
-          timestamp: 1,
-          brickAndMortarCodes: {},
-          ecommerceCodes: {},
-        },
-      ],
-      LastEvaluatedKey: { k: 'x' },
-    };
-    const scan2 = {
-      Items: [
-        {
-          state: 'F',
-          year: 2000,
-          timestamp: 2,
-          brickAndMortarCodes: {},
-          ecommerceCodes: {},
-        },
-      ],
-      LastEvaluatedKey: undefined,
-    };
-
-    let call = 0;
-    globalSendMock.mockImplementation(async () => {
-      call++;
-      if (call === 1) throw gsiErr;
-      if (call === 2) return scan1;
-      if (call === 3) return scan2;
-      return {};
-    });
-
-    const res = await repo.getAllStateDataForState('F');
-    expect(res.length).toBe(2);
-    expect(warnMock).toHaveBeenCalledWith(
-      `GSI not available yet, falling back to Scan for state F`,
-    );
-  });
-
   test('getAllStateDataForState - GSI error not ResourceNotFound rethrows', async () => {
     const gsiErr = new Error('bad gsi');
     gsiErr.name = 'SomeOtherException';
