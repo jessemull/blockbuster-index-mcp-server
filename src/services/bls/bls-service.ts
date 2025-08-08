@@ -5,16 +5,16 @@ import {
 } from '../../util/helpers';
 import type {
   BlsProcessedFile,
-  BlsStateData,
-  BlsSignalRecord,
   BlsService as IBlsService,
+  BlsSignalRecord,
+  BlsStateData,
 } from '../../types/bls';
 import { DynamoDBBlsRepository } from '../../repositories/bls/bls-repository';
 import { S3BlsLoader } from './s3-bls-loader';
 import { calculateTrendSlope } from './calculate-trend-slope';
 import { determineTrendCategory } from './determine-trend-category';
-import { validateStateData } from './validate-state-data';
 import { extractCombinedRetailDataFromCsv } from './extract-combined-retail-data';
+import { validateStateData } from './validate-state-data';
 
 export class BlsService implements IBlsService {
   private repository: DynamoDBBlsRepository;
@@ -70,14 +70,17 @@ export class BlsService implements IBlsService {
       logger.info(`Processing BLS data for year ${year}`);
 
       // Process the CSV file in chunks to manage memory...
+
       const fileSize = await this.s3Loader.getFileSize(year);
       let totalRecords = 0;
       let validRecords = 0;
 
-      // Track processed states at the year level to avoid duplicates
+      // Track processed states at the year level to avoid duplicates...
+
       const processedStates = new Set<string>();
 
-      // Aggregate data by state - combine brick and mortar and e-commerce
+      // Aggregate data by state - combine brick and mortar and e-commerce...
+
       const stateAggregatedData: Record<
         string,
         {
@@ -86,7 +89,8 @@ export class BlsService implements IBlsService {
         }
       > = {};
 
-      // Process CSV in chunks of 10,000 records
+      // Process CSV in chunks of 10,000 records...
+
       for await (const chunk of this.s3Loader.processCsvInChunks(year, 10000)) {
         totalRecords += chunk.length;
 
@@ -96,7 +100,8 @@ export class BlsService implements IBlsService {
           parseInt(year, 10),
         );
 
-        // Combine data by state
+        // Combine data by state...
+
         for (const data of combinedData) {
           if (!stateAggregatedData[data.state]) {
             stateAggregatedData[data.state] = {
@@ -105,7 +110,8 @@ export class BlsService implements IBlsService {
             };
           }
 
-          // Merge the code mappings
+          // Merge the code mappings...
+
           Object.assign(
             stateAggregatedData[data.state].brickAndMortarCodes,
             data.brickAndMortarCodes,
@@ -117,6 +123,7 @@ export class BlsService implements IBlsService {
         }
 
         // Log progress for large files...
+
         if (fileSize > 100 * 1024 * 1024) {
           // 100MB
           logger.info(
@@ -125,7 +132,8 @@ export class BlsService implements IBlsService {
         }
       }
 
-      // Save combined data for each state
+      // Save combined data for each state...
+
       const stateDataToSave: BlsStateData[] = [];
 
       for (const [state, aggregatedData] of Object.entries(
@@ -146,13 +154,15 @@ export class BlsService implements IBlsService {
         }
       }
 
-      // Save all state data in batches for better performance
+      // Save all state data in batches for better performance...
+
       if (stateDataToSave.length > 0) {
         await this.repository.saveStateDataBatch(stateDataToSave);
         logger.info(`Saved ${stateDataToSave.length} state records in batches`);
       }
 
       // Mark the file as processed...
+
       const processedFile: BlsProcessedFile = {
         year,
         processedAt: Math.floor(Date.now() / 1000),
