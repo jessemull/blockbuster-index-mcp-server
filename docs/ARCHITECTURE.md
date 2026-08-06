@@ -89,7 +89,7 @@ See `docs/SIGNALS.md` for calculation details.
 - **Docker** image builds with `SIGNAL_TYPE` arg; runs `node dist/index.js`.
 - **CloudFormation** defines cluster, per-signal task roles, task definitions, EventBridge schedules, DynamoDB tables, S3 buckets, IAM.
 - Environments: `dev` / `prod` parameter mappings in templates.
-- **Deploy note:** when changing IAM roles, update the cluster stack before task-definition stacks (see `docs/SECURITY.md`).
+- **Deploy note:** per-signal IAM cutover is two-phase (keep shared role export until task stacks switch). See `docs/SECURITY.md`.
 
 ---
 

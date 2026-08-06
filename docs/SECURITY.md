@@ -36,10 +36,25 @@
 
 ### Deploy order (per-signal roles)
 
-1. Update the **cluster** stack first (creates roles + PassRole resources).
-2. Redeploy each **task-definition** stack so tasks import the new role ARNs.
-3. Verify with a single `ecs-run` / workflow run per signal in **dev** before prod.
-4. Ensure the CI/deploy IAM principal has `iam:PassRole` on the new role ARNs (outside this repo).
+Cutover is **two-phase** so CloudFormation does not delete an export still imported by task stacks.
+
+**Phase 1 — cluster stack only (`blockbuster-index-cluster-dev` / `-prod`):**
+
+- Keep shared `ECSTaskRole` + `${Environment}-BlockbusterTaskRoleArn` export.
+- Create the six per-signal roles + their exports.
+- EventBridge `PassRole` allows execution role, shared role, and all six signal roles.
+
+**Phase 2 — all six task-definition stacks:**
+
+- Redeploy each `blockbuster-index-<signal>-task-stack-<env>` so `TaskRoleArn` imports the per-signal export (e.g. `…BlockbusterAmazonTaskRoleArn`).
+- Prefer the GitHub Deploy workflow per signal (rebuilds image + updates the task stack).
+
+**Phase 3 — cluster cleanup (after Phase 2):**
+
+- Remove shared `ECSTaskRole` and `${Environment}-BlockbusterTaskRoleArn`.
+- Trim EventBridge `PassRole` to execution + the six signal roles only.
+
+Also ensure the CI/deploy IAM principal has `iam:PassRole` on the new role ARNs.
 
 ---
 

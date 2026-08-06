@@ -125,6 +125,210 @@ Resources:
                   - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-blockbuster-index-${Environment}:*'
                   - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-walmart-${Environment}:*'
 
+  # Temporary shared task role kept so existing task stacks can keep importing
+  # ${Environment}-BlockbusterTaskRoleArn during the cutover. Remove in Phase 3
+  # after all task stacks use per-signal role exports.
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'blockbuster-index-ecs-task-role-${Environment}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Path: '/'
+      Policies:
+        - PolicyName: 'S3WriteAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::blockbuster-index-client-${Environment}'
+                  - !Sub 'arn:aws:s3:::blockbuster-index-client-${Environment}/*'
+        - PolicyName: 'DynamoDBAmazonJobsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterAmazonJobsTableArn'
+        - PolicyName: 'DynamoDBAmazonSlidingWindowAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:UpdateItem
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterAmazonSlidingWindowTableArn'
+        - PolicyName: 'DynamoDBCensusSignalsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterCensusSignalsTableArn'
+        - PolicyName: 'DynamoDBBroadbandSignalsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:Scan
+                Resource:
+                  - !ImportValue
+                    Fn::Sub: '${Environment}-BlockbusterBroadbandSignalsTableArn'
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/blockbuster-index-broadband-signals-${Environment}/index/*'
+        - PolicyName: S3BroadbandAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::blockbuster-index-broadband-${Environment}'
+                  - !Sub 'arn:aws:s3:::blockbuster-index-broadband-${Environment}/*'
+        - PolicyName: 'DynamoDBSignalScoresAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterSignalScoresTableArn'
+        - PolicyName: 'DynamoDBBlockbusterIndexAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterBlockbusterIndexTableArn'
+        - PolicyName: 'DynamoDBWalmartJobsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterWalmartJobsTableArn'
+        - PolicyName: 'DynamoDBWalmartSlidingWindowAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:UpdateItem
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterWalmartSlidingWindowTableArn'
+        - PolicyName: 'DynamoDBBlsProcessedFilesAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:Scan
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterBlsProcessedFilesTableArn'
+        - PolicyName: 'DynamoDBBlsStateDataAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:Scan
+                Resource:
+                  - !ImportValue
+                    Fn::Sub: '${Environment}-BlockbusterBlsStateDataTableArn'
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/blockbuster-index-bls-state-data-${Environment}/index/*'
+        - PolicyName: 'DynamoDBBlsSignalsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:Scan
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterBlsSignalsTableArn'
+        - PolicyName: 'S3BlsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::blockbuster-index-bls-${Environment}'
+                  - !Sub 'arn:aws:s3:::blockbuster-index-bls-${Environment}/*'
+
   AmazonECSTaskRole:
     Type: AWS::IAM::Role
     Properties:
@@ -552,7 +756,7 @@ Resources:
             Version: '2012-10-17'
             Statement:
               # Scoped to this stack's signal task definition families (not Resource: '*').
-              # PassRole includes the execution role plus each per-signal task role.
+              # PassRole: execution + shared ECSTaskRole (cutover) + per-signal roles.
               - Effect: Allow
                 Action:
                   - ecs:RunTask
@@ -568,6 +772,7 @@ Resources:
                   - iam:PassRole
                 Resource:
                   - !GetAtt ECSTaskExecutionRole.Arn
+                  - !GetAtt ECSTaskRole.Arn
                   - !GetAtt AmazonECSTaskRole.Arn
                   - !GetAtt WalmartECSTaskRole.Arn
                   - !GetAtt CensusECSTaskRole.Arn
@@ -629,6 +834,11 @@ Outputs:
     Value: !GetAtt ECSTaskExecutionRole.Arn
     Export:
       Name: !Sub '${Environment}-BlockbusterExecutionRoleArn'
+  TaskRoleArn:
+    Description: 'Shared ECS task role ARN (temporary cutover export; remove in Phase 3)'
+    Value: !GetAtt ECSTaskRole.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterTaskRoleArn'
   AmazonTaskRoleArn:
     Description: 'Amazon signal ECS task role ARN'
     Value: !GetAtt AmazonECSTaskRole.Arn
