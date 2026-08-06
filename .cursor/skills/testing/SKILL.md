@@ -1,7 +1,7 @@
 ---
 name: testing
 description: >-
-  Jest testing workflow for Blockbuster Index MCP Server: coverage, mocks,
+  Jest testing workflow for Blockbuster Index signal calculation server: coverage, mocks,
   co-located tests, and testing philosophy. Use when writing, fixing, or
   reviewing tests.
 ---

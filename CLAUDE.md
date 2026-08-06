@@ -1,4 +1,6 @@
-# Claude Agent Instructions — Blockbuster Index MCP Server
+# Claude Agent Instructions — Blockbuster Index Signal Calculation Server
+
+> Repo slug still contains `mcp` (historical). This is not a Model Context Protocol server.
 
 Before making any changes to this repository:
 

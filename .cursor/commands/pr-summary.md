@@ -1,4 +1,4 @@
-# PR summary (Blockbuster Index MCP Server)
+# PR summary (Blockbuster Index signal calculation server)
 
 Generate a **copy-pasteable** GitHub PR description for the current branch.
 

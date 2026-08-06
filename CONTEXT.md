@@ -1,7 +1,11 @@
-# CONTEXT.md — Blockbuster Index MCP Server
+# CONTEXT.md — Blockbuster Index Signal Calculation Server
 
 > **This is the PRIMARY entry point for ALL AI agents working in this repository.**
 > Read this file first. Follow the mandatory reading order below before making any changes.
+>
+> **Naming:** The repository is still named `blockbuster-index-mcp-server`. "MCP" here is
+> historical — this is **not** a Model Context Protocol server. It is a batch signal
+> calculation / index aggregation system (modular multi-task monolith on ECS Fargate).
 
 ---
 
@@ -157,8 +161,8 @@ Before implementing any changes, confirm you have read and understood:
 
 | Field       | Value                                           |
 | ----------- | ----------------------------------------------- |
-| Project     | Blockbuster Index MCP Server                    |
-| Type        | TypeScript Node.js signal calculation server    |
+| Project     | Blockbuster Index signal calculation server     |
+| Type        | TypeScript Node.js batch signal / index jobs    |
 | Runtime     | Node.js 22                                      |
 | Language    | TypeScript (strict)                             |
 | Compute     | AWS ECS Fargate                                 |

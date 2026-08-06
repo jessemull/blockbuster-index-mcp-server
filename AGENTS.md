@@ -1,23 +1,26 @@
-# AGENTS.md — Blockbuster Index MCP Server
+# AGENTS.md — Blockbuster Index Signal Calculation Server
 
 > Complete development rules and constraints for AI agents and human contributors.
 > This file is the authoritative reference for all coding standards, architecture rules, and workflow requirements.
+>
+> The GitHub repo slug still contains `mcp`; that name is historical. This is a batch signal
+> calculation system on ECS Fargate — **not** a Model Context Protocol server.
 
 ---
 
 ## Repository Overview
 
-| Field            | Value                                                                     |
-| ---------------- | ------------------------------------------------------------------------- |
-| **Project**      | Blockbuster Index MCP Server — retail/digital commerce signal calculation |
-| **Architecture** | Modular signal microservices on AWS ECS Fargate                           |
-| **Language**     | TypeScript (strict) on Node.js 22                                         |
-| **Storage**      | DynamoDB (signal data) + S3 (published scores)                            |
-| **IaC**          | CloudFormation                                                            |
-| **Testing**      | Jest with 80% global coverage thresholds                                  |
-| **Analysis**     | ESLint + Prettier + eslint-plugin-perfectionist                           |
-| **CI/CD**        | GitHub Actions                                                            |
-| **Git Hooks**    | Husky + lint-staged + Conventional Commits                                |
+| Field            | Value                                                                       |
+| ---------------- | --------------------------------------------------------------------------- |
+| **Project**      | Blockbuster Index signal calculation — retail/digital commerce scoring      |
+| **Architecture** | Modular multi-task monolith (shared codebase, per-signal ECS Fargate tasks) |
+| **Language**     | TypeScript (strict) on Node.js 22                                           |
+| **Storage**      | DynamoDB (signal data) + S3 (published scores)                              |
+| **IaC**          | CloudFormation                                                              |
+| **Testing**      | Jest with 80% global coverage thresholds                                    |
+| **Analysis**     | ESLint + Prettier + eslint-plugin-perfectionist                             |
+| **CI/CD**        | GitHub Actions                                                              |
+| **Git Hooks**    | Husky + lint-staged + Conventional Commits                                  |
 
 ### Repository Structure
 

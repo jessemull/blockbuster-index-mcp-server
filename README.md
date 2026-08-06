@@ -1,12 +1,14 @@
-# Blockbuster Index MCP Server
+# Blockbuster Index Signal Calculation Server
 
-The **Blockbuster Index MCP Server** calculates the **Blockbuster Index** for all U.S. states by aggregating multiple retail and digital commerce signals. Each signal runs as an independent ECS Fargate task on a daily schedule, fetching data from various retail APIs, computing weighted scores, and uploading the results to S3 for use by the **Blockbuster Index** website.
+> **Naming note:** The GitHub repository is still named `blockbuster-index-mcp-server`. That "MCP" slug is historical — this is **not** a [Model Context Protocol](https://modelcontextprotocol.io) server. It is a **batch signal calculation** system: scheduled ECS Fargate jobs that fetch data, score signals, and publish results to S3/DynamoDB.
+
+This repository calculates the **Blockbuster Index** for all U.S. states by aggregating multiple retail and digital commerce signals. Each signal runs as an independent ECS Fargate task on a daily schedule, fetching data from various retail APIs, computing weighted scores, and uploading the results to S3 for use by the **Blockbuster Index** website.
 
 The **Blockbuster Index** is an AI-powered exploration of how consumer buying habits have shifted across the United States from traditional brick-and-mortar retail to online commerce. Inspired by the cultural decline of physical video rental stores like Blockbuster, this project builds a unique state-by-state index using signals that reflect the tension between digital and analog purchasing behavior.
 
-This MCP server is part of the **Blockbuster Index Project** which includes the following repositories:
+This calculation server is part of the **Blockbuster Index Project** which includes the following repositories:
 
-- **[Blockbuster Index MCP Server](https://github.com/jessemull/blockbuster-index-mcp-server)**: The **Blockbuster Index** calculation server (this repository).
+- **[Blockbuster Index Signal Calculation Server](https://github.com/jessemull/blockbuster-index-mcp-server)**: Batch signal calculation and index aggregation (this repository).
 - **[Blockbuster Index Project Client](https://github.com/jessemull/blockbuster-index)**: The **Blockbuster Index** NextJS client.
 - **[Blockbuster Index Chat Bot](https://github.com/jessemull/blockbuster-index-chat-bot)**: The AI-powered chat bot (Tapey).
 - **[Blockbuster Index Lambda@Edge](https://github.com/jessemull/blockbuster-index-lambda-at-edge)**: The **Blockbuster Index** Lambda@Edge.
@@ -93,12 +95,12 @@ Entry redirects: [`CLAUDE.md`](CLAUDE.md), [`GEMINI.md`](GEMINI.md). Cursor rule
 
 ## Architecture Overview
 
-The Blockbuster Index MCP Server employs a **modular microservices architecture** where each signal runs as an independent ECS Fargate task. This design provides several key advantages:
+This repository is a **modular multi-task monolith**: one TypeScript codebase with shared libraries, built into multiple webpack entrypoints (`SIGNAL_TYPE`) and run as separate **AWS ECS Fargate** tasks. That is not a fleet of independent microservices with separate repos or APIs — it is one deployable codebase with task-level isolation at runtime.
 
 ### Modular Signal Processing
 
-- **Independent Deployment**: Each signal can be deployed, updated, and scaled independently.
-- **Fault Isolation**: A failure in one signal doesn't affect the others.
+- **Independent Deployment**: Each signal image/task can be deployed, updated, and scheduled independently.
+- **Fault Isolation**: A failure in one signal task doesn't stop the others.
 - **Resource Optimization**: Each task can be configured with appropriate CPU/memory for its specific workload.
 - **Parallel Execution**: Signals can run concurrently, reducing total processing time.
 
@@ -153,7 +155,7 @@ The **Blockbuster Index** operates in multiple environments to ensure smooth dev
 
 ## Tech Stack
 
-The **Blockbuster Index MCP Server** is built using modern technologies to ensure reliability, scalability, and maintainability.
+This calculation server is built using modern technologies to ensure reliability, scalability, and maintainability.
 
 - **AWS ECS Fargate**: Containerized deployment platform that runs each signal as an independent scheduled task without managing servers.
 
@@ -189,7 +191,7 @@ The **Blockbuster Index MCP Server** is built using modern technologies to ensur
 
 - **Puppeteer**: Headless browser automation for web scraping Amazon job postings.
 
-This tech stack ensures that the **Blockbuster Index MCP Server** remains performant, secure, and easily maintainable while leveraging AWS infrastructure for scalability and reliability.
+This tech stack keeps the calculation pipeline performant, secure, and maintainable while leveraging AWS infrastructure for scalability and reliability.
 
 ## Setup Instructions
 
@@ -279,7 +281,7 @@ make ecs-run-all
 
 ## Development Workflow
 
-The **Blockbuster Index MCP Server** follows a structured development workflow that ensures code quality, testing, and proper deployment practices.
+This repository follows a structured development workflow that ensures code quality, testing, and proper deployment practices.
 
 ### Development Process
 
@@ -409,11 +411,11 @@ The server uses **Bunyan** for structured logging with the following features:
 
 ## Environment Variables
 
-See [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) and [`.env.example`](.env.example) for a complete list of all environment variables used by the blockbuster index MCP server, organized by signal type and functionality.
+See [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) and [`.env.example`](.env.example) for a complete list of all environment variables used by this calculation server, organized by signal type and functionality.
 
 ## Build & Deployment
 
-The **Blockbuster Index MCP Server** uses a sophisticated CI/CD pipeline with GitHub Actions to enable independent deployment of each signal. This modular approach allows for targeted updates and rollbacks without affecting the entire system.
+CI/CD uses GitHub Actions so each signal task image can be deployed independently. That modular deploy path allows targeted updates and rollbacks without republishing every signal.
 
 ### Build Process
 

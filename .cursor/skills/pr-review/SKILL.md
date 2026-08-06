@@ -1,7 +1,7 @@
 ---
 name: pr-review
 description: >-
-  Review pull requests for Blockbuster Index MCP Server: diff-first, code-only,
+  Review pull requests for Blockbuster Index signal calculation server: diff-first, code-only,
   fixed-section task lists. Use when reviewing a PR/branch, triaging review
   feedback, or deciding merge blockers.
 ---

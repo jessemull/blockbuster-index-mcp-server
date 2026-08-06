@@ -1,7 +1,7 @@
 ---
 name: security-review
 description: >-
-  Security audit for Blockbuster Index MCP Server: secrets, IAM, logging,
+  Security audit for Blockbuster Index signal calculation server: secrets, IAM, logging,
   dependencies, and network exposure. Use when reviewing security-sensitive
   changes or running a security pass.
 ---

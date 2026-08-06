@@ -1,4 +1,4 @@
-# Merge latest `main` into current branch (Blockbuster Index MCP Server)
+# Merge latest `main` into current branch (Blockbuster Index signal calculation server)
 
 Bring the current feature branch up to date with `origin/main`. Resolve merge conflicts, then confirm status.
 

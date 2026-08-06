@@ -7,6 +7,12 @@ alwaysApply: false
 
 # Architecture Rules
 
+## Deployment shape
+
+This repo is a **modular multi-task monolith**: one shared codebase, webpack entry per
+`SIGNAL_TYPE`, independent ECS Fargate tasks at runtime. Do not describe it as separate
+microservices or as a Model Context Protocol (MCP) server — the `mcp` repo name is historical.
+
 ## Layering
 
 ```

@@ -8,7 +8,9 @@
 
 ## Overview
 
-The Blockbuster Index MCP Server calculates per-state retail/digital commerce signals and aggregates them into the Blockbuster Index. Each signal runs as an independent **AWS ECS Fargate** task on a schedule, persists data in **DynamoDB**, and publishes results to **S3** for the website.
+This repository is a **batch signal calculation** system (not a Model Context Protocol server — the `mcp` repo slug is historical). It calculates per-state retail/digital commerce signals and aggregates them into the Blockbuster Index.
+
+**Deployment shape:** a **modular multi-task monolith** — one shared TypeScript codebase with `entrypoint → service → repository` layering, webpack-built per `SIGNAL_TYPE`, and run as independent **AWS ECS Fargate** tasks on a schedule. Tasks persist data in **DynamoDB** and publish results to **S3** for the website. Runtime isolation is at the ECS task boundary; there are not separate microservice repositories or inter-signal HTTP APIs.
 
 ---
 

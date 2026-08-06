@@ -1,4 +1,4 @@
-# Start feature branch (Blockbuster Index MCP Server)
+# Start feature branch (Blockbuster Index signal calculation server)
 
 Branch name: **$ARGUMENTS**
 

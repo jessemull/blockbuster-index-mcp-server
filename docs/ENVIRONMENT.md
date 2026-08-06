@@ -1,7 +1,8 @@
 # Environment Variables
 
-This document lists all environment variables used by the blockbuster index MCP server.
-Application code reads these only through `src/config/config.ts`.
+This document lists all environment variables used by the Blockbuster Index signal calculation server
+(repository: `blockbuster-index-mcp-server`). Application code reads these only through
+`src/config/config.ts`.
 
 ## Amazon Signal
 

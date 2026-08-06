@@ -1,5 +1,5 @@
 name: Bug Report
-description: Report a bug in the Blockbuster Index MCP Server
+description: Report a bug in the Blockbuster Index signal calculation server
 labels: ['bug']
 body:
   - type: textarea

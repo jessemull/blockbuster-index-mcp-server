@@ -1,7 +1,7 @@
 ---
 name: dependency-upgrade
 description: >-
-  Guide npm dependency additions and upgrades for Blockbuster Index MCP Server.
+  Guide npm dependency additions and upgrades for Blockbuster Index signal calculation server.
   New dependencies require human approval. Use when changing package.json or
   evaluating libraries.
 ---

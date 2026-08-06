@@ -1,7 +1,7 @@
 ---
 name: repo-review
 description: >-
-  Full-repository audit for Blockbuster Index MCP Server with fixed output
+  Full-repository audit for Blockbuster Index signal calculation server with fixed output
   sections and Ready/Needs work verdict. Use for release readiness or broad
   health checks — not for single-PR review (use pr-review).
 ---

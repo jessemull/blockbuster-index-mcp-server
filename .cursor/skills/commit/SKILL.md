@@ -1,7 +1,7 @@
 ---
 name: commit
 description: >-
-  Prepare and create commits for Blockbuster Index MCP Server following
+  Prepare and create commits for Blockbuster Index signal calculation server following
   Conventional Commits, governance rules, and quality gates. Use when staging,
   committing, or preparing changes for PR.
 ---
