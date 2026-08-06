@@ -61,11 +61,6 @@ async function main() {
           version: CONFIG.VERSION,
           totalStates: Object.keys(response.states).length,
           states: response.states,
-          signalStatus: {
-            total: SIGNALS.length,
-            successful: SIGNALS.length,
-            failed: 0,
-          },
         };
 
         await blockbusterIndexRepository.save(blockbusterRecord);

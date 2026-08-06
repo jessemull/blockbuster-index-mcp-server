@@ -54,7 +54,6 @@ const sampleRecord: BlockbusterIndexRecord = {
     CA: { rank: 1, score: 0.91 } as unknown as StateScore,
     OR: { rank: 2, score: 0.9 } as unknown as StateScore,
   },
-  signalStatus: { total: 51, successful: 49, failed: 2 },
 };
 
 describe('DynamoDBBlockbusterIndexRepository', () => {
@@ -81,7 +80,6 @@ describe('DynamoDBBlockbusterIndexRepository', () => {
           version: sampleRecord.version,
           totalStates: sampleRecord.totalStates,
           states: sampleRecord.states,
-          signalStatus: sampleRecord.signalStatus,
         },
         TableName: TABLE,
         ConditionExpression: 'attribute_not_exists(#timestamp)',

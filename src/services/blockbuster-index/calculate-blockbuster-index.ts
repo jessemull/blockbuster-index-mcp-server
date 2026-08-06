@@ -70,11 +70,6 @@ export function calculateBlockbusterIndex(
       calculatedAt,
       version,
       totalStates: Object.keys(states).length,
-      signalStatus: {
-        total: SIGNALS.length,
-        successful: SIGNALS.length,
-        failed: 0,
-      },
     },
   };
 }

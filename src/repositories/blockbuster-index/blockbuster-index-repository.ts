@@ -13,7 +13,6 @@ export class DynamoDBBlockbusterIndexRepository extends DynamoDBBlockbusterRepos
         version: record.version,
         totalStates: record.totalStates,
         states: record.states,
-        signalStatus: record.signalStatus,
       };
 
       await this.client.send(
@@ -96,11 +95,6 @@ export class DynamoDBBlockbusterIndexRepository extends DynamoDBBlockbusterRepos
         version: response.Item.version as string,
         totalStates: response.Item.totalStates as number,
         states: response.Item.states as Record<string, StateScore>,
-        signalStatus: response.Item.signalStatus as {
-          failed: number;
-          successful: number;
-          total: number;
-        },
       };
     } catch (error: unknown) {
       logger.error('Failed to get blockbuster index record', {
@@ -133,11 +127,6 @@ export class DynamoDBBlockbusterIndexRepository extends DynamoDBBlockbusterRepos
         version: item.version as string,
         totalStates: item.totalStates as number,
         states: item.states as Record<string, StateScore>,
-        signalStatus: item.signalStatus as {
-          failed: number;
-          successful: number;
-          total: number;
-        },
       }));
     } catch (error: unknown) {
       logger.error('Failed to query blockbuster index records', {
