@@ -8,6 +8,7 @@ This MCP server is part of the **Blockbuster Index Project** which includes the 
 
 - **[Blockbuster Index MCP Server](https://github.com/jessemull/blockbuster-index-mcp-server)**: The **Blockbuster Index** calculation server (this repository).
 - **[Blockbuster Index Project Client](https://github.com/jessemull/blockbuster-index)**: The **Blockbuster Index** NextJS client.
+- **[Blockbuster Index Chat Bot](https://github.com/jessemull/blockbuster-index-chat-bot)**: The AI-powered chat bot (Tapey).
 - **[Blockbuster Index Lambda@Edge](https://github.com/jessemull/blockbuster-index-lambda-at-edge)**: The **Blockbuster Index** Lambda@Edge.
 
 ## Table of Contents
