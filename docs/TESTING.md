@@ -23,13 +23,16 @@ Amazon and Walmart scrapers include Cheerio-based contract tests against checked
 
 ### Optional LocalStack
 
-Files matching `*.localstack.test.ts` are ignored by default Jest. To run against a local LocalStack:
+Files matching `*.localstack.test.ts` are ignored by default Jest (`testPathIgnorePatterns`). To run against a local LocalStack, override the ignore list:
 
 ```bash
-LOCALSTACK_ENDPOINT=http://localhost:4566 npx jest --testPathPatterns=localstack --coverage=false
+LOCALSTACK_ENDPOINT=http://localhost:4566 npx jest \
+  --testPathPatterns=localstack \
+  --testPathIgnorePatterns='/node_modules/|/dist/|/dev/' \
+  --coverage=false
 ```
 
-No extra npm packages are required — tests configure the AWS SDK with `endpoint` when the env var is set.
+No extra npm packages are required — tests configure the AWS SDK with `endpoint` when the env var is set. If `LOCALSTACK_ENDPOINT` is unset, the LocalStack suite is skipped.
 
 ---
 

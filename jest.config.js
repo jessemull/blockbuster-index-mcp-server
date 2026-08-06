@@ -24,7 +24,12 @@ module.exports = {
   },
   preset: 'ts-jest',
   testEnvironment: 'node',
-  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/dev/'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/dist/',
+    '/dev/',
+    ...(process.env.LOCALSTACK_ENDPOINT ? [] : ['\\.localstack\\.test\\.ts$']),
+  ],
   transform: {
     '^.+\\.ts$': [
       'ts-jest',

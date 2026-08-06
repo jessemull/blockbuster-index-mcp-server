@@ -87,8 +87,9 @@ See `docs/SIGNALS.md` for calculation details.
 
 - **Webpack** bundles one entry per `SIGNAL_TYPE` → `src/signals/<signal>/entrypoint.ts`.
 - **Docker** image builds with `SIGNAL_TYPE` arg; runs `node dist/index.js`.
-- **CloudFormation** defines cluster, task definitions, EventBridge schedules, DynamoDB tables, S3 buckets, IAM.
+- **CloudFormation** defines cluster, per-signal task roles, task definitions, EventBridge schedules, DynamoDB tables, S3 buckets, IAM.
 - Environments: `dev` / `prod` parameter mappings in templates.
+- **Deploy note:** when changing IAM roles, update the cluster stack before task-definition stacks (see `docs/SECURITY.md`).
 
 ---
 

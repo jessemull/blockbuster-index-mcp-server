@@ -28,9 +28,18 @@
 ## AWS IAM & infrastructure
 
 - Least privilege for ECS task roles and policies.
+- Each signal has its **own ECS task role** (amazon, walmart, census, broadband, bls, blockbuster-index) exporting `${Environment}-Blockbuster<Signal>TaskRoleArn`. Roles only include DynamoDB/S3 permissions that signal needs (amazon/walmart also read census for workforce normalization).
+- EventBridge invoke role may `iam:PassRole` the execution role plus all six task roles.
 - Broadening IAM or security groups requires human review.
 - S3 buckets should not be public unless explicitly required and reviewed.
 - Infrastructure changes live in `cloudformation/` and require human approval.
+
+### Deploy order (per-signal roles)
+
+1. Update the **cluster** stack first (creates roles + PassRole resources).
+2. Redeploy each **task-definition** stack so tasks import the new role ARNs.
+3. Verify with a single `ecs-run` / workflow run per signal in **dev** before prod.
+4. Ensure the CI/deploy IAM principal has `iam:PassRole` on the new role ARNs (outside this repo).
 
 ---
 
