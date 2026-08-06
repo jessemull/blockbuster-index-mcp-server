@@ -1,6 +1,6 @@
 name: Bug Report
 description: Report a bug in the Blockbuster Index MCP Server
-labels: ["bug"]
+labels: ['bug']
 body:
   - type: textarea
     attributes:
@@ -42,7 +42,7 @@ body:
   - type: input
     attributes:
       label: Node.js Version
-      placeholder: "20.x"
+      placeholder: '20.x'
   - type: textarea
     attributes:
       label: Logs / Stack Trace

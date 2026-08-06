@@ -340,4 +340,4 @@ Outputs:
     Description: 'ARN of the BLS Signals table'
     Value: !GetAtt BlsSignalsTable.Arn
     Export:
-      Name: !Sub '${Environment}-BlockbusterBlsSignalsTableArn' 
+      Name: !Sub '${Environment}-BlockbusterBlsSignalsTableArn'

@@ -54,4 +54,4 @@ Outputs:
     Description: 'ARN of the BLS S3 bucket'
     Value: !GetAtt BlsS3Bucket.Arn
     Export:
-      Name: !Sub '${Environment}-BlockbusterBlsS3BucketArn' 
+      Name: !Sub '${Environment}-BlockbusterBlsS3BucketArn'

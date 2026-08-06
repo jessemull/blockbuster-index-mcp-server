@@ -45,7 +45,7 @@ Resources:
       ClusterName: !Sub 'blockbuster-index-${Environment}'
 
   # Individual log groups for each signal
-  
+
   AmazonLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
@@ -204,7 +204,7 @@ Resources:
                   - dynamodb:Scan
                 Resource:
                   - !ImportValue
-                      Fn::Sub: '${Environment}-BlockbusterBroadbandSignalsTableArn'
+                    Fn::Sub: '${Environment}-BlockbusterBroadbandSignalsTableArn'
                   - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/blockbuster-index-broadband-signals-${Environment}/index/*'
         - PolicyName: S3BroadbandAccess
           PolicyDocument:
@@ -298,7 +298,7 @@ Resources:
                   - dynamodb:Scan
                 Resource:
                   - !ImportValue
-                      Fn::Sub: '${Environment}-BlockbusterBlsStateDataTableArn'
+                    Fn::Sub: '${Environment}-BlockbusterBlsStateDataTableArn'
                   - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/blockbuster-index-bls-state-data-${Environment}/index/*'
         - PolicyName: 'DynamoDBBlsSignalsAccess'
           PolicyDocument:

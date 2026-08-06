@@ -32,12 +32,33 @@ Conditions:
   IsBroadband: !Equals [!Ref SignalType, 'broadband']
   IsWalmart: !Equals [!Ref SignalType, 'walmart']
   IsBlockbusterIndex: !Equals [!Ref SignalType, 'blockbuster-index']
-  IsProdAmazon: !And [!Equals [!Ref Environment, 'prod'], !Equals [!Ref SignalType, 'amazon']]
-  IsProdBls: !And [!Equals [!Ref Environment, 'prod'], !Equals [!Ref SignalType, 'bls']]
-  IsProdCensus: !And [!Equals [!Ref Environment, 'prod'], !Equals [!Ref SignalType, 'census']]
-  IsProdBroadband: !And [!Equals [!Ref Environment, 'prod'], !Equals [!Ref SignalType, 'broadband']]
-  IsProdWalmart: !And [!Equals [!Ref Environment, 'prod'], !Equals [!Ref SignalType, 'walmart']]
-  IsProdBlockbusterIndex: !And [!Equals [!Ref Environment, 'prod'], !Equals [!Ref SignalType, 'blockbuster-index']]
+  IsProdAmazon:
+    !And [
+      !Equals [!Ref Environment, 'prod'],
+      !Equals [!Ref SignalType, 'amazon'],
+    ]
+  IsProdBls:
+    !And [!Equals [!Ref Environment, 'prod'], !Equals [!Ref SignalType, 'bls']]
+  IsProdCensus:
+    !And [
+      !Equals [!Ref Environment, 'prod'],
+      !Equals [!Ref SignalType, 'census'],
+    ]
+  IsProdBroadband:
+    !And [
+      !Equals [!Ref Environment, 'prod'],
+      !Equals [!Ref SignalType, 'broadband'],
+    ]
+  IsProdWalmart:
+    !And [
+      !Equals [!Ref Environment, 'prod'],
+      !Equals [!Ref SignalType, 'walmart'],
+    ]
+  IsProdBlockbusterIndex:
+    !And [
+      !Equals [!Ref Environment, 'prod'],
+      !Equals [!Ref SignalType, 'blockbuster-index'],
+    ]
 
 Parameters:
   Environment:
@@ -85,7 +106,7 @@ Resources:
           Cpu: 512
           Memory: 1024
           Essential: true
-          Command: ["node", "dist/index.js"]
+          Command: ['node', 'dist/index.js']
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -146,7 +167,7 @@ Resources:
           Cpu: 512
           Memory: 1024
           Essential: true
-          Command: ["node", "dist/index.js"]
+          Command: ['node', 'dist/index.js']
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -203,7 +224,7 @@ Resources:
           Cpu: 512
           Memory: 1024
           Essential: true
-          Command: ["node", "dist/index.js"]
+          Command: ['node', 'dist/index.js']
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -262,7 +283,7 @@ Resources:
           Cpu: 512
           Memory: 1024
           Essential: true
-          Command: ["node", "dist/index.js"]
+          Command: ['node', 'dist/index.js']
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -323,7 +344,7 @@ Resources:
           Cpu: 2048
           Memory: 8192
           Essential: true
-          Command: ["node", "dist/index.js"]
+          Command: ['node', 'dist/index.js']
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -386,7 +407,7 @@ Resources:
           Cpu: 512
           Memory: 1024
           Essential: true
-          Command: ["node", "dist/index.js"]
+          Command: ['node', 'dist/index.js']
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -443,7 +464,8 @@ Resources:
             NetworkConfiguration:
               AwsVpcConfiguration:
                 AssignPublicIp: ENABLED
-                SecurityGroups: !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
+                SecurityGroups:
+                  !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
                 Subnets: !FindInMap [EnvConfig, !Ref Environment, Subnets]
 
   CensusScheduledTaskRule:
@@ -466,7 +488,8 @@ Resources:
             NetworkConfiguration:
               AwsVpcConfiguration:
                 AssignPublicIp: ENABLED
-                SecurityGroups: !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
+                SecurityGroups:
+                  !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
                 Subnets: !FindInMap [EnvConfig, !Ref Environment, Subnets]
 
   BroadbandScheduledTaskRule:
@@ -489,7 +512,8 @@ Resources:
             NetworkConfiguration:
               AwsVpcConfiguration:
                 AssignPublicIp: ENABLED
-                SecurityGroups: !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
+                SecurityGroups:
+                  !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
                 Subnets: !FindInMap [EnvConfig, !Ref Environment, Subnets]
 
   WalmartScheduledTaskRule:
@@ -512,7 +536,8 @@ Resources:
             NetworkConfiguration:
               AwsVpcConfiguration:
                 AssignPublicIp: ENABLED
-                SecurityGroups: !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
+                SecurityGroups:
+                  !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
                 Subnets: !FindInMap [EnvConfig, !Ref Environment, Subnets]
 
   BlsScheduledTaskRule:
@@ -535,7 +560,8 @@ Resources:
             NetworkConfiguration:
               AwsVpcConfiguration:
                 AssignPublicIp: ENABLED
-                SecurityGroups: !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
+                SecurityGroups:
+                  !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
                 Subnets: !FindInMap [EnvConfig, !Ref Environment, Subnets]
 
   BlockbusterIndexScheduledTaskRule:
@@ -558,7 +584,8 @@ Resources:
             NetworkConfiguration:
               AwsVpcConfiguration:
                 AssignPublicIp: ENABLED
-                SecurityGroups: !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
+                SecurityGroups:
+                  !FindInMap [EnvConfig, !Ref Environment, SecurityGroups]
                 Subnets: !FindInMap [EnvConfig, !Ref Environment, Subnets]
 
 # --- Outputs ---
