@@ -92,12 +92,12 @@ These constraints apply to **every change** in this repository. No exceptions wi
 
 ## Mandatory Quality Gates
 
-| When               | Gate                                                                   | Failure policy |
-| ------------------ | ---------------------------------------------------------------------- | -------------- |
-| **Commit**         | Husky `pre-commit` — `lint-staged` (ESLint + Prettier on staged files) | Block commit   |
-| **Commit message** | Husky `commit-msg` — commitlint (Conventional Commits + scope enum)    | Block commit   |
-| **Push**           | Husky `pre-push` — lint + format-check + test + build                  | Block push     |
-| **PR / CI**        | GitHub Actions: build all signals, lint, test, 80% coverage            | Block merge    |
+| When               | Gate                                                                                               | Failure policy |
+| ------------------ | -------------------------------------------------------------------------------------------------- | -------------- |
+| **Commit**         | Husky `pre-commit` — `lint-staged` (ESLint + Prettier on staged files)                             | Block commit   |
+| **Commit message** | Husky `commit-msg` — commitlint (Conventional Commits + scope enum)                                | Block commit   |
+| **Push**           | Husky `pre-push` — lint + format-check + test + build                                              | Block push     |
+| **PR / CI**        | GitHub Actions: commitlint, lint, format-check, test (Jest 80%), build all signals; soft npm audit | Block merge    |
 
 ### When to run what (avoid duplicate work)
 

@@ -16,6 +16,7 @@
 ### Required
 
 - [ ] `make preflight` passes (or push validation: lint + format-check + test + build)
+- [ ] PR CI green (commitlint, preflight, build all signals)
 - [ ] Tests added/updated for changes
 - [ ] Coverage remains ≥ 80%
 - [ ] No new lint/format violations

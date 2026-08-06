@@ -145,7 +145,7 @@ Map into `.github/PULL_REQUEST_TEMPLATE.md`:
 
 A PR may merge when **all** are true:
 
-1. CI is green (build, lint, test, coverage)
+1. CI is green (commitlint, lint, format-check, test with 80% coverage, build all signals)
 2. At least one human reviewer has approved (when review is required)
 3. All MUST-level review comments are resolved
 4. No unresolved merge conflicts
