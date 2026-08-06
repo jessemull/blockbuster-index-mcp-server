@@ -7,6 +7,8 @@ module.exports = {
     '!**/index.ts',
     '!src/constants/retry.ts',
     '!src/constants/weights.ts',
+    '!**/*.localstack.test.ts',
+    '!src/util/localstack/**',
   ],
   coverageDirectory: './coverage',
   coverageReporters: ['json', 'lcov', 'text', 'clover'],
