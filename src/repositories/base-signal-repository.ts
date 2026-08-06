@@ -1,6 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import type { SignalRepository } from '../types/repository';
+import { CONFIG } from '../config';
 
 export abstract class DynamoDBSignalRepository<
   T,
@@ -9,7 +10,9 @@ export abstract class DynamoDBSignalRepository<
   protected tableName: string;
 
   constructor(tableName: string, region?: string) {
-    const dynamoClient = new DynamoDBClient({ region: region || 'us-west-2' });
+    const dynamoClient = new DynamoDBClient({
+      region: region ?? CONFIG.AWS_REGION,
+    });
     this.client = DynamoDBDocumentClient.from(dynamoClient);
     this.tableName = tableName;
   }

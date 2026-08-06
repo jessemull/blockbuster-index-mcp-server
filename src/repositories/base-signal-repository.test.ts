@@ -1,5 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import { CONFIG } from '../config';
 import { DynamoDBSignalRepository } from './base-signal-repository';
 
 jest.mock('@aws-sdk/client-dynamodb');
@@ -30,10 +31,10 @@ describe('DynamoDBSignalRepository', () => {
     jest.clearAllMocks();
   });
 
-  it('should create a DynamoDB client with the default region when none is provided', () => {
+  it('should create a DynamoDB client with CONFIG.AWS_REGION when none is provided', () => {
     new TestSignalRepository('test-table');
 
-    expect(DynamoDBClient).toHaveBeenCalledWith({ region: 'us-west-2' });
+    expect(DynamoDBClient).toHaveBeenCalledWith({ region: CONFIG.AWS_REGION });
     expect(DynamoDBDocumentClient.from).toHaveBeenCalled();
   });
 
