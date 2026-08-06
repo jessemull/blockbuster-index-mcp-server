@@ -1,8 +1,8 @@
 export interface BrowserDocument {
   querySelector: (selector: string) => {
-    querySelector: (selector: string) => { textContent: string | null } | null;
+    querySelector: (selector: string) => { textContent: null | string } | null;
   } | null;
   querySelectorAll: (
     selector: string,
-  ) => { getAttribute: (name: string) => string | null }[];
+  ) => { getAttribute: (name: string) => null | string }[];
 }

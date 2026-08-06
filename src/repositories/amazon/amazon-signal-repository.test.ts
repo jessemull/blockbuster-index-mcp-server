@@ -2,14 +2,14 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
   DynamoDBDocumentClient,
   GetCommand,
+  GetCommandInput,
   PutCommand,
   PutCommandInput,
-  GetCommandInput,
   QueryCommand,
   QueryCommandInput,
 } from '@aws-sdk/lib-dynamodb';
-import { DynamoDBAmazonSignalRepository } from './amazon-signal-repository';
 import { logger } from '../../util';
+import { DynamoDBAmazonSignalRepository } from './amazon-signal-repository';
 
 jest.mock('@aws-sdk/client-dynamodb');
 jest.mock('@aws-sdk/lib-dynamodb');

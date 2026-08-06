@@ -1,8 +1,8 @@
-import { getWalmartScores } from './get-walmart-scores';
-import { CONFIG } from '../../config';
-import { logger, uploadToS3 } from '../../util';
 import fs from 'fs';
 import path from 'path';
+import { CONFIG } from '../../config';
+import { logger, uploadToS3 } from '../../util';
+import { getWalmartScores } from './get-walmart-scores';
 
 async function main() {
   try {

@@ -1,5 +1,5 @@
-import { classifyIndustry } from './classify-industry';
 import { BlsCsvRecord } from '../../types/bls';
+import { classifyIndustry } from './classify-industry';
 
 describe('classifyIndustry', () => {
   const createMockRecord = (industryCode: string): BlsCsvRecord => ({

@@ -1,7 +1,7 @@
-import { BroadbandService } from './broadband-service';
-import { BroadbandCsvRecord } from '../../types/broadband';
 import { SPEED_THRESHOLDS } from '../../constants/broadband';
+import { BroadbandCsvRecord } from '../../types/broadband';
 import { logger } from '../../util';
+import { BroadbandService } from './broadband-service';
 
 jest.mock('fs');
 jest.mock('../../util', () => ({
@@ -39,26 +39,26 @@ jest.mock('../../repositories/broadband', () => ({
 
 // Interface for accessing private methods of BroadbandService
 interface BroadbandServicePrivate {
+  calculateAverage(numbers: number[]): number;
   calculateBroadbandMetrics(
     records: BroadbandCsvRecord[],
   ): import('../../types/broadband').BroadbandMetrics;
+  calculateBroadbandScore(metrics: {
+    broadbandAvailabilityPercent: number;
+    gigabitAvailabilityPercent: number;
+    highSpeedAvailabilityPercent: number;
+    technologyCounts: import('../../types/broadband').TechnologyCounts;
+  }): number;
+  calculateMedian(numbers: number[]): number;
+  calculateTechnologyCounts(
+    records: BroadbandCsvRecord[],
+  ): import('../../types/broadband').TechnologyCounts;
   countBlocksWithBroadband(records: BroadbandCsvRecord[]): number;
   countBlocksWithSpeed(
     records: BroadbandCsvRecord[],
     speedThreshold: number,
   ): number;
-  calculateTechnologyCounts(
-    records: BroadbandCsvRecord[],
-  ): import('../../types/broadband').TechnologyCounts;
   extractSpeeds(records: BroadbandCsvRecord[]): number[];
-  calculateAverage(numbers: number[]): number;
-  calculateMedian(numbers: number[]): number;
-  calculateBroadbandScore(metrics: {
-    broadbandAvailabilityPercent: number;
-    highSpeedAvailabilityPercent: number;
-    gigabitAvailabilityPercent: number;
-    technologyCounts: import('../../types/broadband').TechnologyCounts;
-  }): number;
 }
 
 describe('BroadbandService', () => {

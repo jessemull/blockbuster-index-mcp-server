@@ -1,19 +1,19 @@
+import type {
+  BlsProcessedFile,
+  BlsSignalRecord,
+  BlsStateData,
+  BlsService as IBlsService,
+} from '../../types/bls';
+import { DynamoDBBlsRepository } from '../../repositories/bls/bls-repository';
 import { logger } from '../../util';
 import {
   detectAndCorrectOutliers,
   logOutlierAnalysis,
 } from '../../util/helpers';
-import type {
-  BlsProcessedFile,
-  BlsService as IBlsService,
-  BlsSignalRecord,
-  BlsStateData,
-} from '../../types/bls';
-import { DynamoDBBlsRepository } from '../../repositories/bls/bls-repository';
-import { S3BlsLoader } from './s3-bls-loader';
 import { calculateTrendSlope } from './calculate-trend-slope';
 import { determineTrendCategory } from './determine-trend-category';
 import { extractCombinedRetailDataFromCsv } from './extract-combined-retail-data';
+import { S3BlsLoader } from './s3-bls-loader';
 import { validateStateData } from './validate-state-data';
 
 export class BlsService implements IBlsService {
@@ -199,12 +199,12 @@ export class BlsService implements IBlsService {
       // Calculate signals for all states and collect slopes for normalization...
 
       const stateSignals: Array<{
-        state: string;
-        physicalSlope: number;
-        ecommerceSlope: number;
-        physicalTrend: 'declining' | 'stable' | 'growing';
-        ecommerceTrend: 'declining' | 'stable' | 'growing';
         dataPoints: number;
+        ecommerceSlope: number;
+        ecommerceTrend: 'declining' | 'growing' | 'stable';
+        physicalSlope: number;
+        physicalTrend: 'declining' | 'growing' | 'stable';
+        state: string;
         yearsAnalyzed: number[];
       }> = [];
 
@@ -237,8 +237,8 @@ export class BlsService implements IBlsService {
             // Calculate physical retail signal using weighted approach (same as ecommerce)...
 
             const physicalCodeSlopes: Array<{
-              slope: number;
               dataPoints: number;
+              slope: number;
             }> = [];
             let totalPhysicalDataPoints = 0;
 
@@ -256,7 +256,7 @@ export class BlsService implements IBlsService {
             // Calculate individual slopes for each physical retail code...
 
             for (const code of allPhysicalCodes) {
-              const codeDataPoints: { year: number; retailLq: number }[] = [];
+              const codeDataPoints: { retailLq: number; year: number }[] = [];
 
               for (const data of sortedData) {
                 if (
@@ -281,7 +281,7 @@ export class BlsService implements IBlsService {
             }
 
             let physicalSlope = 0;
-            let physicalTrend: 'declining' | 'stable' | 'growing' = 'stable';
+            let physicalTrend: 'declining' | 'growing' | 'stable' = 'stable';
 
             if (physicalCodeSlopes.length > 0) {
               // Calculate weighted average slope...
@@ -297,8 +297,8 @@ export class BlsService implements IBlsService {
             // Calculate e-commerce signal using weighted approach...
 
             const ecommerceCodeSlopes: Array<{
-              slope: number;
               dataPoints: number;
+              slope: number;
             }> = [];
             let totalDataPoints = 0;
 
@@ -316,7 +316,7 @@ export class BlsService implements IBlsService {
             // Calculate individual slopes for each e-commerce code...
 
             for (const code of allEcommerceCodes) {
-              const codeDataPoints: { year: number; retailLq: number }[] = [];
+              const codeDataPoints: { retailLq: number; year: number }[] = [];
 
               for (const data of sortedData) {
                 if (
@@ -341,7 +341,7 @@ export class BlsService implements IBlsService {
             }
 
             let ecommerceSlope = 0;
-            let ecommerceTrend: 'declining' | 'stable' | 'growing' = 'stable';
+            let ecommerceTrend: 'declining' | 'growing' | 'stable' = 'stable';
 
             if (ecommerceCodeSlopes.length > 0) {
               // Calculate weighted average slope...

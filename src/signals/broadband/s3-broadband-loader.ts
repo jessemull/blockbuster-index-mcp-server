@@ -1,18 +1,18 @@
-import { logger } from '../../util/logger';
 import {
-  S3Client,
-  ListObjectsV2Command,
   GetObjectCommand,
+  ListObjectsV2Command,
+  S3Client,
 } from '@aws-sdk/client-s3';
 import { parse } from 'csv-parse';
-import { TECHNOLOGY_CODES, SPEED_THRESHOLDS } from '../../constants/broadband';
-import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband';
 import type {
-  S3BroadbandCsvRecord,
   BroadbandMetrics,
+  S3BroadbandCsvRecord,
   TechnologyCounts,
 } from '../../types/broadband';
+import { SPEED_THRESHOLDS, TECHNOLOGY_CODES } from '../../constants/broadband';
+import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband';
 import { BroadbandService } from '../../services/broadband/broadband-service';
+import { logger } from '../../util/logger';
 
 const DEFAULT_TABLE = 'blockbuster-index-broadband-signals-dev';
 
@@ -39,7 +39,7 @@ export class S3BroadbandLoader {
     });
   }
 
-  async getLatestDataVersion(): Promise<string | null> {
+  async getLatestDataVersion(): Promise<null | string> {
     try {
       const command = new ListObjectsV2Command({
         Bucket: this.bucketName,
@@ -132,10 +132,10 @@ export class S3BroadbandLoader {
   }
 
   async downloadAndParseCSV(s3Key: string): Promise<{
-    state: string;
-    metrics: BroadbandMetrics;
     dataVersion: string;
     lastUpdated: Date;
+    metrics: BroadbandMetrics;
+    state: string;
   }> {
     try {
       const command = new GetObjectCommand({
@@ -300,7 +300,7 @@ export class S3BroadbandLoader {
   }
 
   async loadBroadbandData(): Promise<
-    Array<{ state: string; dataVersion: string; lastUpdated: Date }>
+    Array<{ dataVersion: string; lastUpdated: Date; state: string }>
   > {
     const dataVersion = await this.getLatestDataVersion();
 
@@ -322,9 +322,9 @@ export class S3BroadbandLoader {
     logger.info(`Processing all ${statesToProcess.length} states`);
 
     const processedData: Array<{
-      state: string;
       dataVersion: string;
       lastUpdated: Date;
+      state: string;
     }> = [];
 
     for (const s3Key of statesToProcess) {
@@ -371,10 +371,10 @@ export class S3BroadbandLoader {
 
   async processStatesOneByOne(
     callback: (stateData: {
-      state: string;
-      metrics: BroadbandMetrics;
       dataVersion: string;
       lastUpdated: Date;
+      metrics: BroadbandMetrics;
+      state: string;
     }) => Promise<void>,
   ): Promise<void> {
     const dataVersion = await this.getLatestDataVersion();

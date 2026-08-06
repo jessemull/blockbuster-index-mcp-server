@@ -1,29 +1,29 @@
 import {
   GetCommand,
   PutCommand,
-  UpdateCommand,
   QueryCommand,
+  UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { logger } from '../../util';
 import { DynamoDBSignalRepository } from '../base-signal-repository';
 
 export interface SlidingWindowKeyStrategy<TAggregate> {
+  extractAggregate(response: unknown): null | TAggregate;
   getAggregateCommand(
     state: string,
     tableName: string,
   ): GetCommand | QueryCommand;
-  extractAggregate(response: unknown): TAggregate | null;
 }
 
 export class DynamoDBSlidingWindowRepository<
   TAggregate extends {
-    state: string;
-    windowStart: number;
-    totalJobCount: number;
-    dayCount: number;
     averageJobCount: number;
-    windowEnd: number;
+    dayCount: number;
     lastUpdated: number;
+    state: string;
+    totalJobCount: number;
+    windowEnd: number;
+    windowStart: number;
   },
 > extends DynamoDBSignalRepository<TAggregate> {
   private keyStrategy: SlidingWindowKeyStrategy<TAggregate>;
@@ -37,7 +37,7 @@ export class DynamoDBSlidingWindowRepository<
     this.keyStrategy = keyStrategy;
   }
 
-  async getAggregate(state: string): Promise<TAggregate | null> {
+  async getAggregate(state: string): Promise<null | TAggregate> {
     try {
       const command = this.keyStrategy.getAggregateCommand(
         state,
@@ -218,7 +218,7 @@ export class DynamoDBSlidingWindowRepository<
     return aggregate !== null;
   }
 
-  async get(state: string): Promise<TAggregate | null> {
+  async get(state: string): Promise<null | TAggregate> {
     return this.getAggregate(state);
   }
 }

@@ -1,8 +1,8 @@
 import { Browser } from 'puppeteer';
-import { logger } from '../../util';
 import { WALMART_JOBS_URL_TEMPLATE } from '../../constants/walmart';
-import { searchWalmartJobsInState } from './search-jobs-in-state';
+import { logger } from '../../util';
 import { getJobCountFromPage } from './get-job-count-from-page';
+import { searchWalmartJobsInState } from './search-jobs-in-state';
 
 jest.mock('../../util', () => ({
   logger: {

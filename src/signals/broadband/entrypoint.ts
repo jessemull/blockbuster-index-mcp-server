@@ -1,8 +1,8 @@
-import { getBroadbandScores } from './get-broadband-scores';
-import { CONFIG } from '../../config';
-import { logger, uploadToS3 } from '../../util';
 import fs from 'fs';
 import path from 'path';
+import { CONFIG } from '../../config';
+import { logger, uploadToS3 } from '../../util';
+import { getBroadbandScores } from './get-broadband-scores';
 
 async function main() {
   try {

@@ -1,19 +1,19 @@
+import type { Readable } from 'stream';
 import {
-  S3BroadbandLoader,
-  mapTechCodeToTechnology,
-} from './s3-broadband-loader';
-import {
-  S3Client,
-  ListObjectsV2Command,
   GetObjectCommand,
+  ListObjectsV2Command,
+  S3Client,
 } from '@aws-sdk/client-s3';
 import { mockClient } from 'aws-sdk-client-mock';
 import { parse, Parser } from 'csv-parse';
-import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband';
 import type { S3BroadbandCsvRecord } from '../../types/broadband';
-import type { Readable } from 'stream';
 import { TECHNOLOGY_CODES } from '../../constants';
+import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband';
 import { logger } from '../../util/logger';
+import {
+  mapTechCodeToTechnology,
+  S3BroadbandLoader,
+} from './s3-broadband-loader';
 
 jest.mock('../../util/logger', () => ({
   logger: {

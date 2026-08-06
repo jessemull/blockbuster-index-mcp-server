@@ -1,7 +1,7 @@
-import { S3BlsLoader } from './s3-bls-loader';
 import { S3Client } from '@aws-sdk/client-s3';
-import { logger } from '../../util';
 import { BlsCsvRecord } from '../../types/bls';
+import { logger } from '../../util';
+import { S3BlsLoader } from './s3-bls-loader';
 
 jest.mock('@aws-sdk/client-s3');
 jest.mock('../../util', () => ({

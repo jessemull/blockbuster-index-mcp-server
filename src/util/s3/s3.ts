@@ -13,7 +13,7 @@ export const s3Client = new S3Client({
 });
 
 export interface S3UploadOptions {
-  body: string | Buffer;
+  body: Buffer | string;
   bucket: string;
   cacheControl?: string;
   contentType?: string;

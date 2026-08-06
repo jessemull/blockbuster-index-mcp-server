@@ -1,6 +1,6 @@
 import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
-import { logger } from '../../util';
 import type { SignalScoreRecord } from '../../types/signals';
+import { logger } from '../../util';
 import { DynamoDBSignalRepository } from '../base-signal-repository';
 
 export class DynamoDBSignalScoresRepository extends DynamoDBSignalRepository<SignalScoreRecord> {
@@ -77,7 +77,7 @@ export class DynamoDBSignalScoresRepository extends DynamoDBSignalRepository<Sig
   async get(
     signalType: string,
     timestamp?: number,
-  ): Promise<SignalScoreRecord | null> {
+  ): Promise<null | SignalScoreRecord> {
     try {
       const response = await this.client.send(
         new GetCommand({

@@ -1,9 +1,9 @@
 import { QueryCommand } from '@aws-sdk/lib-dynamodb';
+import type { WalmartSlidingWindowAggregate } from '../../types/walmart';
 import {
   DynamoDBSlidingWindowRepository,
   SlidingWindowKeyStrategy,
 } from '../../repositories/generic-sliding-window-repository';
-import type { WalmartSlidingWindowAggregate } from '../../types/walmart';
 
 const walmartKeyStrategy: SlidingWindowKeyStrategy<WalmartSlidingWindowAggregate> =
   {

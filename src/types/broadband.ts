@@ -1,86 +1,86 @@
 // Raw CSV data structure from FCC broadband files.
 
 export interface BroadbandCsvRecord {
-  LogRecNo: string;
-  Provider_Id: string;
-  FRN: string;
-  ProviderName: string;
-  DBAName: string;
-  HoldingCompanyName: string;
-  HocoNum: string;
-  HocoFinal: string;
-  StateAbbr: string;
   BlockCode: string;
-  TechCode: string;
+  Business: string;
   Consumer: string;
+  DBAName: string;
+  FRN: string;
+  HocoFinal: string;
+  HocoNum: string;
+  HoldingCompanyName: string;
+  LogRecNo: string;
   MaxAdDown: string;
   MaxAdUp: string;
-  Business: string;
+  Provider_Id: string;
+  ProviderName: string;
+  StateAbbr: string;
+  TechCode: string;
 }
 
 export interface S3BroadbandCsvRecord {
-  StateAbbr?: string;
   BlockCode?: string;
-  ProviderName?: string;
-  TechCode?: string;
   MaxAdDown?: string;
+  ProviderName?: string;
+  StateAbbr?: string;
+  TechCode?: string;
 }
 
 export interface BroadbandRecord {
-  state: string;
   censusBlock: string;
   provider: string;
-  technology: string;
   speed: number;
+  state: string;
+  technology: string;
 }
 
 export interface S3BroadbandData {
-  state: string;
   dataVersion: string;
   lastUpdated: Date;
+  state: string;
 }
 
 export interface BroadbandMetrics {
-  totalCensusBlocks: number;
-  blocksWithBroadband: number;
-  broadbandAvailabilityPercent: number;
-  blocksWithHighSpeed: number;
-  highSpeedAvailabilityPercent: number;
-  blocksWithGigabit: number;
-  gigabitAvailabilityPercent: number;
-  technologyCounts: TechnologyCounts;
   averageDownloadSpeed: number;
-  medianDownloadSpeed: number;
+  blocksWithBroadband: number;
+  blocksWithGigabit: number;
+  blocksWithHighSpeed: number;
+  broadbandAvailabilityPercent: number;
   broadbandScore: number;
+  gigabitAvailabilityPercent: number;
+  highSpeedAvailabilityPercent: number;
+  medianDownloadSpeed: number;
+  technologyCounts: TechnologyCounts;
+  totalCensusBlocks: number;
 }
 
 export interface TechnologyCounts {
-  fiber: number;
   cable: number;
   dsl: number;
-  wireless: number;
+  fiber: number;
   other: number;
+  wireless: number;
 }
 
 export interface BroadbandSignalRecord {
-  state: string;
-  timestamp: number;
-  dataVersion: string;
-  totalCensusBlocks: number;
-  blocksWithBroadband: number;
-  broadbandAvailabilityPercent: number;
-  blocksWithHighSpeed: number;
-  highSpeedAvailabilityPercent: number;
-  blocksWithGigabit: number;
-  gigabitAvailabilityPercent: number;
-  technologyCounts: TechnologyCounts;
   averageDownloadSpeed: number;
-  medianDownloadSpeed: number;
+  blocksWithBroadband: number;
+  blocksWithGigabit: number;
+  blocksWithHighSpeed: number;
+  broadbandAvailabilityPercent: number;
   broadbandScore: number;
+  dataVersion: string;
+  gigabitAvailabilityPercent: number;
+  highSpeedAvailabilityPercent: number;
+  medianDownloadSpeed: number;
+  state: string;
+  technologyCounts: TechnologyCounts;
+  timestamp: number;
+  totalCensusBlocks: number;
 }
 
 export interface StateVersionMetadata {
-  state: string;
   dataVersion: string;
   lastProcessed: number;
+  state: string;
 }

@@ -1,6 +1,6 @@
-import { getBroadbandScores } from './get-broadband-scores';
 import { BroadbandService } from '../../services';
 import { logger } from '../../util/logger';
+import { getBroadbandScores } from './get-broadband-scores';
 
 jest.mock('../../services');
 

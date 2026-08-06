@@ -1,84 +1,84 @@
 export interface BlsCsvRecord {
-  area_fips: string;
-  industry_code: string;
-  own_code: string;
   agglvl_code: string;
-  size_code: string;
-  year: string;
   annual_avg_emplvl: string;
   annual_avg_estabs: string;
-  total_annual_wages: string;
-  taxable_annual_wages: string;
-  annual_contributions: string;
   annual_avg_wkly_wage: string;
+  annual_contributions: string;
+  area_fips: string;
   avg_annual_pay: string;
+  industry_code: string;
   lq_annual_avg_emplvl: string;
   lq_annual_avg_estabs: string;
-  lq_total_annual_wages: string;
-  lq_taxable_annual_wages: string;
-  lq_annual_contributions: string;
   lq_annual_avg_wkly_wage: string;
+  lq_annual_contributions: string;
   lq_avg_annual_pay: string;
-  oty_total_annual_wages_pct: string;
+  lq_taxable_annual_wages: string;
+  lq_total_annual_wages: string;
   oty_annual_avg_emplvl_pct: string;
   oty_annual_avg_estabs_pct: string;
+  oty_total_annual_wages_pct: string;
+  own_code: string;
+  size_code: string;
+  taxable_annual_wages: string;
+  total_annual_wages: string;
+  year: string;
 }
 
 export interface BlsStateData {
-  state: string;
-  year: number;
-  timestamp: number;
   brickAndMortarCodes: Record<string, number>; // Map of codes to retailLq values
   ecommerceCodes: Record<string, number>; // Map of codes to retailLq values
+  state: string;
+  timestamp: number;
+  year: number;
 }
 
 export interface BlsProcessedFile {
-  year: string;
-  processedAt: number;
   fileSize: number;
+  processedAt: number;
   recordCount: number;
+  year: string;
 }
 
 export interface BlsSignalRecord {
+  calculatedAt: string;
+  dataPoints: number;
+  ecommerceScore: number; // E-commerce signal score
+  ecommerceSlope: number; // E-commerce slope
+  ecommerceTrend: 'declining' | 'growing' | 'stable'; // E-commerce trend
+  physicalScore: number; // Brick and mortar retail signal score
+  physicalSlope: number; // Brick and mortar retail slope
+  physicalTrend: 'declining' | 'growing' | 'stable'; // Brick and mortar retail trend
   state: string;
   timestamp: number;
-  calculatedAt: string;
-  physicalSlope: number; // Brick and mortar retail slope
-  physicalTrend: 'declining' | 'stable' | 'growing'; // Brick and mortar retail trend
-  ecommerceSlope: number; // E-commerce slope
-  ecommerceTrend: 'declining' | 'stable' | 'growing'; // E-commerce trend
-  physicalScore: number; // Brick and mortar retail signal score
-  ecommerceScore: number; // E-commerce signal score
-  dataPoints: number;
   yearsAnalyzed: number[];
 }
 
 export interface BlsRepository {
-  saveProcessedFile(file: BlsProcessedFile): Promise<void>;
+  getAllSignals(): Promise<BlsSignalRecord[]>;
+  getAllStateDataForState(state: string): Promise<BlsStateData[]>;
+  getAllStateDataForYear(year: number): Promise<BlsStateData[]>;
+  getLatestSignal(state: string): Promise<BlsSignalRecord | null>;
+  getStateData(state: string, year: number): Promise<BlsStateData | null>;
   isFileProcessed(year: string): Promise<boolean>;
+  saveProcessedFile(file: BlsProcessedFile): Promise<void>;
+  saveSignal(record: BlsSignalRecord): Promise<void>;
   saveStateData(data: BlsStateData): Promise<void>;
   saveStateDataBatch(dataArray: BlsStateData[]): Promise<void>;
-  getStateData(state: string, year: number): Promise<BlsStateData | null>;
-  getAllStateDataForYear(year: number): Promise<BlsStateData[]>;
-  getAllStateDataForState(state: string): Promise<BlsStateData[]>;
-  saveSignal(record: BlsSignalRecord): Promise<void>;
-  getLatestSignal(state: string): Promise<BlsSignalRecord | null>;
-  getAllSignals(): Promise<BlsSignalRecord[]>;
 }
 
 export interface BlsMetrics {
-  physicalSlope: number; // Brick and mortar retail slope
-  physicalTrend: 'declining' | 'stable' | 'growing'; // Brick and mortar retail trend
-  ecommerceSlope: number; // E-commerce slope
-  ecommerceTrend: 'declining' | 'stable' | 'growing'; // E-commerce trend
-  physicalScore: number; // Brick and mortar retail signal score
-  ecommerceScore: number; // E-commerce signal score
   dataPoints: number;
+  ecommerceScore: number; // E-commerce signal score
+  ecommerceSlope: number; // E-commerce slope
+  ecommerceTrend: 'declining' | 'growing' | 'stable'; // E-commerce trend
+  physicalScore: number; // Brick and mortar retail signal score
+  physicalSlope: number; // Brick and mortar retail slope
+  physicalTrend: 'declining' | 'growing' | 'stable'; // Brick and mortar retail trend
   yearsAnalyzed: number[];
 }
 
 export interface BlsService {
-  processBlsData(): Promise<void>;
-  getAllPhysicalScores(): Promise<Record<string, number>>;
   getAllEcommerceScores(): Promise<Record<string, number>>;
+  getAllPhysicalScores(): Promise<Record<string, number>>;
+  processBlsData(): Promise<void>;
 }

@@ -1,0 +1,42 @@
+---
+description: "Security constraints: secrets, logging, IAM least privilege, and dependency hygiene."
+alwaysApply: false
+---
+
+# Security Rules
+
+## Secrets
+
+### MUST
+
+- [ ] Load secrets only from environment / GitHub Actions secrets
+- [ ] Document new env vars in `docs/ENVIRONMENT.md` and `.env.example`
+- [ ] Route config through `src/config/config.ts`
+
+### MUST NOT
+
+- ❌ Hardcode API keys, tokens, passwords, or AWS credentials
+- ❌ Commit `.env` files
+- ❌ Log credentials, tokens, or sensitive payloads
+
+## Logging
+
+- Use bunyan logger only
+- Strip secrets from logged objects
+- Prefer identifiers (state code, job id) over raw personal data
+
+## IAM & Network
+
+- Least privilege for ECS task roles
+- No unnecessary public exposure of resources
+- Security group / IAM expansions require human review
+
+## Dependencies
+
+- New npm packages require human approval
+- Prefer well-maintained packages with clear licenses
+- Run audits when adding or upgrading dependencies
+
+## Escalation
+
+Security-sensitive changes always require human review before merge.

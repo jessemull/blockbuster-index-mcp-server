@@ -1,0 +1,56 @@
+---
+description: "Jest testing conventions, 80% coverage, mocking AWS I/O, and co-located test layout."
+globs:
+  - "**/*.test.ts"
+alwaysApply: false
+---
+
+# Testing Rules
+
+## Requirements
+
+- Unit tests for services, repositories, helpers, and signal calculation logic
+- Entrypoint tests cover orchestration with mocked dependencies
+- New logic files get a co-located `*.test.ts`
+
+## Coverage
+
+- Global thresholds: **80%** branches, functions, lines, statements
+- Enforced in PR CI and deploy workflows — do not lower thresholds
+
+## Mocking
+
+- Mock AWS with `aws-sdk-client-mock` where applicable
+- Follow `jest.setup.js` patterns (logger, retry, S3)
+- Never hit real AWS, network, or Puppeteer in unit tests
+
+## Structure
+
+```typescript
+it('should [expected behavior] when [condition]', () => {
+  // Arrange
+  // Act
+  // Assert
+});
+```
+
+## Philosophy
+
+### MUST
+
+- [ ] Cover happy path, sad path, and edge cases
+- [ ] Test behavior, not implementation details
+- [ ] Keep tests deterministic and fast
+- [ ] Isolate tests from each other
+
+### MUST NOT
+
+- ❌ Overtest trivial getters/pass-throughs
+- ❌ Assert third-party library internals
+- ❌ Depend on real timers/network/filesystem without fakes
+- ❌ Leave new behavior untested
+
+## File Layout
+
+- Co-locate: `foo.ts` → `foo.test.ts`
+- Mirror module structure; do not create a separate top-level `tests/` tree for unit tests

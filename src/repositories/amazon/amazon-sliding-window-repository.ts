@@ -1,9 +1,9 @@
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
+import type { SlidingWindowAggregate } from '../../types/amazon';
 import {
   DynamoDBSlidingWindowRepository,
   SlidingWindowKeyStrategy,
 } from '../../repositories/generic-sliding-window-repository';
-import type { SlidingWindowAggregate } from '../../types/amazon';
 
 const amazonKeyStrategy: SlidingWindowKeyStrategy<SlidingWindowAggregate> = {
   getAggregateCommand: (state, tableName) =>

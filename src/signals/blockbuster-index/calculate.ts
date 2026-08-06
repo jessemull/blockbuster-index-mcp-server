@@ -1,10 +1,10 @@
 import { WEIGHTS } from '../../constants';
 import { SIGNALS } from '../../constants/signals';
 import {
-  States,
-  Signal,
-  StateScore,
   BlockbusterIndexResponse,
+  Signal,
+  States,
+  StateScore,
 } from '../../types';
 import { normalizeScores } from '../../util/helpers/normalize-signal-scores';
 

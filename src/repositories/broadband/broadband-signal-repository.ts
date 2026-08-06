@@ -4,13 +4,13 @@ import {
   QueryCommand,
   ScanCommand,
 } from '@aws-sdk/lib-dynamodb';
-import { logger } from '../../util';
 import type {
   BroadbandSignalRecord,
   StateVersionMetadata,
 } from '../../types/broadband';
-import { DynamoDBSignalRepository } from '../base-signal-repository';
 import { States } from '../../types/states';
+import { logger } from '../../util';
+import { DynamoDBSignalRepository } from '../base-signal-repository';
 
 export class DynamoDBBroadbandSignalRepository extends DynamoDBSignalRepository<BroadbandSignalRecord> {
   async save(record: BroadbandSignalRecord): Promise<void> {
@@ -120,7 +120,7 @@ export class DynamoDBBroadbandSignalRepository extends DynamoDBSignalRepository<
     }
   }
 
-  async getLatestVersionForState(state: string): Promise<string | null> {
+  async getLatestVersionForState(state: string): Promise<null | string> {
     try {
       const result = await this.client.send(
         new QueryCommand({

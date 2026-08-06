@@ -1,6 +1,6 @@
-import { validateStateData } from './validate-state-data';
 import { BlsStateData } from '../../types/bls';
 import { logger } from '../../util';
+import { validateStateData } from './validate-state-data';
 
 jest.mock('../../util', () => ({
   logger: {

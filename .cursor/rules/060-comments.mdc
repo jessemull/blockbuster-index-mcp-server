@@ -1,0 +1,59 @@
+---
+description: "Comment policy: minimal intent-focused comments with TypeScript spacing conventions."
+globs:
+  - "**/*.ts"
+alwaysApply: false
+---
+
+# Comment Rules
+
+Comments are a maintenance cost. Prefer self-documenting names and structure.
+
+## When to Comment
+
+- Non-obvious **why** (intent, trade-offs)
+- Security-critical constraints
+- Performance trade-offs
+- AWS / Puppeteer / API quirks and workarounds
+- Justification for unavoidable `any` or lint suppressions
+
+## When Not to Comment
+
+- Restating what the next line does
+- TODO without ticket/context
+- Commented-out dead code (delete it)
+
+## Spacing (TypeScript)
+
+### Standalone comments in code
+
+- Empty line **above and below** standalone comments
+- Block start: empty line **below** only
+- Block end: empty line **above** only
+
+### JSDoc
+
+- Place JSDoc **directly above** the declaration — no blank line between comment and symbol
+
+### Example
+
+```typescript
+function processScores(scores: number[]): number[] {
+  // Filter outliers before normalization
+
+  const filtered = removeOutliers(scores);
+
+  // Min-max normalize to 0–100
+
+  return normalize(filtered);
+}
+
+/**
+ * Uploads signal scores to S3 for website consumption.
+ */
+export async function uploadScores(key: string, body: unknown): Promise<void> {
+  // ...
+}
+```
+
+See `docs/COMMENTS.md` for the full policy.

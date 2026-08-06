@@ -1,0 +1,13 @@
+# Governance and automation ownership
+CONTEXT.md @jessemull
+AGENTS.md @jessemull
+CLAUDE.md @jessemull
+GEMINI.md @jessemull
+docs/GOVERNANCE.md @jessemull
+docs/ARCHITECTURE.md @jessemull
+docs/REVIEW.md @jessemull
+docs/SECURITY.md @jessemull
+.cursor/ @jessemull
+.github/ @jessemull
+cloudformation/ @jessemull
+Makefile @jessemull

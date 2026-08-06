@@ -1,6 +1,6 @@
 import { Browser } from 'puppeteer';
-import { logger } from '../../util';
 import { WALMART_JOBS_URL_TEMPLATE } from '../../constants/walmart';
+import { logger } from '../../util';
 import { getJobCountFromPage } from './get-job-count-from-page';
 
 export async function searchWalmartJobsInState(

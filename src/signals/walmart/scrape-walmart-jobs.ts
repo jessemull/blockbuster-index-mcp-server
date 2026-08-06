@@ -1,11 +1,11 @@
 import puppeteer from 'puppeteer';
-import { logger } from '../../util';
-import { States } from '../../types';
-import { searchWalmartJobsInState } from './search-jobs-in-state';
 import type {
-  WalmartSignalRepository,
   WalmartJobRecord,
+  WalmartSignalRepository,
 } from '../../types/walmart';
+import { States } from '../../types';
+import { logger } from '../../util';
+import { searchWalmartJobsInState } from './search-jobs-in-state';
 
 export async function scrapeWalmartJobs(
   walmartRepository?: WalmartSignalRepository<WalmartJobRecord>,

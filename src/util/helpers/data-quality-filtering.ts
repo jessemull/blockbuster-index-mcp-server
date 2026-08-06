@@ -4,20 +4,20 @@
  */
 
 export interface DataQualityMetrics {
+  dataQualityScore: number; // 0-100, higher is better
+  largeGaps: Array<{ fromYear: number; gapSize: number; toYear: number }>;
+  negativeValueCount: number;
+  outliers: Array<{ reason: string; value: number; year: number }>;
   totalDataPoints: number;
   validDataPoints: number;
   zeroValueCount: number;
-  negativeValueCount: number;
-  largeGaps: Array<{ fromYear: number; toYear: number; gapSize: number }>;
-  outliers: Array<{ year: number; value: number; reason: string }>;
-  dataQualityScore: number; // 0-100, higher is better
 }
 
 export interface FilteredDataPoint {
-  year: number;
+  filterReason?: string;
   retailLq: number;
   wasFiltered: boolean;
-  filterReason?: string;
+  year: number;
 }
 
 /**
@@ -25,11 +25,11 @@ export interface FilteredDataPoint {
  * Focuses on technical data problems, not business logic.
  */
 export function analyzeDataQuality(
-  dataPoints: Array<{ year: number; retailLq: number }>,
+  dataPoints: Array<{ retailLq: number; year: number }>,
   options: {
     maxGapYears?: number;
-    outlierThreshold?: number;
     minValidPoints?: number;
+    outlierThreshold?: number;
   } = {},
 ): DataQualityMetrics {
   const {
@@ -46,10 +46,10 @@ export function analyzeDataQuality(
   let negativeValueCount = 0;
   const largeGaps: Array<{
     fromYear: number;
-    toYear: number;
     gapSize: number;
+    toYear: number;
   }> = [];
-  const outliers: Array<{ year: number; value: number; reason: string }> = [];
+  const outliers: Array<{ reason: string; value: number; year: number }> = [];
 
   // Check for data quality issues...
 
@@ -151,12 +151,12 @@ export function analyzeDataQuality(
  * Returns both filtered data and quality metrics.
  */
 export function filterDataQualityIssues(
-  dataPoints: Array<{ year: number; retailLq: number }>,
+  dataPoints: Array<{ retailLq: number; year: number }>,
   options: {
-    filterZeros?: boolean;
-    filterNegatives?: boolean;
     filterLargeGaps?: boolean;
+    filterNegatives?: boolean;
     filterStatisticalOutliers?: boolean;
+    filterZeros?: boolean;
     maxGapYears?: number;
     outlierThreshold?: number;
   } = {},
@@ -219,7 +219,7 @@ export function filterDataQualityIssues(
 export function logDataQualityAnalysis(
   metrics: DataQualityMetrics,
   state: string,
-  signalType: 'physical' | 'ecommerce',
+  signalType: 'ecommerce' | 'physical',
 ): void {
   console.log(
     `=== ${state.toUpperCase()} ${signalType.toUpperCase()} DATA QUALITY ===`,

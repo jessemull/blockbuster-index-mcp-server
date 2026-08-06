@@ -1,12 +1,12 @@
-import { BlsService } from './bls-service';
 import { DynamoDBBlsRepository } from '../../repositories/bls/bls-repository';
-import { S3BlsLoader } from './s3-bls-loader';
+import { BlsSignalRecord } from '../../types/bls';
 import { logger } from '../../util';
 import {
   detectAndCorrectOutliers,
   logOutlierAnalysis,
 } from '../../util/helpers';
-import { BlsSignalRecord } from '../../types/bls';
+import { BlsService } from './bls-service';
+import { S3BlsLoader } from './s3-bls-loader';
 
 jest.mock('../../repositories/bls/bls-repository');
 jest.mock('./s3-bls-loader');

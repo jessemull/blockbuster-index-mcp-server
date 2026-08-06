@@ -3,7 +3,7 @@ import { logger } from '../../util';
 import { DynamoDBSignalRepository } from '../base-signal-repository';
 
 export class DynamoDBJobRepository<
-  T extends { state: string; timestamp: number; jobCount: number },
+  T extends { jobCount: number; state: string; timestamp: number },
 > extends DynamoDBSignalRepository<T> {
   constructor(tableName: string, region?: string) {
     super(tableName, region);
@@ -81,7 +81,7 @@ export class DynamoDBJobRepository<
     }
   }
 
-  async get(state: string, timestamp?: number): Promise<T | null> {
+  async get(state: string, timestamp?: number): Promise<null | T> {
     try {
       const response = await this.client.send(
         new GetCommand({

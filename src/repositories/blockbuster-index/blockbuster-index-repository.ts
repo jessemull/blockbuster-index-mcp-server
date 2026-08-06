@@ -1,7 +1,7 @@
 import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
-import { logger } from '../../util';
 import type { BlockbusterIndexRecord } from '../../types/response';
 import type { StateScore } from '../../types/states';
+import { logger } from '../../util';
 import { DynamoDBBlockbusterRepository } from './base-blockbuster-repository';
 
 export class DynamoDBBlockbusterIndexRepository extends DynamoDBBlockbusterRepository<BlockbusterIndexRecord> {
@@ -97,9 +97,9 @@ export class DynamoDBBlockbusterIndexRepository extends DynamoDBBlockbusterRepos
         totalStates: response.Item.totalStates as number,
         states: response.Item.states as Record<string, StateScore>,
         signalStatus: response.Item.signalStatus as {
-          total: number;
-          successful: number;
           failed: number;
+          successful: number;
+          total: number;
         },
       };
     } catch (error: unknown) {
@@ -134,9 +134,9 @@ export class DynamoDBBlockbusterIndexRepository extends DynamoDBBlockbusterRepos
         totalStates: item.totalStates as number,
         states: item.states as Record<string, StateScore>,
         signalStatus: item.signalStatus as {
-          total: number;
-          successful: number;
           failed: number;
+          successful: number;
+          total: number;
         },
       }));
     } catch (error: unknown) {

@@ -1,0 +1,49 @@
+name: Bug Report
+description: Report a bug in the Blockbuster Index MCP Server
+labels: ["bug"]
+body:
+  - type: textarea
+    attributes:
+      label: Description
+      description: Clear description of the bug.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to Reproduce
+      description: How to reproduce the issue.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Actual Behavior
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Area
+      options:
+        - Amazon signal
+        - Walmart signal
+        - Broadband signal
+        - Census signal
+        - BLS signal
+        - Blockbuster Index
+        - Infrastructure / CloudFormation
+        - CI / Tooling
+        - Other
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Node.js Version
+      placeholder: "20.x"
+  - type: textarea
+    attributes:
+      label: Logs / Stack Trace
+      description: Paste relevant bunyan/CloudWatch logs (redact secrets).

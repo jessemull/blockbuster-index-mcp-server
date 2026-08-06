@@ -1,5 +1,5 @@
-import { DynamoDBSignalScoresRepository } from './signal-scores-repository';
 import { logger } from '../../util';
+import { DynamoDBSignalScoresRepository } from './signal-scores-repository';
 
 // Mock the AWS SDK
 jest.mock('@aws-sdk/client-dynamodb', () => ({

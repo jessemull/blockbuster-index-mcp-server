@@ -1,9 +1,9 @@
-import { CONFIG } from '../../config';
-import { SIGNALS } from '../../constants/signals';
-import { Signal, BlockbusterIndexRecord } from '../../types';
-import { logger, uploadToS3, downloadFromS3 } from '../../util';
 import fs from 'fs';
 import path from 'path';
+import { CONFIG } from '../../config';
+import { SIGNALS } from '../../constants/signals';
+import { BlockbusterIndexRecord, Signal } from '../../types';
+import { downloadFromS3, logger, uploadToS3 } from '../../util';
 import { calculateBlockbusterIndex } from './calculate';
 
 async function getSignalScores(

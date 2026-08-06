@@ -1,10 +1,10 @@
-import { extractCombinedRetailDataFromCsv } from './extract-combined-retail-data';
 import { BlsCsvRecord, BlsStateData } from '../../types/bls';
+import { logger } from '../../util';
 import { aggregateRecordData } from './aggregate-record-data';
 import { classifyIndustry } from './classify-industry';
 import { convertToStateData } from './convert-to-state-data';
+import { extractCombinedRetailDataFromCsv } from './extract-combined-retail-data';
 import { isValidStateRecord } from './valid-state-record';
-import { logger } from '../../util';
 
 jest.mock('./aggregate-record-data');
 jest.mock('./classify-industry');

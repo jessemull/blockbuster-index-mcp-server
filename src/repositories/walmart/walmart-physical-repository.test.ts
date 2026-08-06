@@ -1,14 +1,14 @@
 import {
   DynamoDBDocumentClient,
   GetCommand,
+  GetCommandInput,
   PutCommand,
   PutCommandInput,
-  GetCommandInput,
   QueryCommand,
   QueryCommandInput,
 } from '@aws-sdk/lib-dynamodb';
-import { DynamoDBWalmartJobRepository } from './walmart-physical-repository';
 import type { WalmartJobRecord } from '../../types/walmart';
+import { DynamoDBWalmartJobRepository } from './walmart-physical-repository';
 
 jest.mock('@aws-sdk/client-dynamodb');
 jest.mock('@aws-sdk/lib-dynamodb');

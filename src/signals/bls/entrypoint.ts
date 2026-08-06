@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { BlsService } from '../../services/bls/bls-service';
 import { CONFIG } from '../../config';
+import { BlsService } from '../../services/bls/bls-service';
 import { logger, uploadToS3 } from '../../util';
 
 async function main() {

@@ -1,15 +1,15 @@
 import {
   DynamoDBDocumentClient,
   GetCommand,
-  PutCommand,
-  UpdateCommand,
   GetCommandInput,
+  PutCommand,
   PutCommandInput,
+  UpdateCommand,
   UpdateCommandInput,
 } from '@aws-sdk/lib-dynamodb';
-import { DynamoDBAmazonSlidingWindowRepository } from './amazon-sliding-window-repository';
-import { logger } from '../../util';
 import type { SlidingWindowAggregate } from '../../types/amazon';
+import { logger } from '../../util';
+import { DynamoDBAmazonSlidingWindowRepository } from './amazon-sliding-window-repository';
 
 jest.mock('@aws-sdk/client-dynamodb');
 jest.mock('@aws-sdk/lib-dynamodb');

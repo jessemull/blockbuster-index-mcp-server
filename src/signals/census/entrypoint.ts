@@ -1,8 +1,8 @@
-import { getCensusScores } from './get-census-scores';
-import { CONFIG } from '../../config';
-import { logger, uploadToS3 } from '../../util';
 import fs from 'fs';
 import path from 'path';
+import { CONFIG } from '../../config';
+import { logger, uploadToS3 } from '../../util';
+import { getCensusScores } from './get-census-scores';
 
 async function main() {
   try {

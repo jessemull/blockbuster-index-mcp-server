@@ -1,7 +1,7 @@
 import { logger } from '../../util';
 
 export function calculateTrendSlope(
-  dataPoints: { year: number; retailLq: number }[],
+  dataPoints: { retailLq: number; year: number }[],
 ): number {
   if (dataPoints.length < 2) {
     return 0;

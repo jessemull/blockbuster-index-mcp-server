@@ -1,5 +1,5 @@
-import { logger } from '../logger';
 import { MAX_RETRIES, RETRY_DELAY } from '../../constants';
+import { logger } from '../logger';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

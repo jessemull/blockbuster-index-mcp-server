@@ -13,5 +13,5 @@ export abstract class DynamoDBBlockbusterRepository<T> {
 
   abstract save(record: T): Promise<void>;
   abstract exists(timestamp?: number): Promise<boolean>;
-  abstract get(timestamp?: number): Promise<T | null>;
+  abstract get(timestamp?: number): Promise<null | T>;
 }

@@ -3,11 +3,11 @@
  */
 
 export interface OutlierAnalysis {
-  outliers: string[];
-  median: number;
-  mean: number;
-  standardDeviation: number;
   correctedScores: Record<string, number>;
+  mean: number;
+  median: number;
+  outliers: string[];
+  standardDeviation: number;
 }
 
 /**
@@ -68,7 +68,7 @@ export function detectAndCorrectOutliers(
  */
 export function logOutlierAnalysis(
   analysis: OutlierAnalysis,
-  scoreType: 'physical' | 'ecommerce',
+  scoreType: 'ecommerce' | 'physical',
 ): void {
   const { outliers, median, mean, standardDeviation } = analysis;
 

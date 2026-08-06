@@ -16,5 +16,5 @@ export abstract class DynamoDBSignalRepository<T>
 
   abstract save(record: T): Promise<void>;
   abstract exists(state: string, timestamp?: number): Promise<boolean>;
-  abstract get(state: string, timestamp?: number): Promise<T | null>;
+  abstract get(state: string, timestamp?: number): Promise<null | T>;
 }

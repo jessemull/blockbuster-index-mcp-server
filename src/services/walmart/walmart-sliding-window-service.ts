@@ -1,7 +1,7 @@
-import { States } from '../../types';
-import { DynamoDBWalmartSlidingWindowRepository } from '../../repositories/walmart/walmart-sliding-window-repository';
 import { DynamoDBWalmartJobRepository } from '../../repositories/walmart/walmart-physical-repository';
+import { DynamoDBWalmartSlidingWindowRepository } from '../../repositories/walmart/walmart-sliding-window-repository';
 import { SlidingWindowService } from '../../services/generic-sliding-window-service';
+import { States } from '../../types';
 import { WalmartSlidingWindowAggregate } from '../../types/walmart';
 
 export class WalmartSlidingWindowService {
@@ -13,15 +13,15 @@ export class WalmartSlidingWindowService {
     getOldDayJobCount,
     states,
   }: {
-    windowRepository?: import('../../types/walmart').WalmartSlidingWindowRepository;
-    jobRepository?: import('../../types/walmart').WalmartSignalRepository<
-      import('../../types/walmart').WalmartJobRecord
-    >;
     getOldDayJobCount?: (
       state: string,
       timestamp: number,
     ) => Promise<number | undefined>;
+    jobRepository?: import('../../types/walmart').WalmartSignalRepository<
+      import('../../types/walmart').WalmartJobRecord
+    >;
     states?: string[];
+    windowRepository?: import('../../types/walmart').WalmartSlidingWindowRepository;
   } = {}) {
     const region = process.env.AWS_REGION || 'us-west-2';
     const defaultWindowRepository = new DynamoDBWalmartSlidingWindowRepository(

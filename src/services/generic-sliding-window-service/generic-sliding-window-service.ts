@@ -2,17 +2,17 @@ import { logger } from '../../util';
 
 export class SlidingWindowService<
   TAggregate extends {
-    state: string;
-    windowStart: number;
-    totalJobCount: number;
-    dayCount: number;
     averageJobCount: number;
-    windowEnd: number;
+    dayCount: number;
     lastUpdated: number;
+    state: string;
+    totalJobCount: number;
+    windowEnd: number;
+    windowStart: number;
   },
 > {
   windowRepository: {
-    getAggregate: (state: string) => Promise<TAggregate | null>;
+    getAggregate: (state: string) => Promise<null | TAggregate>;
     saveAggregate: (aggregate: TAggregate) => Promise<void>;
     updateAggregate: (
       state: string,
@@ -35,8 +35,14 @@ export class SlidingWindowService<
     getOldDayJobCount,
     states,
   }: {
+    getOldDayJobCount: (
+      state: string,
+      timestamp: number,
+    ) => Promise<number | undefined>;
+    jobRepository: unknown;
+    states: string[];
     windowRepository: {
-      getAggregate: (state: string) => Promise<TAggregate | null>;
+      getAggregate: (state: string) => Promise<null | TAggregate>;
       saveAggregate: (aggregate: TAggregate) => Promise<void>;
       updateAggregate: (
         state: string,
@@ -46,12 +52,6 @@ export class SlidingWindowService<
         oldDayJobCount?: number,
       ) => Promise<void>;
     };
-    jobRepository: unknown;
-    getOldDayJobCount: (
-      state: string,
-      timestamp: number,
-    ) => Promise<number | undefined>;
-    states: string[];
   }) {
     this.windowRepository = windowRepository;
     this.jobRepository = jobRepository;

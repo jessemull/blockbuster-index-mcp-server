@@ -1,6 +1,6 @@
 import { Page } from 'puppeteer';
-import { logger } from '../../util';
 import { WALMART_JOB_COUNT_SELECTOR } from '../../constants/walmart';
+import { logger } from '../../util';
 
 export async function getJobCountFromPage(page: Page): Promise<number> {
   try {

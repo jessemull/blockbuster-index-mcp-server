@@ -1,0 +1,68 @@
+---
+description: "Signal architecture: entrypoint → service → repository boundaries, shared code placement, and deployment wiring."
+globs:
+  - "**/src/**/*.ts"
+alwaysApply: false
+---
+
+# Architecture Rules
+
+## Layering
+
+```
+entrypoint → service → repository
+```
+
+| Layer | Owns | Must not |
+|-------|------|----------|
+| Entrypoint | Process bootstrap, orchestration, exit codes | Business scoring formulas; raw DynamoDB calls |
+| Service | Business logic, scoring, aggregation | Direct AWS SDK client construction (prefer repos/util) |
+| Repository | DynamoDB persistence | Scoring / product decisions |
+
+S3 uploads use shared helpers in `src/util/s3/`.
+
+---
+
+## Boundaries
+
+### MUST
+
+- [ ] Keep signal code under `src/signals/<signal>/`
+- [ ] Put per-signal services under `src/services/<signal>/`
+- [ ] Put per-signal repositories under `src/repositories/<signal>/`
+- [ ] Share cross-signal job orchestration via `src/signals/shared-job-signal-orchestration/`
+- [ ] Share helpers via `src/util/`, constants via `src/constants/`, types via `src/types/`
+- [ ] Read config only through `src/config/config.ts`
+
+### MUST NOT
+
+- ❌ Import one signal package from another (`src/signals/amazon` ↛ `src/signals/walmart`)
+- ❌ Put business logic in repositories
+- ❌ Hardcode table names, bucket names, or regions — use config/env
+- ❌ Duplicate sliding-window or job-repo logic — extend generic modules instead
+
+---
+
+## Adding or Changing Signals
+
+When adding a signal, update **all** of:
+
+1. `src/signals/<name>/entrypoint.ts` (+ calculation modules)
+2. `src/services/<name>/` (if needed)
+3. `src/repositories/<name>/` (if needed)
+4. `src/types/` and `src/constants/` as needed
+5. `dev/runners/<name>.dev.ts`
+6. Webpack/`SIGNAL_TYPE` build path
+7. `cloudformation/` task definitions and DynamoDB tables
+8. `docs/SIGNALS.md`, `docs/ENVIRONMENT.md`, `.env.example`
+9. Tests with ≥80% coverage contribution
+
+---
+
+## Data Flow Reminder
+
+1. Signal task fetches/processes data
+2. Persist signal-specific records in DynamoDB
+3. Upload versioned results to S3
+4. Blockbuster Index task aggregates signal results
+5. Publish final index to S3 + DynamoDB

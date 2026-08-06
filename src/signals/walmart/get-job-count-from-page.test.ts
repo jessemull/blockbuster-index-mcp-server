@@ -1,5 +1,5 @@
-import { getJobCountFromPage } from './get-job-count-from-page';
 import { Page } from 'puppeteer';
+import { getJobCountFromPage } from './get-job-count-from-page';
 
 jest.mock('puppeteer');
 

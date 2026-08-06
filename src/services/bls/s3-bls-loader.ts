@@ -1,9 +1,9 @@
-import type { BlsCsvRecord } from '../../types/bls';
 import {
-  S3Client,
-  ListObjectsV2Command,
   GetObjectCommand,
+  ListObjectsV2Command,
+  S3Client,
 } from '@aws-sdk/client-s3';
+import type { BlsCsvRecord } from '../../types/bls';
 import { logger } from '../../util';
 
 export class S3BlsLoader {
@@ -333,7 +333,7 @@ export class S3BlsLoader {
     line: string,
     headers: string[],
     lineNumber: number,
-  ): BlsCsvRecord | string | null {
+  ): BlsCsvRecord | null | string {
     const values = this.parseCsvValues(line);
 
     if (lineNumber === 0) {

@@ -1,7 +1,7 @@
-import { CONFIG } from '../../config';
-import { logger } from '../../util/logger';
-import { BroadbandService } from '../../services';
 import type { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband';
+import { CONFIG } from '../../config';
+import { BroadbandService } from '../../services';
+import { logger } from '../../util/logger';
 
 const DEFAULT_TABLE = 'blockbuster-index-broadband-signals-dev';
 

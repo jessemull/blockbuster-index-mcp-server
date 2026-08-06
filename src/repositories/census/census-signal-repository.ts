@@ -1,9 +1,9 @@
 import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
-import { logger } from '../../util';
 import type {
   CensusSignalRecord,
   CensusSignalRepository,
 } from '../../types/census';
+import { logger } from '../../util';
 import { DynamoDBSignalRepository } from '../base-signal-repository';
 
 export class DynamoDBCensusSignalRepository

@@ -1,6 +1,6 @@
 import { Browser } from 'puppeteer';
-import { logger } from '../../util';
 import type { BrowserDocument } from '../../types/browser';
+import { logger } from '../../util';
 
 export async function searchJobsInState(
   browser: Browser,
@@ -31,7 +31,7 @@ export async function searchJobsInState(
         .document;
 
       function getTotalJobsFromPagination(
-        pageButtons: { getAttribute: (name: string) => string | null }[],
+        pageButtons: { getAttribute: (name: string) => null | string }[],
       ): number {
         if (pageButtons.length === 0) {
           return 500;

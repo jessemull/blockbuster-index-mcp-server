@@ -1,7 +1,7 @@
 import { PutObjectCommand, S3ServiceException } from '@aws-sdk/client-s3';
-import { s3Client, uploadToS3, downloadFromS3 } from './s3';
-import { logger } from '../logger';
 import { __ServiceExceptionOptions } from '@aws-sdk/client-s3/dist-types/models/S3ServiceException';
+import { logger } from '../logger';
+import { downloadFromS3, s3Client, uploadToS3 } from './s3';
 
 jest.mock('@aws-sdk/client-s3', () => {
   const original = jest.requireActual('@aws-sdk/client-s3');

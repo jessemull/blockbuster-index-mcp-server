@@ -1,7 +1,7 @@
 import { CONFIG } from '../../config';
-import { CensusSignalRecord } from '../../types/census';
-import { SignalRepository } from '../../types/amazon';
 import { fetchCensusData } from '../../services';
+import { SignalRepository } from '../../types/amazon';
+import { CensusSignalRecord } from '../../types/census';
 import { logger } from '../../util';
 
 const DEFAULT_TABLE = 'blockbuster-index-census-signals-dev';
@@ -63,7 +63,7 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
     `Using Census data for year ${lastAvailableYear} (current year: ${currentYear})`,
   );
 
-  let repository: SignalRepository<CensusSignalRecord> | null = null;
+  let repository: null | SignalRepository<CensusSignalRecord> = null;
 
   if (!CONFIG.IS_DEVELOPMENT || process.env.CENSUS_DYNAMODB_TABLE_NAME) {
     const { DynamoDBCensusSignalRepository } = await import(

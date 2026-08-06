@@ -2,6 +2,7 @@ const eslintPluginPrettier = require('eslint-plugin-prettier');
 const eslintConfigPrettier = require('eslint-config-prettier');
 const typescriptEslint = require('@typescript-eslint/eslint-plugin');
 const typescriptEslintParser = require('@typescript-eslint/parser');
+const perfectionist = require('eslint-plugin-perfectionist');
 
 module.exports = [
   {
@@ -17,6 +18,7 @@ module.exports = [
     plugins: {
       prettier: eslintPluginPrettier,
       '@typescript-eslint': typescriptEslint,
+      perfectionist,
     },
     rules: {
       'prettier/prettier': 'error',
@@ -24,6 +26,47 @@ module.exports = [
       ...typescriptEslint.configs.recommended.rules,
       ...eslintConfigPrettier.rules,
       '@typescript-eslint/no-explicit-any': 'error',
+      'perfectionist/sort-imports': [
+        'error',
+        {
+          type: 'alphabetical',
+          order: 'asc',
+          ignoreCase: true,
+          newlinesBetween: 0,
+        },
+      ],
+      'perfectionist/sort-named-imports': [
+        'error',
+        {
+          type: 'alphabetical',
+          order: 'asc',
+          ignoreCase: true,
+        },
+      ],
+      'perfectionist/sort-interfaces': [
+        'error',
+        {
+          type: 'alphabetical',
+          order: 'asc',
+          ignoreCase: true,
+        },
+      ],
+      'perfectionist/sort-object-types': [
+        'error',
+        {
+          type: 'alphabetical',
+          order: 'asc',
+          ignoreCase: true,
+        },
+      ],
+      'perfectionist/sort-union-types': [
+        'error',
+        {
+          type: 'alphabetical',
+          order: 'asc',
+          ignoreCase: true,
+        },
+      ],
     },
   },
   {
@@ -36,6 +79,7 @@ module.exports = [
     plugins: {
       prettier: eslintPluginPrettier,
       '@typescript-eslint': typescriptEslint,
+      perfectionist,
     },
     rules: {
       'prettier/prettier': 'error',
@@ -43,6 +87,23 @@ module.exports = [
       ...typescriptEslint.configs.recommended.rules,
       ...eslintConfigPrettier.rules,
       '@typescript-eslint/no-explicit-any': 'off',
+      'perfectionist/sort-imports': [
+        'error',
+        {
+          type: 'alphabetical',
+          order: 'asc',
+          ignoreCase: true,
+          newlinesBetween: 0,
+        },
+      ],
+      'perfectionist/sort-named-imports': [
+        'error',
+        {
+          type: 'alphabetical',
+          order: 'asc',
+          ignoreCase: true,
+        },
+      ],
     },
   },
 ];

@@ -1,5 +1,5 @@
-import { aggregateRecordData } from './aggregate-record-data';
 import { BlsCsvRecord } from '../../types/bls';
+import { aggregateRecordData } from './aggregate-record-data';
 
 describe('aggregateRecordData', () => {
   const createMockRecord = (industryCode: string): BlsCsvRecord => ({

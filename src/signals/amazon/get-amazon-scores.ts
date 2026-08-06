@@ -1,11 +1,11 @@
 import { CONFIG } from '../../config';
-import { SignalRepository, JobSignalRecord } from '../../types/amazon';
-import { calculateWorkforceNormalizedScores } from './calculate-workforce-normalized-scores';
-import { scrapeAmazonJobs } from './scrape-amazon-jobs';
-import { logger } from '../../util';
 import { AmazonSlidingWindowService } from '../../services/amazon/amazon-sliding-window-service';
-import { getWorkforceData } from './get-workforce-data';
+import { JobSignalRecord, SignalRepository } from '../../types/amazon';
+import { logger } from '../../util';
 import { orchestrateSignal } from '../shared-job-signal-orchestration';
+import { calculateWorkforceNormalizedScores } from './calculate-workforce-normalized-scores';
+import { getWorkforceData } from './get-workforce-data';
+import { scrapeAmazonJobs } from './scrape-amazon-jobs';
 
 const DEFAULT_TABLE = 'blockbuster-index-amazon-jobs-dev';
 

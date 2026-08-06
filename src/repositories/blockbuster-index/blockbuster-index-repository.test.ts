@@ -1,6 +1,6 @@
-import { DynamoDBBlockbusterIndexRepository } from './blockbuster-index-repository';
 import type { BlockbusterIndexRecord } from '../../types/response';
 import type { StateScore } from '../../types/states';
+import { DynamoDBBlockbusterIndexRepository } from './blockbuster-index-repository';
 
 jest.mock('@aws-sdk/lib-dynamodb', () => ({
   DynamoDBDocumentClient: {

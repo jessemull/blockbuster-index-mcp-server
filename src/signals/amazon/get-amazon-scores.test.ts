@@ -1,11 +1,11 @@
+import { CONFIG } from '../../config';
+import { AmazonSlidingWindowService } from '../../services/amazon/amazon-sliding-window-service';
+import { logger } from '../../util';
 import { calculateWorkforceNormalizedScores } from './calculate-workforce-normalized-scores';
 import { getAmazonScores } from './get-amazon-scores';
 import { getEqualScores } from './get-equal-scores';
 import { getWorkforceData } from './get-workforce-data';
-import { logger } from '../../util';
 import { scrapeAmazonJobs } from './scrape-amazon-jobs';
-import { CONFIG } from '../../config';
-import { AmazonSlidingWindowService } from '../../services/amazon/amazon-sliding-window-service';
 
 jest.mock('./scrape-amazon-jobs');
 jest.mock('./calculate-workforce-normalized-scores');

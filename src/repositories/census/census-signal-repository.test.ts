@@ -2,12 +2,12 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
   DynamoDBDocumentClient,
   GetCommand,
+  GetCommandInput,
   PutCommand,
   PutCommandInput,
-  GetCommandInput,
 } from '@aws-sdk/lib-dynamodb';
-import { DynamoDBCensusSignalRepository } from './census-signal-repository';
 import { logger } from '../../util';
+import { DynamoDBCensusSignalRepository } from './census-signal-repository';
 
 jest.mock('@aws-sdk/client-dynamodb');
 jest.mock('@aws-sdk/lib-dynamodb');

@@ -1,0 +1,49 @@
+---
+description: "AWS conventions for DynamoDB repositories, S3 uploads, ECS tasks, and CloudFormation."
+globs:
+  - "**/cloudformation/**"
+  - "**/src/repositories/**/*.ts"
+  - "**/src/util/s3/**/*.ts"
+alwaysApply: false
+---
+
+# AWS Rules
+
+## DynamoDB
+
+- Table names come from environment variables (see `docs/ENVIRONMENT.md`)
+- Repositories encapsulate all DynamoDB access
+- Prefer batch APIs for bulk writes when volume warrants it
+- Keep item shapes typed in `src/types/`
+- Schema/table changes require CloudFormation updates + human review
+
+## S3
+
+- Use shared helpers in `src/util/s3/`
+- Bucket from `S3_BUCKET_NAME` / config
+- Published artifacts should remain consumable by the Blockbuster Index website
+- Breaking output key/shape changes require human review and downstream coordination
+
+## ECS Fargate
+
+- One task definition family per signal (plus index aggregator)
+- `SIGNAL_TYPE` selects the webpack entry / container behavior
+- EventBridge schedules staggered daily runs; index runs after signals
+
+## CloudFormation
+
+### MUST
+
+- [ ] Keep templates readable and parameterized for `dev` / `prod`
+- [ ] Document new resources in PR description
+- [ ] Apply least-privilege IAM
+
+### MUST NOT
+
+- ❌ Commit account-specific secrets into templates
+- ❌ Broaden IAM “just to make it work” without justification
+- ❌ Change infrastructure without human approval (see `CONTEXT.md` escalation)
+
+## Regions
+
+Default application region is configured via `AWS_REGION` (default `us-west-2` in config docs). Do not hardcode regions in application code.

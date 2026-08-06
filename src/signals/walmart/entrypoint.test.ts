@@ -1,6 +1,6 @@
-import { uploadToS3, logger } from '../../util';
 import fs from 'fs';
 import path from 'path';
+import { logger, uploadToS3 } from '../../util';
 
 const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
   throw new Error('process.exit called');

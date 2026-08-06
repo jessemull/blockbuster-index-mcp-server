@@ -13,36 +13,39 @@ This MCP server is part of the **Blockbuster Index Project** which includes the 
 ## Table of Contents
 
 1. [Project Overview](#project-overview)
-2. [Architecture Overview](#architecture-overview)
-3. [Signal Calculations](#signal-calculations)
-4. [Blockbuster Index Calculation](#blockbuster-index-calculation)
-5. [ECS Task Scheduling](#ecs-task-scheduling)
-6. [Environments](#environments)
-7. [Tech Stack](#tech-stack)
-8. [Setup Instructions](#setup-instructions)
-9. [Running Signals Locally](#running-signals-locally)
-10. [Development Workflow](#development-workflow)
-11. [Commits & Commitizen](#commits--commitizen)
+2. [AI Agent Instructions](#ai-agent-instructions)
+3. [Related Documentation](#related-documentation)
+4. [Architecture Overview](#architecture-overview)
+5. [Signal Calculations](#signal-calculations)
+6. [Blockbuster Index Calculation](#blockbuster-index-calculation)
+7. [ECS Task Scheduling](#ecs-task-scheduling)
+8. [Environments](#environments)
+9. [Tech Stack](#tech-stack)
+10. [Setup Instructions](#setup-instructions)
+11. [Makefile Commands](#makefile-commands)
+12. [Running Signals Locally](#running-signals-locally)
+13. [Development Workflow](#development-workflow)
+14. [Commits & Commitizen](#commits--commitizen)
     - [Making a Commit](#making-a-commit)
-12. [Linting & Formatting](#linting--formatting)
+15. [Linting & Formatting](#linting--formatting)
     - [Linting Commands](#linting-commands)
     - [Formatting Commands](#formatting-commands)
-    - [Pre-Commit Hook](#pre-commit-hook)
-13. [Unit Tests & Code Coverage](#unit-tests--code-coverage)
+    - [Git Hooks](#git-hooks)
+16. [Unit Tests & Code Coverage](#unit-tests--code-coverage)
     - [Unit Tests](#unit-tests)
     - [Code Coverage](#code-coverage)
-14. [Error & Performance Monitoring](#error--performance-monitoring)
+17. [Error & Performance Monitoring](#error--performance-monitoring)
     - [Configuration](#configuration)
     - [CloudWatch Logging](#cloudwatch-logging)
-15. [Environment Variables](#environment-variables)
-16. [Build & Deployment](#build--deployment)
+18. [Environment Variables](#environment-variables)
+19. [Build & Deployment](#build--deployment)
     - [Build Process](#build-process)
     - [Docker Container](#docker-container)
     - [GitHub Workflows](#github-workflows)
     - [Infrastructure](#infrastructure)
-17. [Connecting to the Bastion Host](#connecting-to-the-bastion-host)
+20. [Connecting to the Bastion Host](#connecting-to-the-bastion-host)
     - [Environment Variables](#environment-variables-2)
-18. [License](#license)
+21. [License](#license)
 
 ## Project Overview
 
@@ -60,6 +63,32 @@ Each signal is weighted and combined to generate a comprehensive score that refl
 
 **Signal Inversion:**
 Some signals are inverted after normalization so that higher scores always indicate greater digital adoption.
+
+## AI Agent Instructions
+
+AI agents (Cursor, Claude Code, Gemini CLI, etc.) **must** start here:
+
+1. Read [`CONTEXT.md`](CONTEXT.md) — mandatory loading order, precedence, quality gates
+2. Read [`AGENTS.md`](AGENTS.md) — development rules and forbidden patterns
+3. Follow the mandatory `docs/` list in `CONTEXT.md`
+
+Entry redirects: [`CLAUDE.md`](CLAUDE.md), [`GEMINI.md`](GEMINI.md). Cursor rules/skills/commands live under [`.cursor/`](.cursor/).
+
+## Related Documentation
+
+| Document                                       | Purpose                               |
+| ---------------------------------------------- | ------------------------------------- |
+| [`CONTEXT.md`](CONTEXT.md)                     | Primary AI entry point                |
+| [`AGENTS.md`](AGENTS.md)                       | Authoritative coding & workflow rules |
+| [`docs/GOVERNANCE.md`](docs/GOVERNANCE.md)     | Decision authority & enforcement      |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System design & layering              |
+| [`docs/REVIEW.md`](docs/REVIEW.md)             | PR review severity framework          |
+| [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) | Branch, commit, and PR process        |
+| [`docs/TESTING.md`](docs/TESTING.md)           | Jest strategy & coverage              |
+| [`docs/SECURITY.md`](docs/SECURITY.md)         | Secrets, IAM, logging                 |
+| [`docs/COMMENTS.md`](docs/COMMENTS.md)         | Comment policy                        |
+| [`docs/SIGNALS.md`](docs/SIGNALS.md)           | Signal calculation details            |
+| [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md)   | Environment variable reference        |
 
 ## Architecture Overview
 
@@ -91,7 +120,7 @@ The Blockbuster Index MCP Server employs a **modular microservices architecture*
 
 ## Signal Calculations
 
-See [SIGNALS.md](SIGNALS.md) for detailed information about how each signal is calculated and how they are combined to create the Blockbuster Index.
+See [docs/SIGNALS.md](docs/SIGNALS.md) for detailed information about how each signal is calculated and how they are combined to create the Blockbuster Index.
 
 ## ECS Task Scheduling
 
@@ -177,13 +206,39 @@ To clone the repository, install dependencies, and run the project locally follo
    cd blockbuster-index-mcp-server
    ```
 
-3. Install the dependencies:
+3. Install the dependencies (also installs Husky git hooks via `prepare`):
 
    ```bash
    npm install
    ```
 
-4. Set up environment variables. Please see the [Environment Variables](#environment-variables) section.
+4. Set up environment variables:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Fill in values. Never commit `.env`. See [Environment Variables](#environment-variables) and [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md).
+
+## Makefile Commands
+
+Preferred developer interface (delegates to npm scripts):
+
+| Command                               | Description                        |
+| ------------------------------------- | ---------------------------------- |
+| `make help`                           | List targets                       |
+| `make lint`                           | ESLint                             |
+| `make format` / `make format-check`   | Prettier write / check             |
+| `make test` / `make test-watch`       | Jest                               |
+| `make coverage`                       | Coverage + open HTML report        |
+| `make build` / `make clean`           | Webpack build / remove `dist/`     |
+| `make preflight` / `make ci`          | lint + format-check + test + build |
+| `make signal SIGNAL=<name>`           | Run signal locally                 |
+| `make signal-container SIGNAL=<name>` | Run signal in Docker               |
+| `make ecs-run SIGNAL=<name>`          | Run ECS task                       |
+| `make ecs-run-all`                    | Run all ECS tasks                  |
+| `make commit`                         | Commitizen                         |
+| `make bastion`                        | SSH bastion                        |
 
 ## Running Signals Locally
 
@@ -192,7 +247,8 @@ To clone the repository, install dependencies, and run the project locally follo
 In development mode, signals write results to local files instead of S3. To run each signal independently for development and testing:
 
 ```bash
-npm run signal -- <signalName>
+make signal SIGNAL=<signalName>
+# or: npm run signal -- <signalName>
 ```
 
 ### Container-Based Testing
@@ -200,7 +256,8 @@ npm run signal -- <signalName>
 To test signals in a containerized environment that mirrors production:
 
 ```bash
-npm run signal:container -- <signalName>
+make signal-container SIGNAL=<signalName>
+# or: npm run signal:container -- <signalName>
 ```
 
 ### ECS Task Management
@@ -208,13 +265,15 @@ npm run signal:container -- <signalName>
 Tasks can be triggered manually from the command line. To trigger a specific task:
 
 ```bash
-npm run ecs:run -- <signalName>
+make ecs-run SIGNAL=<signalName>
+# or: npm run ecs:run -- <signalName>
 ```
 
 To run all tasks:
 
 ```bash
-npm run ecs:run:all
+make ecs-run-all
+# or: npm run ecs:run:all
 ```
 
 ## Development Workflow
@@ -235,10 +294,11 @@ The **Blockbuster Index MCP Server** follows a structured development workflow t
 
 When developing new signals or modifying existing ones:
 
-1. **Local Development**: Use `npm run signal -- <signalName>` for local testing
-2. **Container Testing**: Use `npm run signal:container -- <signalName>` for production-like testing
-3. **ECS Testing**: Use `npm run ecs:run -- <signalName>` for AWS environment testing
+1. **Local Development**: Use `make signal SIGNAL=<signalName>` for local testing
+2. **Container Testing**: Use `make signal-container SIGNAL=<signalName>` for production-like testing
+3. **ECS Testing**: Use `make ecs-run SIGNAL=<signalName>` for AWS environment testing
 4. **Deployment**: Use GitHub Actions deploy workflow for production deployment
+5. **Governance**: Follow `.cursor/skills/signal-development/SKILL.md` for new signals (human review required)
 
 ### Code Standards
 
@@ -262,7 +322,7 @@ npm run commit
 
 ## Linting & Formatting
 
-This project uses **ESLint** and **Prettier** for code quality enforcement. Linting is enforced during every CI/CD pipeline to ensure consistent standards.
+This project uses **ESLint** (including `eslint-plugin-perfectionist` for alphabetical imports/types), **Prettier**, and Husky hooks for code quality enforcement. Linting is enforced during every CI/CD pipeline to ensure consistent standards.
 
 ### Linting Commands
 
@@ -292,9 +352,13 @@ Check formatting:
 npm run format:check
 ```
 
-### Pre-Commit Hook
+### Git Hooks
 
-**Lint-staged** is configured to run linting before each commit. The commit will be blocked if linting fails, ensuring code quality at the commit level.
+- **pre-commit**: `lint-staged` runs ESLint + Prettier on staged files.
+- **commit-msg**: Commitlint enforces Conventional Commits and allowed scopes.
+- **pre-push**: Runs `lint` + `format:check` + `test` + `build` (same suite as `make preflight`).
+
+Commits/pushes are blocked if these gates fail. Prefer fixing failures over `--no-verify`.
 
 ## Unit Tests & Code Coverage
 
@@ -344,7 +408,7 @@ The server uses **Bunyan** for structured logging with the following features:
 
 ## Environment Variables
 
-See [ENVIRONMENT.md](ENVIRONMENT.md) for a complete list of all environment variables used by the blockbuster index MCP server, organized by signal type and functionality.
+See [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) and [`.env.example`](.env.example) for a complete list of all environment variables used by the blockbuster index MCP server, organized by signal type and functionality.
 
 ## Build & Deployment
 

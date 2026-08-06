@@ -2,8 +2,8 @@ import { BLS_INDUSTRY_CODES } from '../../constants';
 import { BlsCsvRecord } from '../../types/bls';
 
 export function classifyIndustry(record: BlsCsvRecord): {
-  isECommerce: boolean;
   isBrickAndMortarRetail: boolean;
+  isECommerce: boolean;
 } {
   const isECommerce = BLS_INDUSTRY_CODES.E_COMMERCE_NAICS.some((code) =>
     record.industry_code.startsWith(code),

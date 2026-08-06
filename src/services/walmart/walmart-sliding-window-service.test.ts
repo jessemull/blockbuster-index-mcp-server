@@ -6,8 +6,8 @@ jest.mock('../../util', () => ({
   },
 }));
 
-import { WalmartSlidingWindowService } from './walmart-sliding-window-service';
 import { logger } from '../../util';
+import { WalmartSlidingWindowService } from './walmart-sliding-window-service';
 
 describe('WalmartSlidingWindowService', () => {
   let mockGetAggregate: jest.Mock;

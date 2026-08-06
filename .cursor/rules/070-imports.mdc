@@ -1,0 +1,34 @@
+---
+description: "Alphabetize imports, named members, object keys, and type properties; enforced by eslint-plugin-perfectionist."
+globs:
+  - "**/*.ts"
+alwaysApply: false
+---
+
+# Import & Ordering Rules
+
+Always alphabetize the following when practical:
+
+## TypeScript
+
+- **Imports:** sort by module path; group builtin → external → internal/relative as configured by ESLint perfectionist
+- **Named imports:** sort members alphabetically: `import { A, B, C } from 'x'`
+- **Object keys:** sort object literal keys alphabetically when order does not matter
+- **Interface / type properties:** sort alphabetically
+- **Union types:** sort alphabetically: `null | number | string`
+- **Enum members:** sort alphabetically when order does not encode meaning
+
+## Enforcement
+
+`eslint-plugin-perfectionist` in `eslint.config.js` enforces import and related ordering.
+
+### MUST
+
+- [ ] Keep imports clean (no unused imports)
+- [ ] Prefer path aliases / `baseUrl: src` patterns already used in the repo
+- [ ] Fix perfectionist violations rather than disabling the rule
+
+### MUST NOT
+
+- ❌ Disable perfectionist rules without human approval and justification
+- ❌ Introduce random key ordering in large config literals when sorting is safe

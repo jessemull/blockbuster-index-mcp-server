@@ -1,11 +1,11 @@
 import axios from 'axios';
+import { logger } from '../../util';
 import {
+  fetchCensusData,
   fetchCensusEstablishmentData,
   fetchCensusPopulationData,
   fetchCensusWorkforceData,
-  fetchCensusData,
 } from './census-service';
-import { logger } from '../../util';
 
 jest.mock('axios');
 jest.mock('../../util/helpers/retry', () => ({

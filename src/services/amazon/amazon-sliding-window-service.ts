@@ -1,8 +1,8 @@
-import { States } from '../../types/states';
-import { DynamoDBAmazonSlidingWindowRepository } from '../../repositories/amazon/amazon-sliding-window-repository';
 import { DynamoDBAmazonSignalRepository } from '../../repositories/amazon/amazon-signal-repository';
+import { DynamoDBAmazonSlidingWindowRepository } from '../../repositories/amazon/amazon-sliding-window-repository';
 import { SlidingWindowService } from '../../services/generic-sliding-window-service';
 import { SlidingWindowAggregate } from '../../types/amazon';
+import { States } from '../../types/states';
 
 export class AmazonSlidingWindowService {
   service: SlidingWindowService<SlidingWindowAggregate>;
@@ -13,15 +13,15 @@ export class AmazonSlidingWindowService {
     getOldDayJobCount,
     states,
   }: {
-    windowRepository?: import('../../types/amazon').SlidingWindowRepository;
-    jobRepository?: import('../../types/amazon').SignalRepository<
-      import('../../types/amazon').JobSignalRecord
-    >;
     getOldDayJobCount?: (
       state: string,
       timestamp: number,
     ) => Promise<number | undefined>;
+    jobRepository?: import('../../types/amazon').SignalRepository<
+      import('../../types/amazon').JobSignalRecord
+    >;
     states?: string[];
+    windowRepository?: import('../../types/amazon').SlidingWindowRepository;
   } = {}) {
     const region = process.env.AWS_REGION || 'us-west-2';
     const defaultWindowRepository = new DynamoDBAmazonSlidingWindowRepository(

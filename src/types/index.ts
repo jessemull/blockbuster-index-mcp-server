@@ -10,7 +10,7 @@ export * from './states';
 export * from './walmart';
 
 export interface SignalConfig {
+  getter: () => Promise<Record<string, number>>;
   name: string;
   signal: Signal;
-  getter: () => Promise<Record<string, number>>;
 }

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+.husky/_/
+package-lock.json
+dev/scores/
+.env
+*.log

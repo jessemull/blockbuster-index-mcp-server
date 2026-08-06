@@ -3,8 +3,8 @@ import { STATE_FIPS_CODES } from '../../constants';
 
 export function isValidStateRecord(record: BlsCsvRecord): {
   isValid: boolean;
-  stateAbbr?: string;
   retailLq?: number;
+  stateAbbr?: string;
 } {
   // Check if this is state-level data (area_fips ends with 000)...
 

@@ -1,8 +1,8 @@
 import {
   analyzeDataQuality,
+  DataQualityMetrics,
   filterDataQualityIssues,
   logDataQualityAnalysis,
-  DataQualityMetrics,
 } from './data-quality-filtering';
 
 describe('data-quality-filtering', () => {
@@ -84,7 +84,7 @@ describe('data-quality-filtering', () => {
     });
 
     it('should handle empty data points array', () => {
-      const dataPoints: Array<{ year: number; retailLq: number }> = [];
+      const dataPoints: Array<{ retailLq: number; year: number }> = [];
 
       const result = analyzeDataQuality(dataPoints);
 

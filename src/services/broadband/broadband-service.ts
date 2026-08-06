@@ -1,15 +1,15 @@
-import { logger } from '../../util';
-import { BroadbandCsvRecord } from '../../types/broadband';
-import { SPEED_THRESHOLDS, TECHNOLOGY_CODES } from '../../constants/broadband';
-import { PRECISION } from '../../constants';
-import { S3BroadbandLoader } from '../../signals/broadband/s3-broadband-loader';
-import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband';
 import type {
   BroadbandMetrics,
-  TechnologyCounts,
   BroadbandSignalRecord,
   StateVersionMetadata,
+  TechnologyCounts,
 } from '../../types/broadband';
+import { PRECISION } from '../../constants';
+import { SPEED_THRESHOLDS, TECHNOLOGY_CODES } from '../../constants/broadband';
+import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband';
+import { S3BroadbandLoader } from '../../signals/broadband/s3-broadband-loader';
+import { BroadbandCsvRecord } from '../../types/broadband';
+import { logger } from '../../util';
 
 export class BroadbandService {
   private repository: DynamoDBBroadbandSignalRepository | undefined;
@@ -40,10 +40,10 @@ export class BroadbandService {
   }
 
   private async processStateCallback(stateData: {
-    state: string;
-    metrics: BroadbandMetrics;
     dataVersion: string;
     lastUpdated: Date;
+    metrics: BroadbandMetrics;
+    state: string;
   }): Promise<void> {
     logger.info(`About to process state: ${stateData.state}`);
     await this.processStateData(stateData);
@@ -51,10 +51,10 @@ export class BroadbandService {
   }
 
   private async processStateData(stateData: {
-    state: string;
-    metrics: BroadbandMetrics;
     dataVersion: string;
     lastUpdated: Date;
+    metrics: BroadbandMetrics;
+    state: string;
   }): Promise<void> {
     const { state, metrics, dataVersion } = stateData;
 
@@ -370,8 +370,8 @@ export class BroadbandService {
 
   private calculateBroadbandScore(metrics: {
     broadbandAvailabilityPercent: number;
-    highSpeedAvailabilityPercent: number;
     gigabitAvailabilityPercent: number;
+    highSpeedAvailabilityPercent: number;
     technologyCounts: TechnologyCounts;
   }): number {
     // Technology diversity score (0-1)...
@@ -399,8 +399,8 @@ export class BroadbandService {
 
   public static calculateBroadbandScoreStatic(metrics: {
     broadbandAvailabilityPercent: number;
-    highSpeedAvailabilityPercent: number;
     gigabitAvailabilityPercent: number;
+    highSpeedAvailabilityPercent: number;
     technologyCounts: TechnologyCounts;
   }): number {
     const instance = new BroadbandService();

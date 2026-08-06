@@ -6,23 +6,23 @@ export interface JobSignalRecord {
 
 export interface SignalRepository<T> {
   exists(state: string, timestamp?: number): Promise<boolean>;
-  get(state: string, timestamp?: number): Promise<T | null>;
-  save(record: T): Promise<void>;
+  get(state: string, timestamp?: number): Promise<null | T>;
   query?(state: string, start?: number, end?: number): Promise<T[]>;
+  save(record: T): Promise<void>;
 }
 
 export interface SlidingWindowAggregate {
-  state: string;
-  windowStart: number;
-  windowEnd: number;
-  totalJobCount: number;
-  dayCount: number;
   averageJobCount: number;
+  dayCount: number;
   lastUpdated: number;
+  state: string;
+  totalJobCount: number;
+  windowEnd: number;
+  windowStart: number;
 }
 
 export interface SlidingWindowRepository {
-  getAggregate(state: string): Promise<SlidingWindowAggregate | null>;
+  getAggregate(state: string): Promise<null | SlidingWindowAggregate>;
   saveAggregate(aggregate: SlidingWindowAggregate): Promise<void>;
   updateAggregate(
     state: string,

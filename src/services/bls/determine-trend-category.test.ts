@@ -1,5 +1,5 @@
-import { determineTrendCategory } from './determine-trend-category';
 import { TREND_THRESHOLDS } from '../../constants';
+import { determineTrendCategory } from './determine-trend-category';
 
 describe('determineTrendCategory', () => {
   const threshold = TREND_THRESHOLDS.SLOPE_THRESHOLD;

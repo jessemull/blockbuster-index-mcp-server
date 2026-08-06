@@ -1,0 +1,53 @@
+---
+description: "Signal development: entrypoints, SIGNAL_TYPE webpack builds, CloudFormation, and local runners."
+globs:
+  - "**/src/signals/**/*.ts"
+alwaysApply: false
+---
+
+# Signal Development
+
+## Existing Signals
+
+- `amazon` — job posting scrape + sliding window
+- `walmart` — job posting scrape + sliding window
+- `broadband` — connectivity metrics (often S3 CSV → scores)
+- `census` — retail establishments / population
+- `bls` — historical retail employment trends
+- `blockbuster-index` — aggregate all signals into final index
+
+## Entrypoint Pattern
+
+Each signal exposes `src/signals/<signal>/entrypoint.ts` as the webpack entry when `SIGNAL_TYPE=<signal>`.
+
+Entrypoints should:
+
+1. Load config / validate required env
+2. Orchestrate fetch → compute → persist → upload
+3. Log structured lifecycle events
+4. Exit non-zero on failure
+
+## Shared Job Signals
+
+Amazon and Walmart share orchestration patterns via `src/signals/shared-job-signal-orchestration/`. Prefer extending shared helpers over copy-paste.
+
+## Local Development
+
+```bash
+make signal SIGNAL=amazon
+# or
+npm run signal -- amazon
+```
+
+Runners live in `dev/runners/<signal>.dev.ts` and write to `dev/scores/` in development.
+
+## Deployment Checklist
+
+When changing a signal:
+
+- [ ] Unit tests updated
+- [ ] Local runner still works
+- [ ] Docker/`SIGNAL_TYPE` build succeeds
+- [ ] CloudFormation task env vars/tables still correct
+- [ ] S3 output contract documented if changed
+- [ ] `docs/SIGNALS.md` updated if calculation changed

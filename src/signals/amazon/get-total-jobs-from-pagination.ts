@@ -9,14 +9,14 @@ export function getTotalJobsFromPagination(pageButtons: unknown[]): number {
     const hasGetAttribute =
       button &&
       typeof button === 'object' &&
-      typeof (button as { getAttribute: (name: string) => string | null })
+      typeof (button as { getAttribute: (name: string) => null | string })
         .getAttribute === 'function';
 
     if (!hasGetAttribute) return;
 
     const pageNumber = parseInt(
       (
-        button as { getAttribute: (name: string) => string | null }
+        button as { getAttribute: (name: string) => null | string }
       ).getAttribute('data-label') || '1',
       10,
     );

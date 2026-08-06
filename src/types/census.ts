@@ -19,9 +19,9 @@ export interface CensusWorkforceData {
 
 export interface CensusSignalRecord {
   retailStores: number;
-  workforce: number;
   state: string;
   timestamp: number;
+  workforce: number;
 }
 
 export interface CensusSignalRepository {

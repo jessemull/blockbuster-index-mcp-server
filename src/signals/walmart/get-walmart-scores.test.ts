@@ -18,12 +18,12 @@ jest.mock('../amazon/get-workforce-data', () => ({
   getWorkforceData: jest.fn(),
 }));
 
-import { scrapeWalmartJobs } from './scrape-walmart-jobs';
-import { WalmartSlidingWindowService } from '../../services/walmart/walmart-sliding-window-service';
 import { CONFIG } from '../../config';
+import { WalmartSlidingWindowService } from '../../services/walmart/walmart-sliding-window-service';
 import { logger } from '../../util';
-import { getWalmartScores } from './get-walmart-scores';
 import { getWorkforceData } from '../amazon/get-workforce-data';
+import { getWalmartScores } from './get-walmart-scores';
+import { scrapeWalmartJobs } from './scrape-walmart-jobs';
 
 const mockScrapeWalmartJobs = scrapeWalmartJobs as jest.MockedFunction<
   typeof scrapeWalmartJobs
@@ -32,9 +32,9 @@ const MockWindowService = WalmartSlidingWindowService as jest.MockedClass<
   typeof WalmartSlidingWindowService
 >;
 const mockLogger = logger as unknown as {
+  error: jest.Mock;
   info: jest.Mock;
   warn: jest.Mock;
-  error: jest.Mock;
 };
 const mockGetWorkforceData = getWorkforceData as jest.MockedFunction<
   typeof getWorkforceData

@@ -1,0 +1,31 @@
+name: Feature Request
+description: Request a new feature or signal enhancement
+labels: ["enhancement"]
+body:
+  - type: textarea
+    attributes:
+      label: Description
+      description: Describe the feature you'd like.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Use Case
+      description: Why is this feature needed?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Proposed Solution
+      description: How would you implement this?
+  - type: dropdown
+    attributes:
+      label: Area
+      options:
+        - New signal
+        - Existing signal enhancement
+        - Index aggregation
+        - Infrastructure
+        - Developer experience / tooling
+        - Documentation
+        - Other

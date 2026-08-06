@@ -1,17 +1,17 @@
 import {
+  BatchWriteCommand,
   GetCommand,
   PutCommand,
   QueryCommand,
   ScanCommand,
-  BatchWriteCommand,
 } from '@aws-sdk/lib-dynamodb';
-import { logger } from '../../util';
 import type {
   BlsProcessedFile,
-  BlsStateData,
-  BlsSignalRecord,
   BlsRepository,
+  BlsSignalRecord,
+  BlsStateData,
 } from '../../types/bls';
+import { logger } from '../../util';
 
 export class DynamoDBBlsRepository implements BlsRepository {
   private processedFilesTableName: string;
@@ -443,12 +443,12 @@ export class DynamoDBBlsRepository implements BlsRepository {
         timestamp: item.timestamp as number,
         calculatedAt: item.calculatedAt as string,
         physicalSlope: item.physicalSlope as number,
-        physicalTrend: item.physicalTrend as 'declining' | 'stable' | 'growing',
+        physicalTrend: item.physicalTrend as 'declining' | 'growing' | 'stable',
         ecommerceSlope: item.ecommerceSlope as number,
         ecommerceTrend: item.ecommerceTrend as
           | 'declining'
-          | 'stable'
-          | 'growing',
+          | 'growing'
+          | 'stable',
         physicalScore: item.physicalScore as number,
         ecommerceScore: item.ecommerceScore as number,
         dataPoints: item.dataPoints as number,
@@ -487,13 +487,13 @@ export class DynamoDBBlsRepository implements BlsRepository {
             physicalSlope: item.physicalSlope as number,
             physicalTrend: item.physicalTrend as
               | 'declining'
-              | 'stable'
-              | 'growing',
+              | 'growing'
+              | 'stable',
             ecommerceSlope: item.ecommerceSlope as number,
             ecommerceTrend: item.ecommerceTrend as
               | 'declining'
-              | 'stable'
-              | 'growing',
+              | 'growing'
+              | 'stable',
             physicalScore: item.physicalScore as number,
             ecommerceScore: item.ecommerceScore as number,
             dataPoints: item.dataPoints as number,

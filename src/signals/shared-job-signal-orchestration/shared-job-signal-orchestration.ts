@@ -3,30 +3,30 @@ export interface SignalOrchestrationParams<
   WorkforceData,
   SlidingWindowService,
 > {
-  scraper: (timestamp: number) => Promise<JobCounts>;
-  slidingWindowService: SlidingWindowService;
   getWorkforceData: () => Promise<WorkforceData>;
+  logger: {
+    error: (...args: unknown[]) => void;
+    info: (...args: unknown[]) => void;
+  };
   normalizeScores: (
     jobCounts: JobCounts,
     workforceData: WorkforceData,
   ) => Record<string, number>;
+  scraper: (timestamp: number) => Promise<JobCounts>;
+  slidingWindowService: SlidingWindowService;
   timestamp: number;
-  logger: {
-    info: (...args: unknown[]) => void;
-    error: (...args: unknown[]) => void;
-  };
 }
 
 export async function orchestrateSignal<
   JobCounts extends Record<string, number>,
   WorkforceData,
   SlidingWindowService extends {
+    getSlidingWindowScores: () => Promise<Record<string, number>>;
     updateSlidingWindow: (
       state: string,
       jobCount: number,
       timestamp: number,
     ) => Promise<void>;
-    getSlidingWindowScores: () => Promise<Record<string, number>>;
   },
 >(
   params: SignalOrchestrationParams<

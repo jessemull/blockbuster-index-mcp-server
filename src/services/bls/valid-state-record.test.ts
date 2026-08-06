@@ -1,6 +1,6 @@
-import { isValidStateRecord } from './valid-state-record';
-import { BlsCsvRecord } from '../../types/bls';
 import { STATE_FIPS_CODES } from '../../constants';
+import { BlsCsvRecord } from '../../types/bls';
+import { isValidStateRecord } from './valid-state-record';
 
 jest.mock('../../constants', () => ({
   STATE_FIPS_CODES: {
