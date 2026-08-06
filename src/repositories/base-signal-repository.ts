@@ -2,9 +2,9 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import type { SignalRepository } from '../types/amazon';
 
-export abstract class DynamoDBSignalRepository<T>
-  implements SignalRepository<T>
-{
+export abstract class DynamoDBSignalRepository<
+  T,
+> implements SignalRepository<T> {
   protected client: DynamoDBDocumentClient;
   protected tableName: string;
 

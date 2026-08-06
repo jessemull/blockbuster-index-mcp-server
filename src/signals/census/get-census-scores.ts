@@ -66,9 +66,8 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
   let repository: null | SignalRepository<CensusSignalRecord> = null;
 
   if (!CONFIG.IS_DEVELOPMENT || process.env.CENSUS_DYNAMODB_TABLE_NAME) {
-    const { DynamoDBCensusSignalRepository } = await import(
-      '../../repositories'
-    );
+    const { DynamoDBCensusSignalRepository } =
+      await import('../../repositories');
     repository = new DynamoDBCensusSignalRepository(
       process.env.CENSUS_DYNAMODB_TABLE_NAME || DEFAULT_TABLE,
     );

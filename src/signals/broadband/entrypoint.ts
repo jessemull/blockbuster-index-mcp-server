@@ -18,9 +18,8 @@ async function main() {
       process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME
     ) {
       try {
-        const { DynamoDBSignalScoresRepository } = await import(
-          '../../repositories'
-        );
+        const { DynamoDBSignalScoresRepository } =
+          await import('../../repositories');
         const signalScoresRepository = new DynamoDBSignalScoresRepository(
           process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
         );

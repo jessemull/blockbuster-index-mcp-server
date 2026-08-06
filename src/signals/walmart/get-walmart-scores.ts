@@ -25,9 +25,8 @@ export const getWalmartScores = async (): Promise<{
   let slidingWindowService: undefined | WalmartSlidingWindowService = undefined;
 
   if (!CONFIG.IS_DEVELOPMENT || process.env.WALMART_DYNAMODB_TABLE_NAME) {
-    const { DynamoDBWalmartJobRepository } = await import(
-      '../../repositories/walmart/walmart-physical-repository'
-    );
+    const { DynamoDBWalmartJobRepository } =
+      await import('../../repositories/walmart/walmart-physical-repository');
     walmartRepository = new DynamoDBWalmartJobRepository(
       process.env.WALMART_DYNAMODB_TABLE_NAME || DEFAULT_WALMART_TABLE,
     );

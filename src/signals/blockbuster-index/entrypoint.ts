@@ -48,9 +48,8 @@ async function main() {
       process.env.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME
     ) {
       try {
-        const { DynamoDBBlockbusterIndexRepository } = await import(
-          '../../repositories'
-        );
+        const { DynamoDBBlockbusterIndexRepository } =
+          await import('../../repositories');
         const blockbusterIndexRepository =
           new DynamoDBBlockbusterIndexRepository(
             process.env.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME,

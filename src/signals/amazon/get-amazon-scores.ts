@@ -22,9 +22,8 @@ export const getAmazonScores = async (): Promise<Record<string, number>> => {
   let slidingWindowService: AmazonSlidingWindowService | undefined = undefined;
 
   if (!CONFIG.IS_DEVELOPMENT || process.env.AMAZON_DYNAMODB_TABLE_NAME) {
-    const { DynamoDBAmazonSignalRepository } = await import(
-      '../../repositories'
-    );
+    const { DynamoDBAmazonSignalRepository } =
+      await import('../../repositories');
     repository = new DynamoDBAmazonSignalRepository(
       process.env.AMAZON_DYNAMODB_TABLE_NAME || DEFAULT_TABLE,
     );
