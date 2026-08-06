@@ -10,7 +10,7 @@
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22+
 - npm
 - AWS credentials (for ECS/bastion workflows)
 - Docker (optional, for container signal runs)

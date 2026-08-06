@@ -19,6 +19,9 @@ module.exports = {
     },
   },
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
+  moduleNameMapper: {
+    '^puppeteer$': '<rootDir>/__mocks__/puppeteer.js',
+  },
   preset: 'ts-jest',
   testEnvironment: 'node',
   testPathIgnorePatterns: ['/node_modules/', '/dist/', '/dev/'],

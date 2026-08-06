@@ -159,7 +159,7 @@ Before implementing any changes, confirm you have read and understood:
 | ----------- | ----------------------------------------------- |
 | Project     | Blockbuster Index MCP Server                    |
 | Type        | TypeScript Node.js signal calculation server    |
-| Runtime     | Node.js 20                                      |
+| Runtime     | Node.js 22                                      |
 | Language    | TypeScript (strict)                             |
 | Compute     | AWS ECS Fargate                                 |
 | Storage     | DynamoDB + S3                                   |

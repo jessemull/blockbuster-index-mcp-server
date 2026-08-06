@@ -16,6 +16,9 @@ jest.mock('./src/util', () => ({
   uploadToS3: jest.fn(),
 }));
 
+// Puppeteer 25+ is ESM-only; provide a CJS-safe mock for Jest.
+jest.mock('puppeteer');
+
 global.console = {
   ...console,
   log: jest.fn(),

@@ -11,7 +11,7 @@
 | ---------------- | ------------------------------------------------------------------------- |
 | **Project**      | Blockbuster Index MCP Server — retail/digital commerce signal calculation |
 | **Architecture** | Modular signal microservices on AWS ECS Fargate                           |
-| **Language**     | TypeScript (strict) on Node.js 20                                         |
+| **Language**     | TypeScript (strict) on Node.js 22                                         |
 | **Storage**      | DynamoDB (signal data) + S3 (published scores)                            |
 | **IaC**          | CloudFormation                                                            |
 | **Testing**      | Jest with 80% global coverage thresholds                                  |
