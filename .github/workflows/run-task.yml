@@ -37,7 +37,15 @@ jobs:
           aws-region: us-west-2
 
       - name: Run ECS Task
+        env:
+          ECS_ASSIGN_PUBLIC_IP: ${{ vars.ECS_ASSIGN_PUBLIC_IP || 'ENABLED' }}
+          ECS_SECURITY_GROUPS: ${{ vars.ECS_SECURITY_GROUPS }}
+          ECS_SUBNETS: ${{ vars.ECS_SUBNETS }}
         run: |
+          if [[ -z "$ECS_SUBNETS" || -z "$ECS_SECURITY_GROUPS" ]]; then
+            echo "ECS_SUBNETS and ECS_SECURITY_GROUPS repository/environment variables are required"
+            exit 1
+          fi
           if [[ "${{ github.event.inputs.environment }}" == "prod" ]]; then
             CLUSTER="blockbuster-index-prod"
             TASK_DEF="blockbuster-index-${{ github.event.inputs.component }}-task-prod"
@@ -49,6 +57,6 @@ jobs:
             --cluster $CLUSTER \
             --task-definition $TASK_DEF \
             --launch-type FARGATE \
-            --network-configuration "awsvpcConfiguration={subnets=[subnet-02ce757a,subnet-2655df7b,subnet-e22085a8,subnet-badfdd91],securityGroups=[sg-09812900f87093af6],assignPublicIp=ENABLED}" \
+            --network-configuration "awsvpcConfiguration={subnets=[$ECS_SUBNETS],securityGroups=[$ECS_SECURITY_GROUPS],assignPublicIp=$ECS_ASSIGN_PUBLIC_IP}" \
             --query 'tasks[0].taskArn' \
             --output text)

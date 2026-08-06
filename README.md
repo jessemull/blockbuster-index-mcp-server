@@ -441,7 +441,7 @@ Deploy individual signals to ECS Fargate with full CI/CD pipeline. Triggered man
 
 **Process**:
 
-1. **Code Quality Checks**: Runs lint, format-check, and unit tests (Jest enforces 80% coverage on branches/functions/lines/statements); soft npm audit.
+1. **Code Quality Checks**: Runs lint, format-check, and unit tests (Jest enforces 80% coverage on branches/functions/lines/statements); blocking `npm audit --audit-level=high`.
 2. **Docker Build**: Creates signal-specific container image with versioned tag.
 3. **ECR Push**: Uploads image to AWS ECR with environment-specific repository.
 4. **CloudFormation Deployment**: Updates ECS task definition with new container image.
@@ -474,7 +474,7 @@ Automated quality gates for all pull requests. Automatically triggered on all pu
 1. **Commitlint**: Validates Conventional Commits (with allowed scopes) for commits in the PR.
 2. **Preflight**: Runs lint, Prettier format-check, and Jest (80% coverage thresholds from `jest.config.js`).
 3. **Build All Signals**: Compiles every `SIGNAL_TYPE` webpack bundle.
-4. **Dependency Audit**: Runs `npm audit --audit-level=high` (soft-fail; reports findings without blocking).
+4. **Dependency Audit**: Runs `npm audit --audit-level=high` (blocking on high/critical findings).
 
 Local equivalent: `make preflight` (and Husky `pre-push`). CI additionally builds all signals and runs commitlint/audit.
 

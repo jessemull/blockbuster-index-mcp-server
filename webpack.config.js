@@ -74,9 +74,6 @@ module.exports = {
     ],
   },
   plugins: [
-    new webpack.DefinePlugin({
-      'process.env.SECRET': JSON.stringify(process.env.SECRET),
-    }),
     new webpack.IgnorePlugin({
       resourceRegExp: /^dtrace-provider$/,
     }),

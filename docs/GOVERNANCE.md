@@ -90,14 +90,14 @@ Resolve upward, never downward.
 
 ## Enforcement mechanisms
 
-| Mechanism                        | What it checks                                                                       | Blocks?       |
-| -------------------------------- | ------------------------------------------------------------------------------------ | ------------- |
-| Husky pre-commit (`lint-staged`) | ESLint + Prettier on staged files                                                    | Yes (commit)  |
-| Husky commit-msg                 | Conventional Commits + scope enum                                                    | Yes (commit)  |
-| Husky pre-push                   | lint + format-check + test + build                                                   | Yes (push)    |
-| GitHub Actions PR workflow       | commitlint, lint, format-check, test (Jest 80%), build all signals, npm audit (soft) | Yes (merge)   |
-| GitHub Actions deploy workflow   | lint, format-check, test (Jest 80%), npm audit (soft), then deploy                   | Yes (deploy)  |
-| PR review                        | Architecture, security, tests                                                        | Yes (process) |
+| Mechanism                        | What it checks                                                                                  | Blocks?       |
+| -------------------------------- | ----------------------------------------------------------------------------------------------- | ------------- |
+| Husky pre-commit (`lint-staged`) | ESLint + Prettier on staged files                                                               | Yes (commit)  |
+| Husky commit-msg                 | Conventional Commits + scope enum                                                               | Yes (commit)  |
+| Husky pre-push                   | lint + format-check + test + build                                                              | Yes (push)    |
+| GitHub Actions PR workflow       | commitlint, lint, format-check, test (Jest 80%), build all signals, npm audit (high+, blocking) | Yes (merge)   |
+| GitHub Actions deploy workflow   | lint, format-check, test (Jest 80%), npm audit (high+, blocking), then deploy                   | Yes (deploy)  |
+| PR review                        | Architecture, security, tests                                                                   | Yes (process) |
 
 Skipping hooks is not acceptable for shared branches — CI will catch violations regardless.
 
