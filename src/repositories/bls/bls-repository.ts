@@ -11,6 +11,7 @@ import type {
   BlsSignalRecord,
   BlsStateData,
 } from '../../types/bls';
+import { CONFIG } from '../../config';
 import { logger } from '../../util';
 
 export class DynamoDBBlsRepository implements BlsRepository {
@@ -31,7 +32,7 @@ export class DynamoDBBlsRepository implements BlsRepository {
   async saveProcessedFile(file: BlsProcessedFile): Promise<void> {
     try {
       const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
-      const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+      const client = new DynamoDBClient({ region: CONFIG.AWS_REGION });
 
       await client.send(
         new PutCommand({
@@ -75,7 +76,7 @@ export class DynamoDBBlsRepository implements BlsRepository {
   async isFileProcessed(year: string): Promise<boolean> {
     try {
       const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
-      const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+      const client = new DynamoDBClient({ region: CONFIG.AWS_REGION });
 
       const response = await client.send(
         new GetCommand({
@@ -99,7 +100,7 @@ export class DynamoDBBlsRepository implements BlsRepository {
   async saveStateData(data: BlsStateData): Promise<void> {
     try {
       const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
-      const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+      const client = new DynamoDBClient({ region: CONFIG.AWS_REGION });
 
       await client.send(
         new PutCommand({
@@ -149,7 +150,7 @@ export class DynamoDBBlsRepository implements BlsRepository {
   async saveStateDataBatch(dataArray: BlsStateData[]): Promise<void> {
     try {
       const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
-      const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+      const client = new DynamoDBClient({ region: CONFIG.AWS_REGION });
 
       // Process in batches of 25 (DynamoDB batch limit)...
 
@@ -196,7 +197,7 @@ export class DynamoDBBlsRepository implements BlsRepository {
   ): Promise<BlsStateData | null> {
     try {
       const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
-      const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+      const client = new DynamoDBClient({ region: CONFIG.AWS_REGION });
 
       const response = await client.send(
         new GetCommand({
@@ -234,7 +235,7 @@ export class DynamoDBBlsRepository implements BlsRepository {
   async getAllStateDataForYear(year: number): Promise<BlsStateData[]> {
     try {
       const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
-      const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+      const client = new DynamoDBClient({ region: CONFIG.AWS_REGION });
 
       // Use a simple Scan to get all state data for this year...
 
@@ -274,7 +275,7 @@ export class DynamoDBBlsRepository implements BlsRepository {
   async getAllUniqueStates(): Promise<string[]> {
     try {
       const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
-      const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+      const client = new DynamoDBClient({ region: CONFIG.AWS_REGION });
 
       // Use a simple Scan to get all unique states...
 
@@ -307,7 +308,7 @@ export class DynamoDBBlsRepository implements BlsRepository {
   async getAllStateDataForState(state: string): Promise<BlsStateData[]> {
     try {
       const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
-      const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+      const client = new DynamoDBClient({ region: CONFIG.AWS_REGION });
 
       const allItems: BlsStateData[] = [];
       let lastEvaluatedKey: Record<string, unknown> | undefined;
@@ -359,7 +360,7 @@ export class DynamoDBBlsRepository implements BlsRepository {
   async saveSignal(record: BlsSignalRecord): Promise<void> {
     try {
       const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
-      const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+      const client = new DynamoDBClient({ region: CONFIG.AWS_REGION });
 
       await client.send(
         new PutCommand({
@@ -416,7 +417,7 @@ export class DynamoDBBlsRepository implements BlsRepository {
   async getLatestSignal(state: string): Promise<BlsSignalRecord | null> {
     try {
       const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
-      const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+      const client = new DynamoDBClient({ region: CONFIG.AWS_REGION });
 
       const response = await client.send(
         new QueryCommand({
@@ -464,7 +465,7 @@ export class DynamoDBBlsRepository implements BlsRepository {
   async getAllSignals(): Promise<BlsSignalRecord[]> {
     try {
       const { DynamoDBClient } = await import('@aws-sdk/client-dynamodb');
-      const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+      const client = new DynamoDBClient({ region: CONFIG.AWS_REGION });
 
       const allItems: BlsSignalRecord[] = [];
       let lastEvaluatedKey: Record<string, unknown> | undefined;

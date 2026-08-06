@@ -9,12 +9,11 @@ import type {
   S3BroadbandCsvRecord,
   TechnologyCounts,
 } from '../../types/broadband';
+import { CONFIG } from '../../config';
 import { SPEED_THRESHOLDS, TECHNOLOGY_CODES } from '../../constants/broadband';
 import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband';
-import { BroadbandService } from '../../services/broadband/broadband-service';
 import { logger } from '../../util/logger';
-
-const DEFAULT_TABLE = 'blockbuster-index-broadband-signals-dev';
+import { calculateBroadbandScore } from './calculate-broadband-score';
 
 export function mapTechCodeToTechnology(techCode: string): string {
   const code = parseInt(techCode);
@@ -35,7 +34,7 @@ export class S3BroadbandLoader {
   constructor(bucketName: string) {
     this.bucketName = bucketName;
     this.s3Client = new S3Client({
-      region: process.env.AWS_REGION || 'us-west-2',
+      region: CONFIG.AWS_REGION,
     });
   }
 
@@ -118,7 +117,8 @@ export class S3BroadbandLoader {
   ): Promise<boolean> {
     try {
       const tempRepo = new DynamoDBBroadbandSignalRepository(
-        process.env.BROADBAND_DYNAMODB_TABLE_NAME || DEFAULT_TABLE,
+        CONFIG.BROADBAND_DYNAMODB_TABLE_NAME ||
+          'blockbuster-index-broadband-signals-dev',
       );
       const existingRecord = await tempRepo.getByStateAndVersion(
         state,
@@ -254,13 +254,12 @@ export class S3BroadbandLoader {
 
             // Calculate broadbandScore (reuse your existing logic if possible)...
 
-            const broadbandScore =
-              BroadbandService.calculateBroadbandScoreStatic({
-                broadbandAvailabilityPercent,
-                highSpeedAvailabilityPercent,
-                gigabitAvailabilityPercent,
-                technologyCounts,
-              });
+            const broadbandScore = calculateBroadbandScore({
+              broadbandAvailabilityPercent,
+              gigabitAvailabilityPercent,
+              highSpeedAvailabilityPercent,
+              technologyCounts,
+            });
             resolve({
               state,
               metrics: {

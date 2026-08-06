@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer';
 import type { JobSignalRecord, SignalRepository } from '../../types/amazon';
+import { CONFIG } from '../../config';
 import { STATE_ABBR_TO_NAME } from '../../constants';
 import { States } from '../../types';
 import { logger } from '../../util';
@@ -10,7 +11,7 @@ export async function scrapeAmazonJobs(
   timestamp?: number,
 ): Promise<Record<string, number>> {
   const browser = await puppeteer.launch({
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+    executablePath: CONFIG.PUPPETEER_EXECUTABLE_PATH,
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });

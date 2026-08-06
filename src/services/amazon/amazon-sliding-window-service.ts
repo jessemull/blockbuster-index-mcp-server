@@ -1,3 +1,4 @@
+import { CONFIG } from '../../config';
 import { DynamoDBAmazonSignalRepository } from '../../repositories/amazon/amazon-signal-repository';
 import { DynamoDBAmazonSlidingWindowRepository } from '../../repositories/amazon/amazon-sliding-window-repository';
 import { SlidingWindowService } from '../../services/generic-sliding-window-service';
@@ -23,15 +24,13 @@ export class AmazonSlidingWindowService {
     states?: string[];
     windowRepository?: import('../../types/amazon').SlidingWindowRepository;
   } = {}) {
-    const region = process.env.AWS_REGION || 'us-west-2';
+    const region = CONFIG.AWS_REGION;
     const defaultWindowRepository = new DynamoDBAmazonSlidingWindowRepository(
-      process.env.AMAZON_SLIDING_WINDOW_TABLE_NAME ||
-        'blockbuster-index-amazon-sliding-window-dev',
+      CONFIG.AMAZON_SLIDING_WINDOW_TABLE_NAME,
       region,
     );
     const defaultJobRepository = new DynamoDBAmazonSignalRepository(
-      process.env.AMAZON_DYNAMODB_TABLE_NAME ||
-        'blockbuster-index-amazon-jobs-dev',
+      CONFIG.AMAZON_DYNAMODB_TABLE_NAME || 'blockbuster-index-amazon-jobs-dev',
       region,
     );
     const defaultGetOldDayJobCount = async (

@@ -1,3 +1,4 @@
+import { CONFIG } from '../../config';
 import { DynamoDBWalmartJobRepository } from '../../repositories/walmart/walmart-physical-repository';
 import { DynamoDBWalmartSlidingWindowRepository } from '../../repositories/walmart/walmart-sliding-window-repository';
 import { SlidingWindowService } from '../../services/generic-sliding-window-service';
@@ -23,14 +24,13 @@ export class WalmartSlidingWindowService {
     states?: string[];
     windowRepository?: import('../../types/walmart').WalmartSlidingWindowRepository;
   } = {}) {
-    const region = process.env.AWS_REGION || 'us-west-2';
+    const region = CONFIG.AWS_REGION;
     const defaultWindowRepository = new DynamoDBWalmartSlidingWindowRepository(
-      process.env.WALMART_SLIDING_WINDOW_DYNAMODB_TABLE_NAME ||
-        'blockbuster-index-walmart-sliding-window-dev',
+      CONFIG.WALMART_SLIDING_WINDOW_DYNAMODB_TABLE_NAME,
       region,
     );
     const defaultJobRepository = new DynamoDBWalmartJobRepository(
-      process.env.WALMART_DYNAMODB_TABLE_NAME ||
+      CONFIG.WALMART_DYNAMODB_TABLE_NAME ||
         'blockbuster-index-walmart-jobs-dev',
       region,
     );

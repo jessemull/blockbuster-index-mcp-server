@@ -12,15 +12,12 @@ async function main() {
     const timestamp = Math.floor(Date.now() / 1000);
 
     // Store scores in DynamoDB for historical tracking...
-    if (
-      !CONFIG.IS_DEVELOPMENT &&
-      process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME
-    ) {
+    if (!CONFIG.IS_DEVELOPMENT && CONFIG.SIGNAL_SCORES_DYNAMODB_TABLE_NAME) {
       try {
         const { DynamoDBSignalScoresRepository } =
           await import('../../repositories');
         const signalScoresRepository = new DynamoDBSignalScoresRepository(
-          process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
+          CONFIG.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
         );
         await signalScoresRepository.save({
           signalType: 'walmart',
@@ -29,14 +26,14 @@ async function main() {
           scores,
         });
         logger.info('Walmart scores stored in DynamoDB', {
-          table: process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
+          table: CONFIG.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
           timestamp,
         });
       } catch (dbError) {
         // Continue with S3 upload even if DynamoDB fails...
         logger.error('Failed to store Walmart scores in DynamoDB', {
           error: dbError,
-          table: process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
+          table: CONFIG.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
         });
       }
     }

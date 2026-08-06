@@ -11,9 +11,8 @@ export function calculateWorkforceNormalizedScores(
 
     if (workforceSize > 0) {
       /**
-       * 1. Calculate percentage of workforce that Amazon jobs represent.
-       * 2. Scale by 1,000,000 to get meaningful scores.
-       * E.g. (jobs / workforce) * 100 * 1,000,000 = jobs_percentage * 1,000,000.
+       * Jobs as a percentage of state workforce, scaled by 1,000,000 for
+       * readable integer scores: (jobs / workforce) * 100 * 1,000,000.
        */
 
       const percentageOfWorkforce = (jobCount / workforceSize) * 100;

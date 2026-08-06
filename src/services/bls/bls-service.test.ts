@@ -1,3 +1,4 @@
+import { CONFIG } from '../../config';
 import { DynamoDBBlsRepository } from '../../repositories/bls/bls-repository';
 import { BlsSignalRecord } from '../../types/bls';
 import { logger } from '../../util';
@@ -10,6 +11,14 @@ import { S3BlsLoader } from './s3-bls-loader';
 
 jest.mock('../../repositories/bls/bls-repository');
 jest.mock('./s3-bls-loader');
+jest.mock('../../config', () => ({
+  CONFIG: {
+    BLS_PROCESSED_FILES_TABLE_NAME: 'blockbuster-index-bls-processed-files-dev',
+    BLS_STATE_DATA_TABLE_NAME: 'blockbuster-index-bls-state-data-dev',
+    BLS_SIGNALS_TABLE_NAME: 'blockbuster-index-bls-signals-dev',
+    BLS_S3_BUCKET: 'blockbuster-index-bls-dev',
+  },
+}));
 jest.mock('../../util', () => ({
   logger: {
     info: jest.fn(),
@@ -83,14 +92,10 @@ describe('BlsService', () => {
     });
 
     it('should use environment variables for table names', () => {
-      const originalEnv = process.env;
-      process.env = {
-        ...originalEnv,
-        BLS_PROCESSED_FILES_TABLE_NAME: 'custom-processed-files',
-        BLS_STATE_DATA_TABLE_NAME: 'custom-state-data',
-        BLS_SIGNALS_TABLE_NAME: 'custom-signals',
-        BLS_S3_BUCKET: 'custom-bucket',
-      };
+      CONFIG.BLS_PROCESSED_FILES_TABLE_NAME = 'custom-processed-files';
+      CONFIG.BLS_STATE_DATA_TABLE_NAME = 'custom-state-data';
+      CONFIG.BLS_SIGNALS_TABLE_NAME = 'custom-signals';
+      CONFIG.BLS_S3_BUCKET = 'custom-bucket';
 
       new BlsService();
 
@@ -100,7 +105,11 @@ describe('BlsService', () => {
         'custom-signals',
       );
 
-      process.env = originalEnv;
+      CONFIG.BLS_PROCESSED_FILES_TABLE_NAME =
+        'blockbuster-index-bls-processed-files-dev';
+      CONFIG.BLS_STATE_DATA_TABLE_NAME = 'blockbuster-index-bls-state-data-dev';
+      CONFIG.BLS_SIGNALS_TABLE_NAME = 'blockbuster-index-bls-signals-dev';
+      CONFIG.BLS_S3_BUCKET = 'blockbuster-index-bls-dev';
     });
   });
 

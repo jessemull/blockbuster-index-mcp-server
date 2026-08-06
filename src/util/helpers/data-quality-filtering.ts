@@ -3,6 +3,8 @@
  * Focuses on detecting actual data quality issues without making assumptions about trends.
  */
 
+import { logger } from '../logger';
+
 export interface DataQualityMetrics {
   dataQualityScore: number; // 0-100, higher is better
   largeGaps: Array<{ fromYear: number; gapSize: number; toYear: number }>;
@@ -221,34 +223,32 @@ export function logDataQualityAnalysis(
   state: string,
   signalType: 'ecommerce' | 'physical',
 ): void {
-  console.log(
+  logger.info(
     `=== ${state.toUpperCase()} ${signalType.toUpperCase()} DATA QUALITY ===`,
   );
-  console.log(`Total data points: ${metrics.totalDataPoints}`);
-  console.log(`Valid data points: ${metrics.validDataPoints}`);
-  console.log(`Data quality score: ${metrics.dataQualityScore}/100`);
+  logger.info(`Total data points: ${metrics.totalDataPoints}`);
+  logger.info(`Valid data points: ${metrics.validDataPoints}`);
+  logger.info(`Data quality score: ${metrics.dataQualityScore}/100`);
 
   if (metrics.zeroValueCount > 0) {
-    console.log(`Zero values: ${metrics.zeroValueCount}`);
+    logger.info(`Zero values: ${metrics.zeroValueCount}`);
   }
 
   if (metrics.negativeValueCount > 0) {
-    console.log(`Negative values: ${metrics.negativeValueCount}`);
+    logger.info(`Negative values: ${metrics.negativeValueCount}`);
   }
 
   if (metrics.largeGaps.length > 0) {
-    console.log(`Large gaps: ${metrics.largeGaps.length}`);
+    logger.info(`Large gaps: ${metrics.largeGaps.length}`);
     metrics.largeGaps.forEach((gap) => {
-      console.log(`  ${gap.fromYear} -> ${gap.toYear} (${gap.gapSize} years)`);
+      logger.info(`  ${gap.fromYear} -> ${gap.toYear} (${gap.gapSize} years)`);
     });
   }
 
   if (metrics.outliers.length > 0) {
-    console.log(`Outliers: ${metrics.outliers.length}`);
+    logger.info(`Outliers: ${metrics.outliers.length}`);
     metrics.outliers.forEach((outlier) => {
-      console.log(`  ${outlier.year}: ${outlier.value} (${outlier.reason})`);
+      logger.info(`  ${outlier.year}: ${outlier.value} (${outlier.reason})`);
     });
   }
-
-  console.log('');
 }

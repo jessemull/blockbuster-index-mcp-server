@@ -31,10 +31,13 @@ describe('S3BlsLoader', () => {
       expect(mockS3Client).toHaveBeenCalledWith({ region: 'us-west-2' });
     });
 
-    it('should use default region when AWS_REGION is not set', () => {
+    it('should use default region when AWS_REGION is not set', async () => {
       delete process.env.AWS_REGION;
-      new S3BlsLoader(mockBucketName);
-      expect(mockS3Client).toHaveBeenCalledWith({ region: undefined });
+      jest.resetModules();
+      // CONFIG.AWS_REGION defaults to us-west-2 when env is unset
+      const { S3BlsLoader: FreshLoader } = await import('./s3-bls-loader');
+      new FreshLoader(mockBucketName);
+      expect(mockS3Client).toHaveBeenCalledWith({ region: 'us-west-2' });
     });
   });
 

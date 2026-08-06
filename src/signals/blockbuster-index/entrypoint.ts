@@ -2,9 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import { CONFIG } from '../../config';
 import { SIGNALS } from '../../constants/signals';
+import { calculateBlockbusterIndex } from '../../services/blockbuster-index';
 import { BlockbusterIndexRecord, Signal } from '../../types';
 import { downloadFromS3, logger, uploadToS3 } from '../../util';
-import { calculateBlockbusterIndex } from './calculate';
 
 async function getSignalScores(
   signalName: string,
@@ -45,14 +45,14 @@ async function main() {
 
     if (
       !CONFIG.IS_DEVELOPMENT &&
-      process.env.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME
+      CONFIG.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME
     ) {
       try {
         const { DynamoDBBlockbusterIndexRepository } =
           await import('../../repositories');
         const blockbusterIndexRepository =
           new DynamoDBBlockbusterIndexRepository(
-            process.env.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME,
+            CONFIG.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME,
           );
 
         const blockbusterRecord: BlockbusterIndexRecord = {
@@ -71,7 +71,7 @@ async function main() {
         await blockbusterIndexRepository.save(blockbusterRecord);
 
         logger.info('Blockbuster index stored in DynamoDB', {
-          table: process.env.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME,
+          table: CONFIG.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME,
           timestamp: blockbusterRecord.timestamp,
         });
       } catch (dbError) {
@@ -79,7 +79,7 @@ async function main() {
 
         logger.error('Failed to store blockbuster index in DynamoDB', {
           error: dbError,
-          table: process.env.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME,
+          table: CONFIG.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME,
         });
       }
     }

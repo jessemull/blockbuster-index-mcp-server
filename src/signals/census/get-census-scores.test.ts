@@ -62,7 +62,8 @@ describe('getCensusScores', () => {
     jest.restoreAllMocks();
 
     mockCONFIG.IS_DEVELOPMENT = false;
-    process.env.CENSUS_DYNAMODB_TABLE_NAME = 'test-table';
+    mockCONFIG.CENSUS_DYNAMODB_TABLE_NAME = 'test-table';
+    mockCONFIG.FORCE_REFRESH = false;
 
     const defaultMockRepository = {
       save: jest.fn(),
@@ -74,8 +75,8 @@ describe('getCensusScores', () => {
   });
 
   afterEach(() => {
-    delete process.env.CENSUS_DYNAMODB_TABLE_NAME;
-    delete process.env.FORCE_REFRESH;
+    mockCONFIG.CENSUS_DYNAMODB_TABLE_NAME = undefined;
+    mockCONFIG.FORCE_REFRESH = false;
   });
 
   describe('successful data fetching', () => {
@@ -233,7 +234,7 @@ describe('getCensusScores', () => {
 
     it('creates repository when CENSUS_DYNAMODB_TABLE_NAME is set in development', async () => {
       mockCONFIG.IS_DEVELOPMENT = true;
-      process.env.CENSUS_DYNAMODB_TABLE_NAME = 'dev-table';
+      mockCONFIG.CENSUS_DYNAMODB_TABLE_NAME = 'dev-table';
       const mockRepository = {
         save: jest.fn(),
         exists: jest.fn().mockResolvedValue(true),
@@ -252,7 +253,7 @@ describe('getCensusScores', () => {
 
     it('skips repository creation in development mode without table name', async () => {
       mockCONFIG.IS_DEVELOPMENT = true;
-      delete process.env.CENSUS_DYNAMODB_TABLE_NAME;
+      mockCONFIG.CENSUS_DYNAMODB_TABLE_NAME = undefined;
       mockFetchCensusData.mockResolvedValue(mockCensusData);
 
       const scores = await getCensusScores();
@@ -268,7 +269,7 @@ describe('getCensusScores', () => {
     });
 
     it('forces refresh when FORCE_REFRESH is true', async () => {
-      process.env.FORCE_REFRESH = 'true';
+      mockCONFIG.FORCE_REFRESH = true;
       mockFetchCensusData.mockResolvedValue(mockCensusData);
 
       await getCensusScores();
@@ -352,7 +353,7 @@ describe('getCensusScores', () => {
 
     it('uses the default table name when env var is not set', async () => {
       mockCONFIG.IS_DEVELOPMENT = false;
-      delete process.env.CENSUS_DYNAMODB_TABLE_NAME;
+      mockCONFIG.CENSUS_DYNAMODB_TABLE_NAME = undefined;
       const mockRepository = {
         save: jest.fn(),
         exists: jest.fn().mockResolvedValue(false),
@@ -416,7 +417,7 @@ describe('getCensusScores', () => {
 
     it('covers repository creation when both conditions are false', async () => {
       mockCONFIG.IS_DEVELOPMENT = true;
-      delete process.env.CENSUS_DYNAMODB_TABLE_NAME;
+      mockCONFIG.CENSUS_DYNAMODB_TABLE_NAME = undefined;
       mockFetchCensusData.mockResolvedValue(mockCensusData);
 
       const scores = await getCensusScores();

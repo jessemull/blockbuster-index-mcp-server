@@ -2,6 +2,8 @@
  * Outlier detection and handling utilities for BLS scores
  */
 
+import { logger } from '../logger';
+
 export interface OutlierAnalysis {
   correctedScores: Record<string, number>;
   mean: number;
@@ -47,7 +49,6 @@ export function detectAndCorrectOutliers(
   states.forEach((state) => {
     const score = scores[state];
     const zScore = Math.abs((score - mean) / standardDeviation);
-    if (state === 'CA') console.log(score, zScore, threshold);
     if (zScore > threshold) {
       outliers.push(state);
       correctedScores[state] = median;
@@ -72,15 +73,14 @@ export function logOutlierAnalysis(
 ): void {
   const { outliers, median, mean, standardDeviation } = analysis;
 
-  console.log(`=== ${scoreType.toUpperCase()} SCORE OUTLIER ANALYSIS ===`);
-  console.log(`Mean: ${mean.toFixed(2)}`);
-  console.log(`Median: ${median.toFixed(2)}`);
-  console.log(`Standard Deviation: ${standardDeviation.toFixed(2)}`);
-  console.log(`Outliers (> 2 SD): ${outliers.length}`);
+  logger.info(`=== ${scoreType.toUpperCase()} SCORE OUTLIER ANALYSIS ===`);
+  logger.info(`Mean: ${mean.toFixed(2)}`);
+  logger.info(`Median: ${median.toFixed(2)}`);
+  logger.info(`Standard Deviation: ${standardDeviation.toFixed(2)}`);
+  logger.info(`Outliers (> 2 SD): ${outliers.length}`);
 
   if (outliers.length > 0) {
-    console.log(`Outlier states: ${outliers.join(', ')}`);
-    console.log(`Replaced with median: ${median.toFixed(2)}`);
+    logger.info(`Outlier states: ${outliers.join(', ')}`);
+    logger.info(`Replaced with median: ${median.toFixed(2)}`);
   }
-  console.log('');
 }

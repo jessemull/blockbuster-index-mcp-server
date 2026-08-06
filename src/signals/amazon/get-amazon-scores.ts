@@ -1,10 +1,10 @@
 import { CONFIG } from '../../config';
 import { AmazonSlidingWindowService } from '../../services/amazon/amazon-sliding-window-service';
+import { getWorkforceData } from '../../services/census';
 import { JobSignalRecord, SignalRepository } from '../../types/amazon';
 import { logger } from '../../util';
+import { calculateWorkforceNormalizedScores } from '../../util/helpers';
 import { orchestrateSignal } from '../shared-job-signal-orchestration';
-import { calculateWorkforceNormalizedScores } from './calculate-workforce-normalized-scores';
-import { getWorkforceData } from './get-workforce-data';
 import { scrapeAmazonJobs } from './scrape-amazon-jobs';
 
 const DEFAULT_TABLE = 'blockbuster-index-amazon-jobs-dev';
@@ -21,11 +21,11 @@ export const getAmazonScores = async (): Promise<Record<string, number>> => {
   let repository: SignalRepository<JobSignalRecord> | undefined = undefined;
   let slidingWindowService: AmazonSlidingWindowService | undefined = undefined;
 
-  if (!CONFIG.IS_DEVELOPMENT || process.env.AMAZON_DYNAMODB_TABLE_NAME) {
+  if (!CONFIG.IS_DEVELOPMENT || CONFIG.AMAZON_DYNAMODB_TABLE_NAME) {
     const { DynamoDBAmazonSignalRepository } =
       await import('../../repositories');
     repository = new DynamoDBAmazonSignalRepository(
-      process.env.AMAZON_DYNAMODB_TABLE_NAME || DEFAULT_TABLE,
+      CONFIG.AMAZON_DYNAMODB_TABLE_NAME || DEFAULT_TABLE,
     );
     slidingWindowService = new AmazonSlidingWindowService();
   }

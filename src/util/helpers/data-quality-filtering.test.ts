@@ -1,3 +1,13 @@
+jest.mock('../logger', () => ({
+  logger: {
+    info: jest.fn(),
+    debug: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+
+import { logger } from '../logger';
 import {
   analyzeDataQuality,
   DataQualityMetrics,
@@ -254,14 +264,8 @@ describe('data-quality-filtering', () => {
   });
 
   describe('logDataQualityAnalysis', () => {
-    let consoleSpy: jest.SpyInstance;
-
     beforeEach(() => {
-      consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-    });
-
-    afterEach(() => {
-      consoleSpy.mockRestore();
+      jest.clearAllMocks();
     });
 
     it('should log physical data quality analysis', () => {
@@ -280,19 +284,19 @@ describe('data-quality-filtering', () => {
 
       logDataQualityAnalysis(metrics, 'CA', 'physical');
 
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         '=== CA PHYSICAL DATA QUALITY ===',
       );
-      expect(consoleSpy).toHaveBeenCalledWith('Total data points: 5');
-      expect(consoleSpy).toHaveBeenCalledWith('Valid data points: 3');
-      expect(consoleSpy).toHaveBeenCalledWith('Data quality score: 60/100');
-      expect(consoleSpy).toHaveBeenCalledWith('Zero values: 1');
-      expect(consoleSpy).toHaveBeenCalledWith('Negative values: 1');
-      expect(consoleSpy).toHaveBeenCalledWith('Large gaps: 1');
-      expect(consoleSpy).toHaveBeenCalledWith('  2019 -> 2022 (3 years)');
-      expect(consoleSpy).toHaveBeenCalledWith('Outliers: 2');
-      expect(consoleSpy).toHaveBeenCalledWith('  2020: 0 (zero_value)');
-      expect(consoleSpy).toHaveBeenCalledWith('  2021: -0.5 (negative_value)');
+      expect(logger.info).toHaveBeenCalledWith('Total data points: 5');
+      expect(logger.info).toHaveBeenCalledWith('Valid data points: 3');
+      expect(logger.info).toHaveBeenCalledWith('Data quality score: 60/100');
+      expect(logger.info).toHaveBeenCalledWith('Zero values: 1');
+      expect(logger.info).toHaveBeenCalledWith('Negative values: 1');
+      expect(logger.info).toHaveBeenCalledWith('Large gaps: 1');
+      expect(logger.info).toHaveBeenCalledWith('  2019 -> 2022 (3 years)');
+      expect(logger.info).toHaveBeenCalledWith('Outliers: 2');
+      expect(logger.info).toHaveBeenCalledWith('  2020: 0 (zero_value)');
+      expect(logger.info).toHaveBeenCalledWith('  2021: -0.5 (negative_value)');
     });
 
     it('should log ecommerce data quality analysis', () => {
@@ -308,12 +312,12 @@ describe('data-quality-filtering', () => {
 
       logDataQualityAnalysis(metrics, 'TX', 'ecommerce');
 
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         '=== TX ECOMMERCE DATA QUALITY ===',
       );
-      expect(consoleSpy).toHaveBeenCalledWith('Total data points: 3');
-      expect(consoleSpy).toHaveBeenCalledWith('Valid data points: 3');
-      expect(consoleSpy).toHaveBeenCalledWith('Data quality score: 100/100');
+      expect(logger.info).toHaveBeenCalledWith('Total data points: 3');
+      expect(logger.info).toHaveBeenCalledWith('Valid data points: 3');
+      expect(logger.info).toHaveBeenCalledWith('Data quality score: 100/100');
     });
 
     it('should handle metrics with no issues', () => {
@@ -329,17 +333,17 @@ describe('data-quality-filtering', () => {
 
       logDataQualityAnalysis(metrics, 'NY', 'physical');
 
-      expect(consoleSpy).toHaveBeenCalledWith('Data quality score: 100/100');
-      expect(consoleSpy).not.toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith('Data quality score: 100/100');
+      expect(logger.info).not.toHaveBeenCalledWith(
         expect.stringContaining('Zero values:'),
       );
-      expect(consoleSpy).not.toHaveBeenCalledWith(
+      expect(logger.info).not.toHaveBeenCalledWith(
         expect.stringContaining('Negative values:'),
       );
-      expect(consoleSpy).not.toHaveBeenCalledWith(
+      expect(logger.info).not.toHaveBeenCalledWith(
         expect.stringContaining('Large gaps:'),
       );
-      expect(consoleSpy).not.toHaveBeenCalledWith(
+      expect(logger.info).not.toHaveBeenCalledWith(
         expect.stringContaining('Outliers:'),
       );
     });

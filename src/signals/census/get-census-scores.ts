@@ -65,16 +65,16 @@ export const getCensusScores = async (): Promise<Record<string, number>> => {
 
   let repository: null | SignalRepository<CensusSignalRecord> = null;
 
-  if (!CONFIG.IS_DEVELOPMENT || process.env.CENSUS_DYNAMODB_TABLE_NAME) {
+  if (!CONFIG.IS_DEVELOPMENT || CONFIG.CENSUS_DYNAMODB_TABLE_NAME) {
     const { DynamoDBCensusSignalRepository } =
       await import('../../repositories');
     repository = new DynamoDBCensusSignalRepository(
-      process.env.CENSUS_DYNAMODB_TABLE_NAME || DEFAULT_TABLE,
+      CONFIG.CENSUS_DYNAMODB_TABLE_NAME || DEFAULT_TABLE,
     );
   }
 
   const scores: Record<string, number> = {};
-  const forceRefresh = process.env.FORCE_REFRESH === 'true';
+  const forceRefresh = CONFIG.FORCE_REFRESH;
 
   if (!censusData) {
     throw new Error('Failed to fetch Census data after multiple attempts');

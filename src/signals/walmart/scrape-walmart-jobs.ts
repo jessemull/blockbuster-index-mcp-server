@@ -3,6 +3,7 @@ import type {
   WalmartJobRecord,
   WalmartSignalRepository,
 } from '../../types/walmart';
+import { CONFIG } from '../../config';
 import { States } from '../../types';
 import { logger } from '../../util';
 import { searchWalmartJobsInState } from './search-jobs-in-state';
@@ -14,7 +15,7 @@ export async function scrapeWalmartJobs(
   walmartJobs: Record<string, number>;
 }> {
   const browser = await puppeteer.launch({
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+    executablePath: CONFIG.PUPPETEER_EXECUTABLE_PATH,
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });

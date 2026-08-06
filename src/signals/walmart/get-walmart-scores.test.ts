@@ -5,7 +5,10 @@ jest.mock('../../services/walmart/walmart-sliding-window-service', () => ({
   WalmartSlidingWindowService: jest.fn(),
 }));
 jest.mock('../../config', () => ({
-  CONFIG: { IS_DEVELOPMENT: false },
+  CONFIG: {
+    IS_DEVELOPMENT: false,
+    WALMART_DYNAMODB_TABLE_NAME: undefined as string | undefined,
+  },
 }));
 jest.mock('../../util', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
@@ -14,14 +17,14 @@ jest.mock('../../repositories', () => ({
   DynamoDBWalmartPhysicalRepository: jest.fn(),
   DynamoDBWalmartTechnologyRepository: jest.fn(),
 }));
-jest.mock('../amazon/get-workforce-data', () => ({
+jest.mock('../../services/census', () => ({
   getWorkforceData: jest.fn(),
 }));
 
 import { CONFIG } from '../../config';
+import { getWorkforceData } from '../../services/census';
 import { WalmartSlidingWindowService } from '../../services/walmart/walmart-sliding-window-service';
 import { logger } from '../../util';
-import { getWorkforceData } from '../amazon/get-workforce-data';
 import { getWalmartScores } from './get-walmart-scores';
 import { scrapeWalmartJobs } from './scrape-walmart-jobs';
 
@@ -43,11 +46,9 @@ const mockGetWorkforceData = getWorkforceData as jest.MockedFunction<
 describe('getWalmartScores()', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    delete process.env.WALMART_PHYSICAL_DYNAMODB_TABLE_NAME;
-    delete process.env.WALMART_TECHNOLOGY_DYNAMODB_TABLE_NAME;
     CONFIG.IS_DEVELOPMENT = false;
+    CONFIG.WALMART_DYNAMODB_TABLE_NAME = undefined;
 
-    // Mock workforce data
     mockGetWorkforceData.mockResolvedValue({
       CA: 2000000,
       TX: 1500000,
@@ -122,17 +123,16 @@ describe('getWalmartScores()', () => {
 
   it('still uses DynamoDB if table names are supplied in development', async () => {
     CONFIG.IS_DEVELOPMENT = true;
-    process.env.WALMART_PHYSICAL_DYNAMODB_TABLE_NAME = 'my‑phys';
-    process.env.WALMART_TECHNOLOGY_DYNAMODB_TABLE_NAME = 'my‑tech';
+    CONFIG.WALMART_DYNAMODB_TABLE_NAME = 'my-walmart-table';
 
     const walmartJobs = { OR: 3, WA: 4 };
     mockScrapeWalmartJobs.mockResolvedValue({ walmartJobs });
 
     const updateSlidingWindow = jest.fn();
-    const getSlidingWindowScores = jest
-      .fn()
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({});
+    const getSlidingWindowScores = jest.fn().mockResolvedValue({
+      OR: 300,
+      WA: 333,
+    });
     MockWindowService.mockImplementation(
       () =>
         ({
@@ -146,8 +146,9 @@ describe('getWalmartScores()', () => {
       scores: { OR: 300, WA: 333 },
     });
 
-    expect(updateSlidingWindow).toHaveBeenCalledTimes(0);
-    expect(getSlidingWindowScores).toHaveBeenCalledTimes(0);
+    expect(MockWindowService).toHaveBeenCalledTimes(1);
+    expect(updateSlidingWindow).toHaveBeenCalledTimes(2);
+    expect(getSlidingWindowScores).toHaveBeenCalledTimes(1);
   });
 
   it('propagates errors from scrapeWalmartJobs()', async () => {

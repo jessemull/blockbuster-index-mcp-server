@@ -20,6 +20,9 @@ jest.mock('../../config', () => ({
     return {
       IS_DEVELOPMENT: process.env.NODE_ENV === 'development',
       S3_BUCKET_NAME: 'test-bucket',
+      SIGNAL_SCORES_DYNAMODB_TABLE_NAME:
+        process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
+      VERSION: '1.0.0',
     };
   },
 }));

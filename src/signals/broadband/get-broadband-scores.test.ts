@@ -1,8 +1,15 @@
+import { CONFIG } from '../../config';
 import { BroadbandService } from '../../services';
 import { logger } from '../../util/logger';
 import { getBroadbandScores } from './get-broadband-scores';
 
 jest.mock('../../services');
+jest.mock('../../config', () => ({
+  CONFIG: {
+    IS_DEVELOPMENT: false,
+    BROADBAND_DYNAMODB_TABLE_NAME: 'mock-table' as string | undefined,
+  },
+}));
 
 jest.mock('../../util/logger', () => ({
   logger: {
@@ -16,11 +23,13 @@ const mockBroadbandService = BroadbandService as jest.MockedClass<
   typeof BroadbandService
 >;
 const mockLogger = logger as jest.Mocked<typeof logger>;
+const mockCONFIG = CONFIG as jest.Mocked<typeof CONFIG>;
 
 describe('getBroadbandScores', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.BROADBAND_DYNAMODB_TABLE_NAME = 'mock-table';
+    mockCONFIG.IS_DEVELOPMENT = false;
+    mockCONFIG.BROADBAND_DYNAMODB_TABLE_NAME = 'mock-table';
   });
 
   it('should process broadband data and return scores', async () => {
@@ -50,7 +59,8 @@ describe('getBroadbandScores', () => {
   });
 
   it('should work without repository when table name is not set', async () => {
-    delete process.env.BROADBAND_DYNAMODB_TABLE_NAME;
+    mockCONFIG.IS_DEVELOPMENT = true;
+    mockCONFIG.BROADBAND_DYNAMODB_TABLE_NAME = undefined;
 
     const mockProcessBroadbandData = jest.fn().mockResolvedValue(undefined);
     mockBroadbandService.prototype.processBroadbandData =

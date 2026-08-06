@@ -1,2 +1,4 @@
-export const MAX_RETRIES = parseInt(process.env.MAX_RETRIES || '3', 10);
-export const RETRY_DELAY = parseInt(process.env.RETRY_DELAY || '1000', 10);
+import { CONFIG } from '../config';
+
+export const MAX_RETRIES = CONFIG.MAX_RETRIES;
+export const RETRY_DELAY = CONFIG.RETRY_DELAY;

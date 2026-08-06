@@ -4,12 +4,14 @@ import type {
   StateVersionMetadata,
   TechnologyCounts,
 } from '../../types/broadband';
+import { CONFIG } from '../../config';
 import { PRECISION } from '../../constants';
 import { SPEED_THRESHOLDS, TECHNOLOGY_CODES } from '../../constants/broadband';
 import { DynamoDBBroadbandSignalRepository } from '../../repositories/broadband';
-import { S3BroadbandLoader } from '../../signals/broadband/s3-broadband-loader';
 import { BroadbandCsvRecord } from '../../types/broadband';
 import { logger } from '../../util';
+import { calculateBroadbandScore } from './calculate-broadband-score';
+import { S3BroadbandLoader } from './s3-broadband-loader';
 
 export class BroadbandService {
   private repository: DynamoDBBroadbandSignalRepository | undefined;
@@ -17,9 +19,7 @@ export class BroadbandService {
 
   constructor(repository?: DynamoDBBroadbandSignalRepository) {
     this.repository = repository;
-    this.s3Loader = new S3BroadbandLoader(
-      process.env.BROADBAND_S3_BUCKET || 'blockbuster-index-broadband-dev',
-    );
+    this.s3Loader = new S3BroadbandLoader(CONFIG.BROADBAND_S3_BUCKET);
   }
 
   async processBroadbandData(): Promise<void> {
@@ -366,35 +366,13 @@ export class BroadbandService {
     }
   }
 
-  // Calculate overall broadband score (0-1 range)...
-
   private calculateBroadbandScore(metrics: {
     broadbandAvailabilityPercent: number;
     gigabitAvailabilityPercent: number;
     highSpeedAvailabilityPercent: number;
     technologyCounts: TechnologyCounts;
   }): number {
-    // Technology diversity score (0-1)...
-
-    const totalTech = Object.values(metrics.technologyCounts).reduce(
-      (sum, count) => sum + count,
-      0,
-    );
-    const diversityScore =
-      totalTech > 0
-        ? Object.values(metrics.technologyCounts).filter((count) => count > 0)
-            .length / 5
-        : 0;
-
-    // Weighted score calculation...
-
-    const score =
-      (metrics.broadbandAvailabilityPercent / 100) * 0.3 + // Basic availability.
-      (metrics.highSpeedAvailabilityPercent / 100) * 0.4 + // Quality (25+ Mbps).
-      (metrics.gigabitAvailabilityPercent / 100) * 0.2 + // Future-ready infrastructure.
-      diversityScore * 0.1; // Infrastructure resilience.
-
-    return Math.min(1, Math.max(0, score)); // Clamp to 0-1 range.
+    return calculateBroadbandScore(metrics);
   }
 
   public static calculateBroadbandScoreStatic(metrics: {
@@ -403,7 +381,6 @@ export class BroadbandService {
     highSpeedAvailabilityPercent: number;
     technologyCounts: TechnologyCounts;
   }): number {
-    const instance = new BroadbandService();
-    return instance.calculateBroadbandScore(metrics);
+    return calculateBroadbandScore(metrics);
   }
 }

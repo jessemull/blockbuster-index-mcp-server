@@ -107,6 +107,4 @@ jobs:
         run: npm ci
 
       - name: npm audit (high+)
-        # Soft-fail for now — surface findings without blocking merge
         run: npm audit --audit-level=high
-        continue-on-error: true

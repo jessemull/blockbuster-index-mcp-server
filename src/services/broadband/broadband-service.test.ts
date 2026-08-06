@@ -17,7 +17,7 @@ jest.mock('csv-parse/sync', () => ({
 }));
 
 // Mock the S3BroadbandLoader to avoid AWS SDK import issues
-jest.mock('../../signals/broadband/s3-broadband-loader', () => ({
+jest.mock('./s3-broadband-loader', () => ({
   S3BroadbandLoader: jest.fn().mockImplementation(() => ({
     loadData: jest.fn().mockResolvedValue({
       dataVersion: 'test-version',

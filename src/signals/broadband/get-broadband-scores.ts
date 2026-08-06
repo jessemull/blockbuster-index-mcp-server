@@ -11,11 +11,11 @@ export const getBroadbandScores = async (): Promise<Record<string, number>> => {
   try {
     let repository: DynamoDBBroadbandSignalRepository | undefined = undefined;
 
-    if (!CONFIG.IS_DEVELOPMENT || process.env.BROADBAND_DYNAMODB_TABLE_NAME) {
+    if (!CONFIG.IS_DEVELOPMENT || CONFIG.BROADBAND_DYNAMODB_TABLE_NAME) {
       const { DynamoDBBroadbandSignalRepository } =
         await import('../../repositories');
       repository = new DynamoDBBroadbandSignalRepository(
-        process.env.BROADBAND_DYNAMODB_TABLE_NAME || DEFAULT_TABLE,
+        CONFIG.BROADBAND_DYNAMODB_TABLE_NAME || DEFAULT_TABLE,
       );
     }
 

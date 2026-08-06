@@ -1,10 +1,10 @@
 import { CONFIG } from '../../config';
+import { getWorkforceData } from '../../services/census';
 import { WalmartSlidingWindowService } from '../../services/walmart/walmart-sliding-window-service';
 import { WalmartJobRecord, WalmartSignalRepository } from '../../types/walmart';
 import { logger } from '../../util';
-import { getWorkforceData } from '../amazon/get-workforce-data';
+import { calculateWorkforceNormalizedScores } from '../../util/helpers';
 import { orchestrateSignal } from '../shared-job-signal-orchestration';
-import { calculateWorkforceNormalizedScores } from './calculate-workforce-normalized-scores';
 import { scrapeWalmartJobs } from './scrape-walmart-jobs';
 
 const DEFAULT_WALMART_TABLE = 'blockbuster-index-walmart-jobs-dev';
@@ -24,11 +24,11 @@ export const getWalmartScores = async (): Promise<{
     undefined;
   let slidingWindowService: undefined | WalmartSlidingWindowService = undefined;
 
-  if (!CONFIG.IS_DEVELOPMENT || process.env.WALMART_DYNAMODB_TABLE_NAME) {
+  if (!CONFIG.IS_DEVELOPMENT || CONFIG.WALMART_DYNAMODB_TABLE_NAME) {
     const { DynamoDBWalmartJobRepository } =
       await import('../../repositories/walmart/walmart-physical-repository');
     walmartRepository = new DynamoDBWalmartJobRepository(
-      process.env.WALMART_DYNAMODB_TABLE_NAME || DEFAULT_WALMART_TABLE,
+      CONFIG.WALMART_DYNAMODB_TABLE_NAME || DEFAULT_WALMART_TABLE,
     );
     slidingWindowService = new WalmartSlidingWindowService();
   }

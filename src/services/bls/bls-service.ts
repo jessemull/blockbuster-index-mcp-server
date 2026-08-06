@@ -4,6 +4,7 @@ import type {
   BlsStateData,
   BlsService as IBlsService,
 } from '../../types/bls';
+import { CONFIG } from '../../config';
 import { DynamoDBBlsRepository } from '../../repositories/bls/bls-repository';
 import { logger } from '../../util';
 import {
@@ -24,16 +25,11 @@ export class BlsService implements IBlsService {
     this.repository =
       repository ||
       new DynamoDBBlsRepository(
-        process.env.BLS_PROCESSED_FILES_TABLE_NAME ||
-          'blockbuster-index-bls-processed-files-dev',
-        process.env.BLS_STATE_DATA_TABLE_NAME ||
-          'blockbuster-index-bls-state-data-dev',
-        process.env.BLS_SIGNALS_TABLE_NAME ||
-          'blockbuster-index-bls-signals-dev',
+        CONFIG.BLS_PROCESSED_FILES_TABLE_NAME,
+        CONFIG.BLS_STATE_DATA_TABLE_NAME,
+        CONFIG.BLS_SIGNALS_TABLE_NAME,
       );
-    this.s3Loader = new S3BlsLoader(
-      process.env.BLS_S3_BUCKET || 'blockbuster-index-bls-dev',
-    );
+    this.s3Loader = new S3BlsLoader(CONFIG.BLS_S3_BUCKET);
   }
 
   async processBlsData(): Promise<void> {

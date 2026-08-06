@@ -22,6 +22,8 @@ jest.mock('../../config', () => ({
       IS_DEVELOPMENT: process.env.NODE_ENV === 'development',
       S3_BUCKET_NAME: 'test-bucket',
       VERSION: 'test-version',
+      BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME:
+        process.env.BLOCKBUSTER_INDEX_DYNAMODB_TABLE_NAME,
     };
   },
 }));

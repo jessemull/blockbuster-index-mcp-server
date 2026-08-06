@@ -21,15 +21,12 @@ async function main() {
 
     // Store both signals in DynamoDB for historical tracking...
 
-    if (
-      !CONFIG.IS_DEVELOPMENT &&
-      process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME
-    ) {
+    if (!CONFIG.IS_DEVELOPMENT && CONFIG.SIGNAL_SCORES_DYNAMODB_TABLE_NAME) {
       try {
         const { DynamoDBSignalScoresRepository } =
           await import('../../repositories');
         const signalScoresRepository = new DynamoDBSignalScoresRepository(
-          process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
+          CONFIG.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
         );
 
         // Store physical scores...
@@ -51,7 +48,7 @@ async function main() {
         });
 
         logger.info('BLS signals stored in DynamoDB', {
-          table: process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
+          table: CONFIG.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
           timestamp,
         });
       } catch (dbError) {
@@ -59,7 +56,7 @@ async function main() {
 
         logger.error('Failed to store BLS signals in DynamoDB', {
           error: dbError,
-          table: process.env.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
+          table: CONFIG.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
         });
       }
     }

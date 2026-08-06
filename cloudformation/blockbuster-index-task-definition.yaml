@@ -137,8 +137,6 @@ Resources:
               Value: '3'
             - Name: npm_package_version
               Value: '1.0.0'
-            - Name: OPENAI_API_KEY
-              Value: !Sub '{{resolve:secretsmanager:blockbuster-index-openai-${Environment}:SecretString:apiKey}}'
             - Name: RETRY_DELAY
               Value: '1000'
             - Name: CW_LOG_GROUP
@@ -194,8 +192,6 @@ Resources:
               Value: '3'
             - Name: npm_package_version
               Value: '1.0.0'
-            - Name: OPENAI_API_KEY
-              Value: !Sub '{{resolve:secretsmanager:blockbuster-index-openai-${Environment}:SecretString:apiKey}}'
             - Name: RETRY_DELAY
               Value: '1000'
             - Name: CW_LOG_GROUP
@@ -253,8 +249,6 @@ Resources:
               Value: '3'
             - Name: npm_package_version
               Value: '1.0.0'
-            - Name: OPENAI_API_KEY
-              Value: !Sub '{{resolve:secretsmanager:blockbuster-index-openai-${Environment}:SecretString:apiKey}}'
             - Name: RETRY_DELAY
               Value: '1000'
             - Name: CW_LOG_GROUP
@@ -314,8 +308,6 @@ Resources:
               Value: '3'
             - Name: npm_package_version
               Value: '1.0.0'
-            - Name: OPENAI_API_KEY
-              Value: !Sub '{{resolve:secretsmanager:blockbuster-index-openai-${Environment}:SecretString:apiKey}}'
             - Name: RETRY_DELAY
               Value: '1000'
             - Name: CW_LOG_GROUP
@@ -377,8 +369,6 @@ Resources:
               Value: '3'
             - Name: npm_package_version
               Value: '1.0.0'
-            - Name: OPENAI_API_KEY
-              Value: !Sub '{{resolve:secretsmanager:blockbuster-index-openai-${Environment}:SecretString:apiKey}}'
             - Name: RETRY_DELAY
               Value: '1000'
             - Name: CW_LOG_GROUP
@@ -432,8 +422,6 @@ Resources:
               Value: '3'
             - Name: npm_package_version
               Value: '1.0.0'
-            - Name: OPENAI_API_KEY
-              Value: !Sub '{{resolve:secretsmanager:blockbuster-index-openai-${Environment}:SecretString:apiKey}}'
             - Name: RETRY_DELAY
               Value: '1000'
             - Name: CW_LOG_GROUP

@@ -343,10 +343,18 @@ Resources:
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
+              # Scoped to this stack's signal task definition families (not Resource: '*').
+              # ECS task role remains shared across signals; per-signal roles are a future split.
               - Effect: Allow
                 Action:
                   - ecs:RunTask
-                Resource: '*'
+                Resource:
+                  - !Sub 'arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:task-definition/blockbuster-index-amazon-task-${Environment}:*'
+                  - !Sub 'arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:task-definition/blockbuster-index-census-task-${Environment}:*'
+                  - !Sub 'arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:task-definition/blockbuster-index-broadband-task-${Environment}:*'
+                  - !Sub 'arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:task-definition/blockbuster-index-walmart-task-${Environment}:*'
+                  - !Sub 'arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:task-definition/blockbuster-index-bls-task-${Environment}:*'
+                  - !Sub 'arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:task-definition/blockbuster-index-blockbuster-index-task-${Environment}:*'
               - Effect: Allow
                 Action:
                   - iam:PassRole

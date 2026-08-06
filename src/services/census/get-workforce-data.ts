@@ -10,11 +10,11 @@ export const getWorkforceData = async (): Promise<Record<string, number>> => {
 
   let repository: CensusSignalRepository | null = null;
 
-  if (!CONFIG.IS_DEVELOPMENT || process.env.CENSUS_DYNAMODB_TABLE_NAME) {
+  if (!CONFIG.IS_DEVELOPMENT || CONFIG.CENSUS_DYNAMODB_TABLE_NAME) {
     const { DynamoDBCensusSignalRepository } =
       await import('../../repositories');
     repository = new DynamoDBCensusSignalRepository(
-      process.env.CENSUS_DYNAMODB_TABLE_NAME || DEFAULT_CENSUS_TABLE,
+      CONFIG.CENSUS_DYNAMODB_TABLE_NAME || DEFAULT_CENSUS_TABLE,
     );
   }
 
@@ -26,6 +26,7 @@ export const getWorkforceData = async (): Promise<Record<string, number>> => {
   const states = Object.values(States);
 
   // Get the latest workforce data for each state
+
   for (const state of states) {
     try {
       const record = await repository.getLatest(state);

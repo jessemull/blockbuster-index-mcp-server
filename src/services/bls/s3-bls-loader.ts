@@ -4,6 +4,7 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import type { BlsCsvRecord } from '../../types/bls';
+import { CONFIG } from '../../config';
 import { logger } from '../../util';
 
 export class S3BlsLoader {
@@ -11,7 +12,7 @@ export class S3BlsLoader {
   private bucketName: string;
 
   constructor(bucketName: string) {
-    this.s3Client = new S3Client({ region: process.env.AWS_REGION });
+    this.s3Client = new S3Client({ region: CONFIG.AWS_REGION });
     this.bucketName = bucketName;
   }
 

@@ -1,3 +1,13 @@
+jest.mock('../logger', () => ({
+  logger: {
+    info: jest.fn(),
+    debug: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+
+import { logger } from '../logger';
 import {
   detectAndCorrectOutliers,
   logOutlierAnalysis,
@@ -111,14 +121,8 @@ describe('outlier-detection', () => {
   });
 
   describe('logOutlierAnalysis', () => {
-    let consoleSpy: jest.SpyInstance;
-
     beforeEach(() => {
-      consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-    });
-
-    afterEach(() => {
-      consoleSpy.mockRestore();
+      jest.clearAllMocks();
     });
 
     it('should log physical score analysis', () => {
@@ -132,15 +136,15 @@ describe('outlier-detection', () => {
 
       logOutlierAnalysis(analysis, 'physical');
 
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         '=== PHYSICAL SCORE OUTLIER ANALYSIS ===',
       );
-      expect(consoleSpy).toHaveBeenCalledWith('Mean: 55.50');
-      expect(consoleSpy).toHaveBeenCalledWith('Median: 50.00');
-      expect(consoleSpy).toHaveBeenCalledWith('Standard Deviation: 15.20');
-      expect(consoleSpy).toHaveBeenCalledWith('Outliers (> 2 SD): 2');
-      expect(consoleSpy).toHaveBeenCalledWith('Outlier states: CA, NY');
-      expect(consoleSpy).toHaveBeenCalledWith('Replaced with median: 50.00');
+      expect(logger.info).toHaveBeenCalledWith('Mean: 55.50');
+      expect(logger.info).toHaveBeenCalledWith('Median: 50.00');
+      expect(logger.info).toHaveBeenCalledWith('Standard Deviation: 15.20');
+      expect(logger.info).toHaveBeenCalledWith('Outliers (> 2 SD): 2');
+      expect(logger.info).toHaveBeenCalledWith('Outlier states: CA, NY');
+      expect(logger.info).toHaveBeenCalledWith('Replaced with median: 50.00');
     });
 
     it('should log ecommerce score analysis', () => {
@@ -154,13 +158,13 @@ describe('outlier-detection', () => {
 
       logOutlierAnalysis(analysis, 'ecommerce');
 
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         '=== ECOMMERCE SCORE OUTLIER ANALYSIS ===',
       );
-      expect(consoleSpy).toHaveBeenCalledWith('Mean: 47.20');
-      expect(consoleSpy).toHaveBeenCalledWith('Median: 45.00');
-      expect(consoleSpy).toHaveBeenCalledWith('Standard Deviation: 8.10');
-      expect(consoleSpy).toHaveBeenCalledWith('Outliers (> 2 SD): 0');
+      expect(logger.info).toHaveBeenCalledWith('Mean: 47.20');
+      expect(logger.info).toHaveBeenCalledWith('Median: 45.00');
+      expect(logger.info).toHaveBeenCalledWith('Standard Deviation: 8.10');
+      expect(logger.info).toHaveBeenCalledWith('Outliers (> 2 SD): 0');
     });
 
     it('should handle analysis with no outliers', () => {
@@ -174,11 +178,11 @@ describe('outlier-detection', () => {
 
       logOutlierAnalysis(analysis, 'physical');
 
-      expect(consoleSpy).toHaveBeenCalledWith('Outliers (> 2 SD): 0');
-      expect(consoleSpy).not.toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith('Outliers (> 2 SD): 0');
+      expect(logger.info).not.toHaveBeenCalledWith(
         expect.stringContaining('Outlier states:'),
       );
-      expect(consoleSpy).not.toHaveBeenCalledWith(
+      expect(logger.info).not.toHaveBeenCalledWith(
         expect.stringContaining('Replaced with median:'),
       );
     });

@@ -1,22 +1,27 @@
 import { CONFIG } from '../../config';
 import { AmazonSlidingWindowService } from '../../services/amazon/amazon-sliding-window-service';
+import { getWorkforceData } from '../../services/census';
 import { logger } from '../../util';
-import { calculateWorkforceNormalizedScores } from './calculate-workforce-normalized-scores';
+import { calculateWorkforceNormalizedScores } from '../../util/helpers';
 import { getAmazonScores } from './get-amazon-scores';
 import { getEqualScores } from './get-equal-scores';
-import { getWorkforceData } from './get-workforce-data';
 import { scrapeAmazonJobs } from './scrape-amazon-jobs';
 
 jest.mock('./scrape-amazon-jobs');
-jest.mock('./calculate-workforce-normalized-scores');
+jest.mock('../../util/helpers', () => ({
+  calculateWorkforceNormalizedScores: jest.fn(),
+}));
 jest.mock('./get-equal-scores');
-jest.mock('./get-workforce-data');
+jest.mock('../../services/census', () => ({
+  getWorkforceData: jest.fn(),
+}));
 jest.mock('../../services/amazon/amazon-sliding-window-service', () => ({
   AmazonSlidingWindowService: jest.fn(),
 }));
 jest.mock('../../config', () => ({
   CONFIG: {
     IS_DEVELOPMENT: false,
+    AMAZON_DYNAMODB_TABLE_NAME: undefined as string | undefined,
   },
 }));
 jest.mock('../../util', () => ({
@@ -54,6 +59,8 @@ const mockAmazonSlidingWindowService =
 describe('getAmazonScores', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockCONFIG.IS_DEVELOPMENT = false;
+    mockCONFIG.AMAZON_DYNAMODB_TABLE_NAME = undefined;
   });
 
   it('returns calculated scores when scrape succeeds', async () => {
@@ -91,10 +98,10 @@ describe('getAmazonScores', () => {
 
     const scores = await getAmazonScores();
 
-    expect(scores).toEqual(mockScores);
+    expect(scores).toEqual(mockSlidingWindowJobCounts);
     expect(mockScrapeAmazonJobs).toHaveBeenCalled();
     expect(mockCalculateWorkforceNormalizedScores).toHaveBeenCalledWith(
-      mockSlidingWindowJobCounts,
+      mockJobCounts,
       mockWorkforceData,
     );
     expect(mockUpdateSlidingWindow).toHaveBeenCalledTimes(2);
@@ -121,7 +128,7 @@ describe('getAmazonScores', () => {
 
   it('skips repository creation in development mode without table name', async () => {
     mockCONFIG.IS_DEVELOPMENT = true;
-    delete process.env.AMAZON_DYNAMODB_TABLE_NAME;
+    mockCONFIG.AMAZON_DYNAMODB_TABLE_NAME = undefined;
     const mockJobCounts = { CA: 10, TX: 50 };
     const mockScores = { CA: 0.05, TX: 0.2 };
     const mockWorkforceData = { CA: 2000000, TX: 1500000 };
