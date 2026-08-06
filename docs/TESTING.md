@@ -17,6 +17,20 @@
 
 Integration against real AWS is **out of scope** for the default Jest suite.
 
+### Scraper DOM contracts
+
+Amazon and Walmart scrapers include Cheerio-based contract tests against checked-in HTML fixtures under `src/signals/<signal>/__fixtures__/`. These catch selector drift without live network or Puppeteer. Refresh fixtures when production scrapes fail due to DOM changes.
+
+### Optional LocalStack
+
+Files matching `*.localstack.test.ts` are ignored by default Jest. To run against a local LocalStack:
+
+```bash
+LOCALSTACK_ENDPOINT=http://localhost:4566 npx jest --testPathPatterns=localstack --coverage=false
+```
+
+No extra npm packages are required — tests configure the AWS SDK with `endpoint` when the env var is set.
+
 ---
 
 ## Layout
