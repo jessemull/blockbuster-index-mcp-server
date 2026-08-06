@@ -99,7 +99,7 @@ Resources:
       ExecutionRoleArn: !ImportValue
         Fn::Sub: '${Environment}-BlockbusterExecutionRoleArn'
       TaskRoleArn: !ImportValue
-        Fn::Sub: '${Environment}-BlockbusterTaskRoleArn'
+        Fn::Sub: '${Environment}-BlockbusterAmazonTaskRoleArn'
       ContainerDefinitions:
         - Name: blockbuster-index-amazon-container
           Image: !Ref ContainerImage
@@ -158,7 +158,7 @@ Resources:
       ExecutionRoleArn: !ImportValue
         Fn::Sub: '${Environment}-BlockbusterExecutionRoleArn'
       TaskRoleArn: !ImportValue
-        Fn::Sub: '${Environment}-BlockbusterTaskRoleArn'
+        Fn::Sub: '${Environment}-BlockbusterCensusTaskRoleArn'
       ContainerDefinitions:
         - Name: blockbuster-index-census-container
           Image: !Ref ContainerImage
@@ -213,7 +213,7 @@ Resources:
       ExecutionRoleArn: !ImportValue
         Fn::Sub: '${Environment}-BlockbusterExecutionRoleArn'
       TaskRoleArn: !ImportValue
-        Fn::Sub: '${Environment}-BlockbusterTaskRoleArn'
+        Fn::Sub: '${Environment}-BlockbusterBroadbandTaskRoleArn'
       ContainerDefinitions:
         - Name: blockbuster-index-broadband-container
           Image: !Ref ContainerImage
@@ -270,7 +270,7 @@ Resources:
       ExecutionRoleArn: !ImportValue
         Fn::Sub: '${Environment}-BlockbusterExecutionRoleArn'
       TaskRoleArn: !ImportValue
-        Fn::Sub: '${Environment}-BlockbusterTaskRoleArn'
+        Fn::Sub: '${Environment}-BlockbusterWalmartTaskRoleArn'
       ContainerDefinitions:
         - Name: blockbuster-index-walmart-container
           Image: !Ref ContainerImage
@@ -329,7 +329,7 @@ Resources:
       ExecutionRoleArn: !ImportValue
         Fn::Sub: '${Environment}-BlockbusterExecutionRoleArn'
       TaskRoleArn: !ImportValue
-        Fn::Sub: '${Environment}-BlockbusterTaskRoleArn'
+        Fn::Sub: '${Environment}-BlockbusterBlsTaskRoleArn'
       ContainerDefinitions:
         - Name: blockbuster-index-bls-container
           Image: !Ref ContainerImage
@@ -390,7 +390,7 @@ Resources:
       ExecutionRoleArn: !ImportValue
         Fn::Sub: '${Environment}-BlockbusterExecutionRoleArn'
       TaskRoleArn: !ImportValue
-        Fn::Sub: '${Environment}-BlockbusterTaskRoleArn'
+        Fn::Sub: '${Environment}-BlockbusterBlockbusterIndexTaskRoleArn'
       ContainerDefinitions:
         - Name: blockbuster-index-blockbuster-index-container
           Image: !Ref ContainerImage

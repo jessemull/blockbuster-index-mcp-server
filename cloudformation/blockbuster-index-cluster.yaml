@@ -125,10 +125,10 @@ Resources:
                   - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-blockbuster-index-${Environment}:*'
                   - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/blockbuster-index-walmart-${Environment}:*'
 
-  ECSTaskRole:
+  AmazonECSTaskRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub 'blockbuster-index-ecs-task-role-${Environment}'
+      RoleName: !Sub 'blockbuster-index-amazon-task-role-${Environment}'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -138,7 +138,7 @@ Resources:
             Action: sts:AssumeRole
       Path: '/'
       Policies:
-        - PolicyName: 'S3WriteAccess'
+        - PolicyName: 'S3ClientAccess'
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -190,33 +190,6 @@ Resources:
                   - dynamodb:DescribeTable
                 Resource: !ImportValue
                   Fn::Sub: '${Environment}-BlockbusterCensusSignalsTableArn'
-        - PolicyName: 'DynamoDBBroadbandSignalsAccess'
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - dynamodb:PutItem
-                  - dynamodb:BatchWriteItem
-                  - dynamodb:Query
-                  - dynamodb:GetItem
-                  - dynamodb:DescribeTable
-                  - dynamodb:Scan
-                Resource:
-                  - !ImportValue
-                    Fn::Sub: '${Environment}-BlockbusterBroadbandSignalsTableArn'
-                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/blockbuster-index-broadband-signals-${Environment}/index/*'
-        - PolicyName: S3BroadbandAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - s3:ListBucket
-                Resource:
-                  - !Sub 'arn:aws:s3:::blockbuster-index-broadband-${Environment}'
-                  - !Sub 'arn:aws:s3:::blockbuster-index-broadband-${Environment}/*'
         - PolicyName: 'DynamoDBSignalScoresAccess'
           PolicyDocument:
             Version: '2012-10-17'
@@ -230,19 +203,32 @@ Resources:
                   - dynamodb:DescribeTable
                 Resource: !ImportValue
                   Fn::Sub: '${Environment}-BlockbusterSignalScoresTableArn'
-        - PolicyName: 'DynamoDBBlockbusterIndexAccess'
+
+  WalmartECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'blockbuster-index-walmart-task-role-${Environment}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Path: '/'
+      Policies:
+        - PolicyName: 'S3ClientAccess'
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
-                  - dynamodb:PutItem
-                  - dynamodb:BatchWriteItem
-                  - dynamodb:Query
-                  - dynamodb:GetItem
-                  - dynamodb:DescribeTable
-                Resource: !ImportValue
-                  Fn::Sub: '${Environment}-BlockbusterBlockbusterIndexTableArn'
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::blockbuster-index-client-${Environment}'
+                  - !Sub 'arn:aws:s3:::blockbuster-index-client-${Environment}/*'
         - PolicyName: 'DynamoDBWalmartJobsAccess'
           PolicyDocument:
             Version: '2012-10-17'
@@ -270,6 +256,176 @@ Resources:
                   - dynamodb:UpdateItem
                 Resource: !ImportValue
                   Fn::Sub: '${Environment}-BlockbusterWalmartSlidingWindowTableArn'
+        - PolicyName: 'DynamoDBCensusSignalsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterCensusSignalsTableArn'
+        - PolicyName: 'DynamoDBSignalScoresAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterSignalScoresTableArn'
+
+  CensusECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'blockbuster-index-census-task-role-${Environment}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Path: '/'
+      Policies:
+        - PolicyName: 'S3ClientAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::blockbuster-index-client-${Environment}'
+                  - !Sub 'arn:aws:s3:::blockbuster-index-client-${Environment}/*'
+        - PolicyName: 'DynamoDBCensusSignalsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterCensusSignalsTableArn'
+        - PolicyName: 'DynamoDBSignalScoresAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterSignalScoresTableArn'
+
+  BroadbandECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'blockbuster-index-broadband-task-role-${Environment}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Path: '/'
+      Policies:
+        - PolicyName: 'S3ClientAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::blockbuster-index-client-${Environment}'
+                  - !Sub 'arn:aws:s3:::blockbuster-index-client-${Environment}/*'
+        - PolicyName: 'DynamoDBBroadbandSignalsAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                  - dynamodb:Scan
+                Resource:
+                  - !ImportValue
+                    Fn::Sub: '${Environment}-BlockbusterBroadbandSignalsTableArn'
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/blockbuster-index-broadband-signals-${Environment}/index/*'
+        - PolicyName: 'S3BroadbandAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::blockbuster-index-broadband-${Environment}'
+                  - !Sub 'arn:aws:s3:::blockbuster-index-broadband-${Environment}/*'
+        - PolicyName: 'DynamoDBSignalScoresAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterSignalScoresTableArn'
+
+  BlsECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'blockbuster-index-bls-task-role-${Environment}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Path: '/'
+      Policies:
+        - PolicyName: 'S3ClientAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::blockbuster-index-client-${Environment}'
+                  - !Sub 'arn:aws:s3:::blockbuster-index-client-${Environment}/*'
         - PolicyName: 'DynamoDBBlsProcessedFilesAccess'
           PolicyDocument:
             Version: '2012-10-17'
@@ -325,6 +481,58 @@ Resources:
                 Resource:
                   - !Sub 'arn:aws:s3:::blockbuster-index-bls-${Environment}'
                   - !Sub 'arn:aws:s3:::blockbuster-index-bls-${Environment}/*'
+        - PolicyName: 'DynamoDBSignalScoresAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterSignalScoresTableArn'
+
+  BlockbusterIndexECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'blockbuster-index-blockbuster-index-task-role-${Environment}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Path: '/'
+      Policies:
+        - PolicyName: 'S3ClientAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::blockbuster-index-client-${Environment}'
+                  - !Sub 'arn:aws:s3:::blockbuster-index-client-${Environment}/*'
+        - PolicyName: 'DynamoDBBlockbusterIndexAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:DescribeTable
+                Resource: !ImportValue
+                  Fn::Sub: '${Environment}-BlockbusterBlockbusterIndexTableArn'
 
   EventBridgeInvokeRole:
     Type: AWS::IAM::Role
@@ -344,7 +552,7 @@ Resources:
             Version: '2012-10-17'
             Statement:
               # Scoped to this stack's signal task definition families (not Resource: '*').
-              # ECS task role remains shared across signals; per-signal roles are a future split.
+              # PassRole includes the execution role plus each per-signal task role.
               - Effect: Allow
                 Action:
                   - ecs:RunTask
@@ -360,7 +568,12 @@ Resources:
                   - iam:PassRole
                 Resource:
                   - !GetAtt ECSTaskExecutionRole.Arn
-                  - !GetAtt ECSTaskRole.Arn
+                  - !GetAtt AmazonECSTaskRole.Arn
+                  - !GetAtt WalmartECSTaskRole.Arn
+                  - !GetAtt CensusECSTaskRole.Arn
+                  - !GetAtt BroadbandECSTaskRole.Arn
+                  - !GetAtt BlsECSTaskRole.Arn
+                  - !GetAtt BlockbusterIndexECSTaskRole.Arn
 
   ECSFargateSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -416,11 +629,36 @@ Outputs:
     Value: !GetAtt ECSTaskExecutionRole.Arn
     Export:
       Name: !Sub '${Environment}-BlockbusterExecutionRoleArn'
-  TaskRoleArn:
-    Description: 'ECS Task Role ARN'
-    Value: !GetAtt ECSTaskRole.Arn
+  AmazonTaskRoleArn:
+    Description: 'Amazon signal ECS task role ARN'
+    Value: !GetAtt AmazonECSTaskRole.Arn
     Export:
-      Name: !Sub '${Environment}-BlockbusterTaskRoleArn'
+      Name: !Sub '${Environment}-BlockbusterAmazonTaskRoleArn'
+  WalmartTaskRoleArn:
+    Description: 'Walmart signal ECS task role ARN'
+    Value: !GetAtt WalmartECSTaskRole.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterWalmartTaskRoleArn'
+  CensusTaskRoleArn:
+    Description: 'Census signal ECS task role ARN'
+    Value: !GetAtt CensusECSTaskRole.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterCensusTaskRoleArn'
+  BroadbandTaskRoleArn:
+    Description: 'Broadband signal ECS task role ARN'
+    Value: !GetAtt BroadbandECSTaskRole.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterBroadbandTaskRoleArn'
+  BlsTaskRoleArn:
+    Description: 'BLS signal ECS task role ARN'
+    Value: !GetAtt BlsECSTaskRole.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterBlsTaskRoleArn'
+  BlockbusterIndexTaskRoleArn:
+    Description: 'Blockbuster Index ECS task role ARN'
+    Value: !GetAtt BlockbusterIndexECSTaskRole.Arn
+    Export:
+      Name: !Sub '${Environment}-BlockbusterBlockbusterIndexTaskRoleArn'
   EventBridgeInvokeRoleArn:
     Description: 'EventBridge Invoke Role ARN'
     Value: !GetAtt EventBridgeInvokeRole.Arn
