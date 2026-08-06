@@ -1,15 +1,12 @@
+import type { SignalRepository } from './repository';
+
 export interface WalmartJobRecord {
   jobCount: number;
   state: string;
   timestamp: number;
 }
 
-export interface WalmartSignalRepository<T> {
-  exists(state: string, timestamp?: number): Promise<boolean>;
-  get(state: string, timestamp?: number): Promise<null | T>;
-  query?(state: string, start?: number, end?: number): Promise<T[]>;
-  save(record: T): Promise<void>;
-}
+export type WalmartSignalRepository<T> = SignalRepository<T>;
 
 export interface WalmartSlidingWindowAggregate {
   averageJobCount: number;

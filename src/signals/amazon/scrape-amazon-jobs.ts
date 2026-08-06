@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer';
-import type { JobSignalRecord, SignalRepository } from '../../types/amazon';
+import type { JobSignalRecord } from '../../types/amazon';
+import type { SignalRepository } from '../../types/repository';
 import { CONFIG } from '../../config';
 import { STATE_ABBR_TO_NAME } from '../../constants';
 import { States } from '../../types';

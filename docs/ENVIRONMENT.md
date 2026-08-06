@@ -82,9 +82,9 @@ Application code reads these only through `src/config/config.ts`.
 | `NODE_ENV`      | Node.js environment  | No       | `development` |
 | `CACHE_CONTROL` | Cache control header | No       | `max-age=300` |
 
-## GitHub Actions (deploy + run-task workflows)
+## GitHub Actions + local ECS runners
 
-Set these as repository or environment **Variables** (not secrets) for `deploy.yml` and `run-task.yml`:
+Set these as repository/environment **Variables** (GitHub Actions) or in `.env` / your shell (local `make ecs-run` / `scripts/run-ecs-task.js`):
 
 | Variable               | Description                                         | Example                 |
 | ---------------------- | --------------------------------------------------- | ----------------------- |

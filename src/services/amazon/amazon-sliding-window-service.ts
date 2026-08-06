@@ -18,7 +18,7 @@ export class AmazonSlidingWindowService {
       state: string,
       timestamp: number,
     ) => Promise<number | undefined>;
-    jobRepository?: import('../../types/amazon').SignalRepository<
+    jobRepository?: import('../../types/repository').SignalRepository<
       import('../../types/amazon').JobSignalRecord
     >;
     states?: string[];

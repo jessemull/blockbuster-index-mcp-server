@@ -4,6 +4,7 @@ export * from './amazon';
 export * from './broadband';
 export * from './browser';
 export * from './census';
+export * from './repository';
 export * from './response';
 export * from './signals';
 export * from './states';

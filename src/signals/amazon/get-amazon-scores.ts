@@ -1,7 +1,8 @@
 import { CONFIG } from '../../config';
 import { AmazonSlidingWindowService } from '../../services/amazon/amazon-sliding-window-service';
 import { getWorkforceData } from '../../services/census';
-import { JobSignalRecord, SignalRepository } from '../../types/amazon';
+import { JobSignalRecord } from '../../types/amazon';
+import { SignalRepository } from '../../types/repository';
 import { logger } from '../../util';
 import { calculateWorkforceNormalizedScores } from '../../util/helpers';
 import { orchestrateSignal } from '../shared-job-signal-orchestration';

@@ -10,7 +10,7 @@
 
 ### Prerequisites
 
-- Node.js 22+
+- Node.js 22+ (see `.nvmrc`)
 - npm
 - AWS credentials (for ECS/bastion workflows)
 - Docker (optional, for container signal runs)

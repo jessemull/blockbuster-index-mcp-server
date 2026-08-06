@@ -9,6 +9,17 @@ if (!signalType) {
   process.exit(1);
 }
 
+const subnets = process.env.ECS_SUBNETS;
+const securityGroups = process.env.ECS_SECURITY_GROUPS;
+const assignPublicIp = process.env.ECS_ASSIGN_PUBLIC_IP || 'ENABLED';
+
+if (!subnets || !securityGroups) {
+  console.error(
+    'ECS_SUBNETS and ECS_SECURITY_GROUPS environment variables are required',
+  );
+  process.exit(1);
+}
+
 const taskDefinition = `blockbuster-index-${signalType}-task-dev`;
 
 console.log(`Running ECS task: ${taskDefinition}`);
@@ -23,7 +34,7 @@ const awsArgs = [
   '--launch-type',
   'FARGATE',
   '--network-configuration',
-  'awsvpcConfiguration={subnets=[subnet-02ce757a,subnet-2655df7b,subnet-e22085a8,subnet-badfdd91],securityGroups=[sg-09812900f87093af6],assignPublicIp=ENABLED}',
+  `awsvpcConfiguration={subnets=[${subnets}],securityGroups=[${securityGroups}],assignPublicIp=${assignPublicIp}}`,
 ];
 
 const proc = spawn('aws', awsArgs, {
