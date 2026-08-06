@@ -3,9 +3,9 @@
 import fs from 'fs';
 import path from 'path';
 import { SIGNALS } from '../../src/constants/signals';
+import { calculateBlockbusterIndex } from '../../src/signals/blockbuster-index/calculate';
 import { Signal } from '../../src/types';
 import { logger } from '../../src/util';
-import { calculateBlockbusterIndex } from '../../src/signals/blockbuster-index/calculate';
 
 async function getSignalScores(
   signalName: string,
