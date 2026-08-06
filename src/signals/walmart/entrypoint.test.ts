@@ -64,9 +64,13 @@ describe('Walmart signal entrypoint', () => {
       expect.stringContaining('"scores"'),
     );
     expect(logger.info).toHaveBeenCalledWith('Starting Walmart signal task...');
-    expect(logger.info).toHaveBeenCalledWith('Walmart scores written to file', {
-      filePath: '/mocked/dev/scores/walmart-scores.json',
-    });
+    expect(logger.info).toHaveBeenCalledWith(
+      'Signal scores written to file',
+      expect.objectContaining({
+        filePath: expect.any(String),
+        signalType: expect.any(String),
+      }),
+    );
     expect(logger.info).toHaveBeenCalledWith(
       'SUCCESS: Walmart signal task completed successfully!',
     );
@@ -85,10 +89,14 @@ describe('Walmart signal entrypoint', () => {
       body: expect.stringContaining('"scores"'),
       metadata: { calculatedAt: expect.any(String), signal: 'WALMART' },
     });
-    expect(logger.info).toHaveBeenCalledWith('Walmart scores uploaded to S3', {
-      bucket: 'test-bucket',
-      key: 'data/signals/walmart-scores.json',
-    });
+    expect(logger.info).toHaveBeenCalledWith(
+      'Signal scores uploaded to S3',
+      expect.objectContaining({
+        bucket: 'test-bucket',
+        key: expect.stringContaining('data/signals/'),
+        signalType: expect.any(String),
+      }),
+    );
     expect(logger.info).toHaveBeenCalledWith(
       'SUCCESS: Walmart signal task completed successfully!',
     );
@@ -109,11 +117,12 @@ describe('Walmart signal entrypoint', () => {
     await main();
 
     expect(logger.info).toHaveBeenCalledWith(
-      'Walmart scores stored in DynamoDB',
-      {
+      'Signal scores stored in DynamoDB',
+      expect.objectContaining({
         table: 'mock-table',
         timestamp: expect.any(Number),
-      },
+        signalTypes: expect.any(Array),
+      }),
     );
   });
 

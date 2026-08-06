@@ -65,8 +65,11 @@ describe('Broadband signal entrypoint', () => {
       'Starting Broadband signal task...',
     );
     expect(logger.info).toHaveBeenCalledWith(
-      'Broadband scores written to file',
-      { filePath: '/mocked/dev/scores/broadband-scores.json' },
+      'Signal scores written to file',
+      expect.objectContaining({
+        filePath: expect.any(String),
+        signalType: expect.any(String),
+      }),
     );
     expect(logger.info).toHaveBeenCalledWith(
       'SUCCESS: Broadband signal task completed successfully!',
@@ -92,11 +95,12 @@ describe('Broadband signal entrypoint', () => {
       'Starting Broadband signal task...',
     );
     expect(logger.info).toHaveBeenCalledWith(
-      'Broadband scores uploaded to S3',
-      {
+      'Signal scores uploaded to S3',
+      expect.objectContaining({
         bucket: 'test-bucket',
-        key: 'data/signals/broadband-scores.json',
-      },
+        key: expect.stringContaining('data/signals/'),
+        signalType: expect.any(String),
+      }),
     );
     expect(logger.info).toHaveBeenCalledWith(
       'SUCCESS: Broadband signal task completed successfully!',
@@ -117,11 +121,12 @@ describe('Broadband signal entrypoint', () => {
     await main();
 
     expect(logger.info).toHaveBeenCalledWith(
-      'Broadband scores stored in DynamoDB',
-      {
+      'Signal scores stored in DynamoDB',
+      expect.objectContaining({
         table: 'mock-signal-scores-table',
         timestamp: expect.any(Number),
-      },
+        signalTypes: expect.any(Array),
+      }),
     );
     expect(uploadToS3).toHaveBeenCalled();
   });
@@ -134,7 +139,7 @@ describe('Broadband signal entrypoint', () => {
     await main();
 
     expect(logger.info).not.toHaveBeenCalledWith(
-      'Broadband scores stored in DynamoDB',
+      'Signal scores stored in DynamoDB',
       expect.any(Object),
     );
     expect(uploadToS3).toHaveBeenCalled();

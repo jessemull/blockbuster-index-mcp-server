@@ -1,66 +1,22 @@
-import fs from 'fs';
-import path from 'path';
-import { CONFIG } from '../../config';
-import { logger, uploadToS3 } from '../../util';
+import { logger } from '../../util';
+import { publishSignalArtifacts } from '../shared-signal-publish';
 import { getWalmartScores } from './get-walmart-scores';
 
 async function main() {
   try {
     logger.info('Starting Walmart signal task...');
     const { scores } = await getWalmartScores();
-    const calculatedAt = new Date().toISOString();
-    const timestamp = Math.floor(Date.now() / 1000);
 
-    // Store scores in DynamoDB for historical tracking...
-    if (!CONFIG.IS_DEVELOPMENT && CONFIG.SIGNAL_SCORES_DYNAMODB_TABLE_NAME) {
-      try {
-        const { DynamoDBSignalScoresRepository } =
-          await import('../../repositories');
-        const signalScoresRepository = new DynamoDBSignalScoresRepository(
-          CONFIG.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
-        );
-        await signalScoresRepository.save({
-          signalType: 'walmart',
-          timestamp,
-          calculatedAt,
-          scores,
-        });
-        logger.info('Walmart scores stored in DynamoDB', {
-          table: CONFIG.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
-          timestamp,
-        });
-      } catch (dbError) {
-        // Continue with S3 upload even if DynamoDB fails...
-        logger.error('Failed to store Walmart scores in DynamoDB', {
-          error: dbError,
-          table: CONFIG.SIGNAL_SCORES_DYNAMODB_TABLE_NAME,
-        });
-      }
-    }
+    await publishSignalArtifacts([
+      {
+        signalType: 'walmart',
+        scores,
+        s3Key: 'data/signals/walmart-scores.json',
+        localFileName: 'walmart-scores.json',
+        metadataSignal: 'WALMART',
+      },
+    ]);
 
-    if (CONFIG.IS_DEVELOPMENT) {
-      const scoresDir = path.resolve(__dirname, '../../../dev/scores');
-      const filePath = path.join(scoresDir, 'walmart-scores.json');
-      fs.mkdirSync(scoresDir, { recursive: true });
-      fs.writeFileSync(
-        filePath,
-        JSON.stringify({ scores, calculatedAt }, null, 2),
-      );
-      logger.info('Walmart scores written to file', {
-        filePath,
-      });
-    } else {
-      await uploadToS3({
-        bucket: CONFIG.S3_BUCKET_NAME!,
-        key: 'data/signals/walmart-scores.json',
-        body: JSON.stringify({ scores, calculatedAt }, null, 2),
-        metadata: { calculatedAt, signal: 'WALMART' },
-      });
-      logger.info('Walmart scores uploaded to S3', {
-        bucket: CONFIG.S3_BUCKET_NAME!,
-        key: 'data/signals/walmart-scores.json',
-      });
-    }
     logger.info('SUCCESS: Walmart signal task completed successfully!');
   } catch (err) {
     logger.error('Walmart signal task failed:', err);

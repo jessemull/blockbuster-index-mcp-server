@@ -70,10 +70,20 @@ describe('BLS signal entrypoint', () => {
       JSON.stringify({ CA: 80.0, TX: 60.0 }, null, 2),
     );
     expect(logger.info).toHaveBeenCalledWith('Starting BLS signal task...');
-    expect(logger.info).toHaveBeenCalledWith('BLS signals written to files', {
-      physicalFilePath: '/mocked/dev/scores/bls-physical-scores.json',
-      ecommerceFilePath: '/mocked/dev/scores/bls-ecommerce-scores.json',
-    });
+    expect(logger.info).toHaveBeenCalledWith(
+      'Signal scores written to file',
+      expect.objectContaining({
+        filePath: '/mocked/dev/scores/bls-physical-scores.json',
+        signalType: 'bls-physical',
+      }),
+    );
+    expect(logger.info).toHaveBeenCalledWith(
+      'Signal scores written to file',
+      expect.objectContaining({
+        filePath: '/mocked/dev/scores/bls-ecommerce-scores.json',
+        signalType: 'bls-ecommerce',
+      }),
+    );
     expect(logger.info).toHaveBeenCalledWith(
       'SUCCESS: BLS signal task completed successfully!',
     );
@@ -98,11 +108,22 @@ describe('BLS signal entrypoint', () => {
       body: expect.stringContaining('"scores"'),
       metadata: { calculatedAt: expect.any(String), signal: 'BLS_ECOMMERCE' },
     });
-    expect(logger.info).toHaveBeenCalledWith('BLS signals uploaded to S3', {
-      bucket: 'test-bucket',
-      physicalKey: 'data/signals/bls-physical-scores.json',
-      ecommerceKey: 'data/signals/bls-ecommerce-scores.json',
-    });
+    expect(logger.info).toHaveBeenCalledWith(
+      'Signal scores uploaded to S3',
+      expect.objectContaining({
+        bucket: 'test-bucket',
+        key: 'data/signals/bls-physical-scores.json',
+        signalType: 'bls-physical',
+      }),
+    );
+    expect(logger.info).toHaveBeenCalledWith(
+      'Signal scores uploaded to S3',
+      expect.objectContaining({
+        bucket: 'test-bucket',
+        key: 'data/signals/bls-ecommerce-scores.json',
+        signalType: 'bls-ecommerce',
+      }),
+    );
     expect(logger.info).toHaveBeenCalledWith(
       'SUCCESS: BLS signal task completed successfully!',
     );
@@ -126,10 +147,14 @@ describe('BLS signal entrypoint', () => {
     const { main } = await import('./entrypoint');
     await main();
 
-    expect(logger.info).toHaveBeenCalledWith('BLS signals stored in DynamoDB', {
-      table: 'mock-table',
-      timestamp: expect.any(Number),
-    });
+    expect(logger.info).toHaveBeenCalledWith(
+      'Signal scores stored in DynamoDB',
+      expect.objectContaining({
+        table: 'mock-table',
+        timestamp: expect.any(Number),
+        signalTypes: ['bls-physical', 'bls-ecommerce'],
+      }),
+    );
   });
 
   it('logs and exits on S3 upload error', async () => {

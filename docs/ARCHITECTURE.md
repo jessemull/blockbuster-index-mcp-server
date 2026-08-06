@@ -54,6 +54,7 @@ entrypoint → service → repository
 | Service                  | `src/services/<signal>/`                       | Business logic, aggregation            |
 | Repository               | `src/repositories/<signal>/`                   | DynamoDB access                        |
 | Shared job orchestration | `src/signals/shared-job-signal-orchestration/` | Cross-signal scrape/job patterns       |
+| Shared signal publish    | `src/signals/shared-signal-publish/`           | Dynamo history + S3/dev score publish  |
 | Util                     | `src/util/`                                    | Logger, S3, retry, normalization       |
 | Config                   | `src/config/config.ts`                         | Env-backed configuration               |
 | Types / Constants        | `src/types/`, `src/constants/`                 | Shared contracts                       |

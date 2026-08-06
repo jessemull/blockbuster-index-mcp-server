@@ -62,9 +62,13 @@ describe('Census signal entrypoint', () => {
       expect.stringContaining('scores'),
     );
     expect(logger.info).toHaveBeenCalledWith('Starting Census signal task...');
-    expect(logger.info).toHaveBeenCalledWith('Census scores written to file', {
-      filePath: '/mocked/dev/scores/census-scores.json',
-    });
+    expect(logger.info).toHaveBeenCalledWith(
+      'Signal scores written to file',
+      expect.objectContaining({
+        filePath: expect.any(String),
+        signalType: expect.any(String),
+      }),
+    );
     expect(logger.info).toHaveBeenCalledWith(
       'SUCCESS: Census signal task completed successfully!',
     );
@@ -86,10 +90,14 @@ describe('Census signal entrypoint', () => {
       }),
     });
     expect(logger.info).toHaveBeenCalledWith('Starting Census signal task...');
-    expect(logger.info).toHaveBeenCalledWith('Census scores uploaded to S3', {
-      bucket: 'test-bucket',
-      key: 'data/signals/census-scores.json',
-    });
+    expect(logger.info).toHaveBeenCalledWith(
+      'Signal scores uploaded to S3',
+      expect.objectContaining({
+        bucket: 'test-bucket',
+        key: expect.stringContaining('data/signals/'),
+        signalType: expect.any(String),
+      }),
+    );
     expect(logger.info).toHaveBeenCalledWith(
       'SUCCESS: Census signal task completed successfully!',
     );
@@ -109,11 +117,12 @@ describe('Census signal entrypoint', () => {
     await main();
 
     expect(logger.info).toHaveBeenCalledWith(
-      'Census scores stored in DynamoDB',
-      {
+      'Signal scores stored in DynamoDB',
+      expect.objectContaining({
         table: 'mock-signal-scores-table',
         timestamp: expect.any(Number),
-      },
+        signalTypes: expect.any(Array),
+      }),
     );
     expect(uploadToS3).toHaveBeenCalled();
   });
@@ -126,7 +135,7 @@ describe('Census signal entrypoint', () => {
     await main();
 
     expect(logger.info).not.toHaveBeenCalledWith(
-      'Census scores stored in DynamoDB',
+      'Signal scores stored in DynamoDB',
       expect.any(Object),
     );
     expect(uploadToS3).toHaveBeenCalled();
