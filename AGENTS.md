@@ -14,7 +14,7 @@
 | ---------------- | --------------------------------------------------------------------------- |
 | **Project**      | Blockbuster Index signal calculation — retail/digital commerce scoring      |
 | **Architecture** | Modular multi-task monolith (shared codebase, per-signal ECS Fargate tasks) |
-| **Language**     | TypeScript (strict) on Node.js 22                                           |
+| **Language**     | TypeScript (strict) on Node.js 26                                           |
 | **Storage**      | DynamoDB (signal data) + S3 (published scores)                              |
 | **IaC**          | CloudFormation                                                              |
 | **Testing**      | Jest with 80% global coverage thresholds                                    |

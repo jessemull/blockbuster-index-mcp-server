@@ -163,7 +163,7 @@ Before implementing any changes, confirm you have read and understood:
 | ----------- | ----------------------------------------------- |
 | Project     | Blockbuster Index signal calculation server     |
 | Type        | TypeScript Node.js batch signal / index jobs    |
-| Runtime     | Node.js 22                                      |
+| Runtime     | Node.js 26                                      |
 | Language    | TypeScript (strict)                             |
 | Compute     | AWS ECS Fargate                                 |
 | Storage     | DynamoDB + S3                                   |
